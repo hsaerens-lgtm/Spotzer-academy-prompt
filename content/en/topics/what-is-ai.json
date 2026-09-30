@@ -1,0 +1,22 @@
+{
+  "id": "what-is-ai",
+  "chapter": "basics",
+  "title": "What is AI?",
+  "teaser": "The big picture, from AI to generative AI",
+  "reviewed": "2026-09-29",
+  "basics": [
+    { "say": "Let's start at the very beginning. 'AI' is a big umbrella word – it covers any machine doing a task that usually needs human thinking.", "mood": "happy", "gesture": "pointScreen", "screen": "what-is-ai:1" },
+    { "say": "Inside that umbrella sits machine learning. Instead of following hand-written rules, the machine learns patterns from lots of examples.", "screen": "what-is-ai:2" },
+    { "say": "Think of a spam filter. Nobody lists every spam email. It sees thousands of examples and learns what spam tends to look like.", "mood": "thinking" },
+    { "say": "Deep learning is machine learning with many stacked layers – a 'neural network'. That's what made recognizing faces and voices possible.", "screen": "what-is-ai:3" },
+    { "say": "And right in the middle: generative AI. It doesn't just recognize things – it creates new text, images or sound. That's what we'll explore here.", "mood": "encouraging", "gesture": "pointScreen", "screen": "what-is-ai:4" }
+  ],
+  "deeper": [
+    { "say": "Here's the key difference. Traditional software: a person writes the rules. Machine learning: the machine finds the rules itself, from data.", "mood": "thinking", "screen": "what-is-ai:2" },
+    { "say": "A neural network is loosely inspired by the brain: millions of tiny adjustable numbers, called parameters, tuned during training.", "screen": "what-is-ai:3" },
+    { "say": "Training is slow, expensive and happens once. Using the model afterwards – experts call it 'inference' – is fast. That's what happens when you chat.", "mood": "neutral" },
+    { "say": "One consequence: a model only knows what was in its training data, up to a cut-off date. Anything newer, it has to be told.", "mood": "encouraging", "screen": "what-is-ai:4" }
+  ],
+  "takeaway": "Generative AI is the part of AI that creates new content – text, images, sound.",
+  "next": null
+}
