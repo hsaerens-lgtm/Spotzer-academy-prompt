@@ -1,7 +1,25 @@
+import { appStore, useApp } from '../core/store'
+import { ErrorBoundary } from './ErrorBoundary'
+import { Fader } from './Fader'
+import { LoadingScreen } from './LoadingScreen'
+import { Stage } from './Stage'
+import { ZoneOverlayHost } from './ZoneOverlayHost'
+
 export function App() {
+  const threeD = useApp((s) => s.webgl === 'ok' && !s.readingMode)
+  const showLoading = useApp((s) => s.zone === 'office' && !s.sceneReady)
   return (
-    <main className="app">
-      <h1 className="at-h1">Athena Prompt Academy</h1>
-    </main>
+    <div className="app">
+      {threeD && (
+        <ErrorBoundary zone="office" onError={() => appStore.getState().reportWebglLost()}>
+          <Stage />
+        </ErrorBoundary>
+      )}
+      <div className="overlay">
+        <ZoneOverlayHost />
+      </div>
+      {threeD && showLoading && <LoadingScreen />}
+      <Fader />
+    </div>
   )
 }
