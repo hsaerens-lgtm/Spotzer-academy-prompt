@@ -1,0 +1,196 @@
+import { createStore, type StoreApi } from 'zustand/vanilla'
+import { useStore } from 'zustand'
+import { getContent } from '../content/load'
+import type { Topic } from '../content/schema'
+import * as engine from '../dialogue/engine'
+import type { Choice, DialogueState } from '../dialogue/engine'
+import {
+  loadProgress,
+  loadSettings,
+  markSeen,
+  saveProgress,
+  saveSettings,
+  type Progress,
+  type Settings,
+  type StorageLike,
+} from './progress'
+
+export type ZoneId = 'office' | 'workshop' | 'dungeon'
+export const ZONES: readonly ZoneId[] = ['office', 'workshop', 'dungeon']
+export type Via = 'laptop' | 'tv'
+export type HoverTarget = 'laptop' | 'tv' | 'ada'
+
+export interface Transition {
+  to: ZoneId
+  via: Via | null
+  stage: 'flight' | 'fade'
+}
+
+export interface AppState {
+  zone: ZoneId
+  transition: Transition | null
+  railTarget: number
+  hasScrolled: boolean
+  activeTopic: string | null
+  menuOpen: boolean
+  dialogue: DialogueState | null
+  progress: Progress
+  settings: Settings
+  webgl: 'ok' | 'unavailable'
+  webglLost: boolean
+  readingMode: boolean
+  reducedMotion: boolean
+  sceneReady: boolean
+  hovered: HoverTarget | null
+  adaPokes: number
+  expandOpen: boolean
+
+  requestZone: (to: ZoneId, via?: Via) => void
+  transitionStep: () => void
+  setRailTarget: (t: number) => void
+  nudgeRail: (delta: number) => void
+  openMenu: () => void
+  closeMenu: () => void
+  openTopic: (id: string) => void
+  finishTyping: () => void
+  advanceDialogue: () => void
+  choose: (choice: Choice) => void
+  closeTopic: () => void
+  setSound: (on: boolean) => void
+  setLang: (lang: string) => void
+  setReadingMode: (on: boolean) => void
+  setWebgl: (status: 'ok' | 'unavailable') => void
+  reportWebglLost: () => void
+  setSceneReady: (ready: boolean) => void
+  setHovered: (target: HoverTarget | null) => void
+  pokeAda: () => void
+  setExpandOpen: (open: boolean) => void
+}
+
+export interface StoreDeps {
+  getTopic: (lang: string, id: string) => Topic | undefined
+  storage?: StorageLike | null
+  reducedMotion?: boolean
+}
+
+const clamp01 = (n: number) => Math.min(1, Math.max(0, n))
+
+export function createAppStore(deps: StoreDeps): StoreApi<AppState> {
+  const { getTopic, storage } = deps
+  return createStore<AppState>()((set, get) => {
+    const topicFor = (id: string) => getTopic(get().settings.lang, id)
+    const setProgress = (next: Progress) => {
+      if (next === get().progress) return
+      set({ progress: next })
+      saveProgress(next, storage)
+    }
+    const setSettings = (next: Settings) => {
+      set({ settings: next })
+      saveSettings(next, storage)
+    }
+
+    return {
+      zone: 'office',
+      transition: null,
+      railTarget: 0,
+      hasScrolled: false,
+      activeTopic: null,
+      menuOpen: false,
+      dialogue: null,
+      progress: loadProgress(storage),
+      settings: loadSettings(storage),
+      webgl: 'ok',
+      webglLost: false,
+      readingMode: false,
+      reducedMotion: deps.reducedMotion ?? false,
+      sceneReady: false,
+      hovered: null,
+      adaPokes: 0,
+      expandOpen: false,
+
+      requestZone: (to, via) => {
+        const s = get()
+        if (s.transition || to === s.zone) return
+        const canFly = via !== undefined && s.zone === 'office' && !s.reducedMotion && s.webgl === 'ok' && !s.readingMode
+        set({ transition: { to, via: canFly ? via : null, stage: canFly ? 'flight' : 'fade' }, hovered: null })
+      },
+      transitionStep: () => {
+        const t = get().transition
+        if (!t) return
+        if (t.stage === 'flight') {
+          set({ transition: { ...t, stage: 'fade' } })
+          return
+        }
+        const officeReset =
+          t.to === 'office' ? { railTarget: 0, activeTopic: null, dialogue: null, menuOpen: false } : {}
+        set({ zone: t.to, transition: null, expandOpen: false, ...officeReset })
+      },
+      setRailTarget: (t) => set({ railTarget: clamp01(t) }),
+      nudgeRail: (delta) => set({ railTarget: clamp01(get().railTarget + delta), hasScrolled: true }),
+      openMenu: () => set({ menuOpen: true, railTarget: 1 }),
+      closeMenu: () => set({ menuOpen: false }),
+      openTopic: (id) => {
+        const topic = topicFor(id)
+        if (!topic) return
+        set({ activeTopic: id, dialogue: engine.start(topic), menuOpen: false, railTarget: 1, expandOpen: false })
+        const progress = get().progress
+        if (!progress.firstVisitDone) setProgress({ ...progress, firstVisitDone: true })
+      },
+      finishTyping: () => {
+        const dialogue = get().dialogue
+        if (dialogue) set({ dialogue: engine.finishTyping(dialogue) })
+      },
+      advanceDialogue: () => {
+        const dialogue = get().dialogue
+        if (!dialogue) return
+        const topic = topicFor(dialogue.topicId)
+        if (!topic) return
+        const result = engine.advance(dialogue, topic)
+        set({ dialogue: result.state })
+        if (result.completed) {
+          setProgress(markSeen(get().progress, result.completed.topicId, result.completed.section))
+        }
+      },
+      choose: (choice) => {
+        if (choice.kind === 'next') {
+          get().openTopic(choice.topicId)
+          return
+        }
+        if (choice.kind === 'all') {
+          get().closeTopic()
+          return
+        }
+        const dialogue = get().dialogue
+        const topic = dialogue ? topicFor(dialogue.topicId) : undefined
+        if (dialogue && topic) set({ dialogue: engine.chooseDeeper(dialogue, topic) })
+      },
+      closeTopic: () => set({ activeTopic: null, dialogue: null, expandOpen: false, menuOpen: true }),
+      setSound: (on) => setSettings({ ...get().settings, sound: on }),
+      setLang: (lang) => setSettings({ ...get().settings, lang }),
+      setReadingMode: (on) => set({ readingMode: on, hovered: null }),
+      setWebgl: (status) => set({ webgl: status }),
+      reportWebglLost: () => set({ webgl: 'unavailable', webglLost: true, readingMode: true, transition: null }),
+      setSceneReady: (ready) => set({ sceneReady: ready }),
+      setHovered: (target) => set({ hovered: target }),
+      pokeAda: () => set({ adaPokes: get().adaPokes + 1 }),
+      setExpandOpen: (open) => set({ expandOpen: open }),
+    }
+  })
+}
+
+function prefersReducedMotion(): boolean {
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  } catch {
+    return false
+  }
+}
+
+export const appStore = createAppStore({
+  getTopic: (lang, id) => getContent(lang).topicById.get(id),
+  reducedMotion: prefersReducedMotion(),
+})
+
+export function useApp<T>(selector: (state: AppState) => T): T {
+  return useStore(appStore, selector)
+}
