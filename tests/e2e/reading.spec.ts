@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, expectDialoguePhase, test } from './fixtures'
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -18,6 +18,8 @@ test('without WebGL the site opens in reading mode and the tokens demo works', a
   await page.getByRole('tab', { name: /How it works/ }).click()
   await page.getByRole('button', { name: /^Tokens/ }).click()
   await expect(page.getByTestId('screen-content')).toContainText('AI reads in chunks')
+  // Ada's first line is fully written: the screenshot is the same on every run.
+  await expectDialoguePhase(page, 'waiting')
   await page.screenshot({ path: 'docs/evidence/office/05-reading-mode.png' })
 
   await page.getByRole('button', { name: 'Try it yourself' }).click()

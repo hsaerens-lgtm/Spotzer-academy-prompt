@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { gzipSync } from 'node:zlib'
 import { join } from 'node:path'
 
@@ -28,3 +28,15 @@ if (total > BUDGET_BYTES) {
   console.error('Bundle budget exceeded')
   process.exit(1)
 }
+
+// The Playwright test API (window.__academy) is development only: it must not reach any production chunk, lazy ones included.
+const assets = join(dist, 'assets')
+const leaking = readdirSync(assets).filter(
+  (file) => file.endsWith('.js') && readFileSync(join(assets, file), 'utf8').includes('__academy'),
+)
+if (leaking.length > 0) {
+  console.error(`Test API leaked into the production build: "__academy" found in ${leaking.map((f) => join(assets, f)).join(', ')}`)
+  console.error('Guard every use of installTestApi / TestApiBridge with import.meta.env.DEV.')
+  process.exit(1)
+}
+console.log('No test API (__academy) in the production JS')

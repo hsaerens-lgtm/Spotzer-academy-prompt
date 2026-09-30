@@ -19,6 +19,8 @@ npm run check
 
 Runs the type check, the unit and content tests, the production build and the bundle budget (initial JS ≤ 1.5 MB gzip).
 
+The first end-to-end run needs the browser: `npx playwright install chromium`.
+
 ```bash
 npm run e2e
 ```

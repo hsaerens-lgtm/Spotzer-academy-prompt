@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import { expect, expectDialoguePhase, state, test } from './fixtures'
 
 const EVIDENCE = 'docs/evidence/office'
 
@@ -9,12 +10,32 @@ async function openOffice(page: Page, hash = '') {
   await page.waitForFunction(() => window.__academy?.state().sceneReady === true, undefined, { timeout: 60_000 })
 }
 
-const state = (page: Page) => page.evaluate(() => window.__academy!.state())
-
 async function pressUntilVisible(page: Page, name: string) {
   const target = page.getByRole('button', { name })
   for (let i = 0; i < 40 && !(await target.isVisible()); i++) await page.keyboard.press('Space')
   await expect(target).toBeVisible()
+}
+
+const screenPosition = (page: Page, name: string) => page.evaluate((n) => window.__academy!.screenPosition!(n), name)
+
+/**
+ * Waits until a named 3D object stops moving on screen (two consecutive samples less than 1 px apart),
+ * i.e. until the camera, the rail easing and the parallax have settled. Returns its final position.
+ */
+async function settledPosition(page: Page, name: string) {
+  let previous = await screenPosition(page, name)
+  await expect
+    .poll(
+      async () => {
+        const current = await screenPosition(page, name)
+        const moved = previous && current ? Math.hypot(current.x - previous.x, current.y - previous.y) : Infinity
+        previous = current
+        return moved
+      },
+      { intervals: [200], timeout: 20_000 },
+    )
+    .toBeLessThan(1)
+  return previous
 }
 
 test('scroll to the presentation view, learn a topic and keep the progress', async ({ page }) => {
@@ -26,11 +47,18 @@ test('scroll to the presentation view, learn a topic and keep the progress', asy
   await page.mouse.move(800, 300)
   await page.mouse.wheel(0, -1500)
   await expect.poll(async () => (await state(page)).railTarget).toBe(1)
+  // The wheel also brings the camera back out to the overview.
+  await page.mouse.wheel(0, 1500)
+  await expect.poll(async () => (await state(page)).railTarget).toBe(0)
+  await page.mouse.wheel(0, -1500)
+  await expect.poll(async () => (await state(page)).railTarget).toBe(1)
 
   await page.getByRole('button', { name: /Learn the basics/ }).click()
   await page.getByRole('button', { name: /What is AI\?/ }).click()
   await expect(page.locator('.wall-screen [data-testid="screen-content"]')).toContainText('AI is a family of ideas')
-  await page.waitForTimeout(1500)
+  // Ada's first line is fully written and the camera is at rest: the screenshot is the same on every run.
+  await expectDialoguePhase(page, 'waiting')
+  await settledPosition(page, 'laptop')
   await page.screenshot({ path: `${EVIDENCE}/02-presentation.png` })
 
   await pressUntilVisible(page, 'Go deeper')
@@ -47,13 +75,11 @@ test('scroll to the presentation view, learn a topic and keep the progress', asy
 
 test('the real 3D laptop and the TV lead to their zones and back', async ({ page }) => {
   await openOffice(page)
-  await page.waitForTimeout(1500)
-  const approx = await page.evaluate(() => window.__academy!.screenPosition!('laptop'))
+  const approx = await settledPosition(page, 'laptop')
   expect(approx).not.toBeNull()
   // Moving the mouse shifts the view a little (parallax): let it settle, then aim again.
   await page.mouse.move(approx!.x, approx!.y)
-  await page.waitForTimeout(1200)
-  const laptop = await page.evaluate(() => window.__academy!.screenPosition!('laptop'))
+  const laptop = await settledPosition(page, 'laptop')
   await page.mouse.move(laptop!.x, laptop!.y)
   await expect(page.locator('.object-label')).toHaveText('Prompt Workshop')
   await expect(page.locator('.stage canvas')).toHaveCSS('z-index', '2')
@@ -69,7 +95,7 @@ test('the real 3D laptop and the TV lead to their zones and back', async ({ page
   await expect(page.getByRole('heading', { name: 'The Dungeon' })).toBeVisible()
   await page.goBack()
   await expect.poll(async () => (await state(page)).zone).toBe('office')
-  expect(new URL(page.url()).hash).toBe('#/office')
+  await expect(page).toHaveURL(/#\/office$/)
 })
 
 test('everything works from the keyboard', async ({ page }) => {
@@ -86,9 +112,12 @@ test('everything works from the keyboard', async ({ page }) => {
   for (let i = 0; i < 25 && !(await focusText()).includes('What is AI?'); i++) await page.keyboard.press('Tab')
   await page.keyboard.press('Enter')
   await expect(page.getByTestId('dialogue-line')).toBeVisible()
+  // First Space finishes Ada's line, the second one moves on to the next beat.
+  await expectDialoguePhase(page, 'typing')
   await page.keyboard.press('Space')
+  await expectDialoguePhase(page, 'waiting')
   await page.keyboard.press('Space')
-  expect((await state(page)).dialogue?.beatIndex).toBe(1)
+  await expect.poll(async () => (await state(page)).dialogue?.beatIndex).toBe(1)
   await page.keyboard.press('Escape')
   await expect(page.getByRole('tablist')).toBeVisible()
   await page.keyboard.press('Escape')
@@ -111,6 +140,7 @@ test('deep links open topics and bad links land on the office', async ({ page })
   await expect(page.locator('.dialogue .at-kicker')).toHaveText('Tokens')
   await openOffice(page, '#/office?topic=nope')
   await expect(page.getByRole('button', { name: /Learn the basics/ })).toBeVisible()
+  expect(await state(page)).toMatchObject({ zone: 'office', dialogue: null })
   await openOffice(page, '#/nowhere')
-  expect(new URL(page.url()).hash).toBe('#/office')
+  await expect(page).toHaveURL(/#\/office$/)
 })
