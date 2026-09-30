@@ -1,4 +1,7 @@
 import '@testing-library/jest-dom/vitest'
+import { initI18n } from '../core/i18n'
+
+initI18n('en')
 
 if (!window.matchMedia) {
   window.matchMedia = (query: string) =>

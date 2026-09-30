@@ -1,0 +1,71 @@
+{
+  "app": {
+    "name": "Athena Prompt Academy",
+    "loading": "Setting up the office…",
+    "smallScreen": "This experience works best on a larger screen."
+  },
+  "hud": {
+    "language": "Language",
+    "soundOn": "Sound on",
+    "soundOff": "Sound off",
+    "progress": "{{seen}}/{{total}} topics",
+    "readingMode": "Reading mode",
+    "exitReadingMode": "3D mode"
+  },
+  "welcome": {
+    "greeting": "Hi, I'm Ada. Welcome to the office – take a seat and let's talk about AI.",
+    "scrollHint": "Scroll to take a seat",
+    "clickableHint": "Psst – the laptop and the old console are clickable too.",
+    "learn": "Learn the basics",
+    "workshop": "Prompt workshop",
+    "dungeon": "The dungeon",
+    "pickTopic": "Pick a topic to start."
+  },
+  "topics": {
+    "menuTitle": "What do you want to learn?",
+    "seen": "Seen",
+    "deeperSeen": "Deep dive done"
+  },
+  "dialogue": {
+    "deeper": "Go deeper",
+    "nextTopic": "Next: {{title}}",
+    "allTopics": "All topics",
+    "takeaway": "Key takeaway",
+    "continueHint": "Click or press Space to continue",
+    "tryIt": "Try it yourself"
+  },
+  "screen": {
+    "expand": "Expand",
+    "close": "Close"
+  },
+  "objects": {
+    "laptop": "Prompt Workshop",
+    "tv": "The Dungeon",
+    "ada": "Ada"
+  },
+  "zones": {
+    "soonLabel": "Coming soon",
+    "back": "Back to the office",
+    "workshop": {
+      "title": "Prompt Workshop",
+      "soon": "Ada is still setting up the workshop. Come back soon to build your first prompt."
+    },
+    "dungeon": {
+      "title": "The Dungeon",
+      "soon": "The dungeon gates are still locked. Come back soon to test what you've learned."
+    }
+  },
+  "errors": {
+    "generic": "Something went wrong",
+    "genericBody": "This part of the office hit a snag. Head back and keep learning.",
+    "webglLost": "3D stopped working on this device, so you're now in reading mode."
+  },
+  "tokensDemo": {
+    "label": "Type a sentence",
+    "loading": "Loading the tokenizer…",
+    "count": "{{tokens}} tokens · {{chars}} characters",
+    "note": "Each AI model splits text a little differently.",
+    "limit": "Limited to {{max}} characters.",
+    "loadError": "The live demo couldn't load."
+  }
+}
