@@ -1,0 +1,359 @@
+/* ============================================================
+   Online Essentials — Design Tokens
+   Single source of truth: colors, type, spacing, radius, shadow.
+   Import once at the top of every page.
+   ============================================================ */
+
+
+:root {
+  /* ----- Brand colors ----- */
+  --oe-near-black:       #0E0E0F;
+  --oe-blue-grey:        #2F4858;
+  --oe-blue-grey-soft:   #517288;
+  --oe-lime:             #58FC73;
+  --oe-lime-hover:       #42E063;
+  --oe-lime-press:       #2EC050;
+  --oe-lime-mint:        #4DDBB8;
+
+  --oe-light-blue-grey:  #EBF1FC;
+  --oe-off-white:        #EEEEE5;
+
+  /* ----- Neutrals ----- */
+  --oe-white:            #FFFFFF;
+  --oe-grey-50:          #F8F9FA;
+  --oe-grey-100:         #F6F6F6;
+  --oe-grey-200:         #EEEEEE;
+  --oe-grey-300:         #DEE2E6;
+  --oe-grey-400:         #CED4DA;
+  --oe-grey-500:         #ADB5BD;
+  --oe-grey-600:         #6C757D;
+  --oe-grey-700:         #495057;
+  --oe-grey-800:         #343A40;
+  --oe-grey-900:         #212529;
+
+  /* ----- Semantic ----- */
+  --oe-link:             #2374E7;
+  --oe-success:          #58FC73;
+  --oe-success-bg:       #E8FCEE;
+  --oe-warn:             #FF9500;
+  --oe-warn-bg:          #FFF1DC;
+  --oe-danger:           #EF4444;
+  --oe-danger-bg:        #FEE2E2;
+
+  /* ----- Foregrounds / surfaces ----- */
+  --oe-fg-1:             var(--oe-near-black);   /* primary text */
+  --oe-fg-2:             var(--oe-blue-grey);    /* headings */
+  --oe-fg-3:             var(--oe-grey-600);     /* secondary copy */
+  --oe-fg-mute:          var(--oe-grey-500);
+  --oe-fg-on-dark:       var(--oe-white);
+  --oe-bg-app:           var(--oe-grey-100);     /* app background outside cards */
+  --oe-bg-surface:       var(--oe-white);        /* card surfaces */
+  --oe-bg-dark:          var(--oe-blue-grey);    /* dark band / sidebar */
+  --oe-bg-near-black:    var(--oe-near-black);   /* approved logo bg */
+  --oe-divider:          var(--oe-grey-400);
+
+  /* ----- Brand gradient ----- */
+  --oe-grad-brand:       linear-gradient(90deg, #FFFFFF 0%, #4DDBB8 50%, #58FC73 100%);
+  --oe-grad-highlight:   linear-gradient(180deg, rgba(255,255,255,0) 0%, #4DDBB8 50%, #42FC61 100%);
+
+  /* ----- Typography (families) ----- */
+  --oe-font-ui:          "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --oe-font-display:     "Playfair Display", Georgia, "Times New Roman", serif;
+  --oe-font-system:      "Inter", system-ui, sans-serif;
+
+  /* ----- Type scale (desktop) ----- */
+  --oe-fs-display:       70px;      /* Playfair italic hero line */
+  --oe-fs-h1:            64px;      /* Montserrat 700 */
+  --oe-fs-h2:            40px;
+  --oe-fs-h3:            26px;
+  --oe-fs-h4:            18px;
+  --oe-fs-subtitle:      18px;
+  --oe-fs-body:          16px;
+  --oe-fs-body-sm:       14px;
+  --oe-fs-caption:       12px;
+
+  --oe-lh-display:       1.0;
+  --oe-lh-tight:         1.2;
+  --oe-lh-normal:        1.45;
+  --oe-lh-loose:         1.7;
+
+  --oe-tracking-tight:   -0.01em;
+  --oe-tracking-normal:  0.002em;
+  --oe-tracking-wide:    0.02em;
+
+  /* ----- Spacing scale ----- */
+  --oe-space-1:          4px;
+  --oe-space-2:          8px;
+  --oe-space-3:          12px;
+  --oe-space-4:          16px;
+  --oe-space-5:          24px;
+  --oe-space-6:          32px;
+  --oe-space-8:          48px;
+  --oe-space-10:         64px;
+  --oe-space-12:         96px;
+  --oe-space-16:         128px;
+
+  /* ----- Radii ----- */
+  --oe-radius-xs:        4px;
+  --oe-radius-sm:        8px;
+  --oe-radius-md:        12px;
+  --oe-radius-lg:        20px;
+  --oe-radius-xl:        24px;
+  --oe-radius-pill:      9999px;
+
+  /* ----- Shadow ----- */
+  --oe-shadow-card:      0 4px 12px rgba(0,0,0,0.08);
+  --oe-shadow-float:     4px 4px 12px rgba(0,0,0,0.15);
+  --oe-shadow-lift:      0 10px 30px rgba(14,14,15,0.10);
+  --oe-shadow-inset:     inset 0 1px 0 rgba(255,255,255,0.06);
+
+  /* ----- Layout ----- */
+  --oe-container:        1140px;
+  --oe-container-inner:  1110px;
+  --oe-sidebar-w:        264px;
+
+  /* ----- Motion ----- */
+  --oe-ease:             cubic-bezier(.2,.6,.2,1);
+  --oe-dur-1:            150ms;
+  --oe-dur-2:            220ms;
+}
+
+/* ============================================================
+   Semantic helpers — apply directly with class names.
+   Pages that want the system look should:
+     <body class="oe-body"> ... </body>
+   ============================================================ */
+
+html { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: inherit; }
+
+.oe-body {
+  margin: 0;
+  font-family: var(--oe-font-ui);
+  font-weight: 500;
+  font-size: var(--oe-fs-body);
+  line-height: var(--oe-lh-normal);
+  color: var(--oe-fg-1);
+  background: var(--oe-bg-app);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---- Headings ---- */
+.oe-display {
+  font-family: var(--oe-font-display);
+  font-style: italic;
+  font-weight: 700;
+  font-size: var(--oe-fs-display);
+  line-height: var(--oe-lh-display);
+  color: var(--oe-lime);
+  letter-spacing: 0.296px;
+  margin: 0;
+}
+.oe-h1 {
+  font-family: var(--oe-font-ui);
+  font-weight: 700;
+  font-size: var(--oe-fs-h1);
+  line-height: 1.22;
+  letter-spacing: 0.2px;
+  color: var(--oe-fg-1);
+  margin: 0;
+}
+.oe-h2 {
+  font-family: var(--oe-font-ui);
+  font-weight: 700;
+  font-size: var(--oe-fs-h2);
+  line-height: 1.25;
+  letter-spacing: 0.2px;
+  color: var(--oe-fg-1);
+  margin: 0;
+}
+.oe-h3 {
+  font-family: var(--oe-font-ui);
+  font-weight: 700;
+  font-size: var(--oe-fs-h3);
+  line-height: 1.3;
+  color: var(--oe-fg-1);
+  margin: 0;
+}
+.oe-h4 {
+  font-family: var(--oe-font-ui);
+  font-weight: 700;
+  font-size: var(--oe-fs-h4);
+  line-height: 1.55;
+  letter-spacing: 0.4px;
+  color: var(--oe-fg-1);
+  margin: 0;
+}
+.oe-eyebrow {
+  font-family: var(--oe-font-ui);
+  font-weight: 500;
+  font-size: var(--oe-fs-h4);
+  line-height: 1.9;
+  letter-spacing: 0.2px;
+  color: var(--oe-fg-1);
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+}
+.oe-eyebrow::before {
+  content: "";
+  width: 64px;
+  height: 1px;
+  background: var(--oe-fg-1);
+}
+.oe-eyebrow--light { color: var(--oe-white); }
+.oe-eyebrow--light::before { background: var(--oe-white); }
+
+/* highlighter — green block behind a word */
+.oe-highlight {
+  background: var(--oe-lime);
+  padding: 0 0.18em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.oe-subtitle {
+  font-family: var(--oe-font-ui);
+  font-weight: 500;
+  font-size: var(--oe-fs-subtitle);
+  line-height: 1.9;
+  color: var(--oe-fg-1);
+  margin: 0;
+}
+.oe-body-md {
+  font-family: var(--oe-font-ui);
+  font-weight: 500;
+  font-size: var(--oe-fs-body);
+  line-height: 1.75;
+  color: var(--oe-fg-1);
+  margin: 0;
+}
+.oe-body-strong {
+  font-family: var(--oe-font-ui);
+  font-weight: 700;
+  font-size: var(--oe-fs-body);
+  line-height: 1.75;
+  color: var(--oe-fg-1);
+  margin: 0;
+}
+.oe-caption {
+  font-family: var(--oe-font-ui);
+  font-weight: 500;
+  font-size: var(--oe-fs-body-sm);
+  line-height: 2;
+  color: var(--oe-fg-3);
+}
+.oe-mono {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  background: var(--oe-grey-100);
+  padding: 2px 6px;
+  border-radius: var(--oe-radius-xs);
+}
+
+/* ---- Buttons ---- */
+.oe-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 26px;
+  font-family: var(--oe-font-ui);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.2px;
+  border-radius: var(--oe-radius-pill);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: background var(--oe-dur-1) var(--oe-ease),
+              color var(--oe-dur-1) var(--oe-ease),
+              border-color var(--oe-dur-1) var(--oe-ease),
+              transform var(--oe-dur-1) var(--oe-ease);
+  user-select: none;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.oe-btn--primary {
+  background: var(--oe-lime);
+  color: var(--oe-near-black);
+  border-color: var(--oe-lime);
+}
+.oe-btn--primary:hover { background: var(--oe-lime-hover); border-color: var(--oe-lime-hover); }
+.oe-btn--primary:active { background: var(--oe-lime-press); transform: translateY(1px); }
+
+.oe-btn--ghost-light {
+  background: transparent;
+  color: var(--oe-white);
+  border-color: var(--oe-white);
+}
+.oe-btn--ghost-light:hover { background: var(--oe-white); color: var(--oe-near-black); }
+
+.oe-btn--ghost-dark {
+  background: transparent;
+  color: var(--oe-blue-grey);
+  border-color: var(--oe-blue-grey);
+}
+.oe-btn--ghost-dark:hover { background: var(--oe-blue-grey); color: var(--oe-white); }
+
+.oe-btn--small {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+.oe-btn--icon-after::after {
+  content: "→";
+  font-weight: 700;
+}
+
+/* ---- Cards / surfaces ---- */
+.oe-card {
+  background: var(--oe-bg-surface);
+  border-radius: var(--oe-radius-xl);
+  box-shadow: var(--oe-shadow-card);
+  padding: 24px;
+}
+.oe-card--flat {
+  background: var(--oe-grey-100);
+  border-radius: var(--oe-radius-xl);
+  box-shadow: none;
+  padding: 40px;
+}
+.oe-divider {
+  height: 1px;
+  background: var(--oe-divider);
+  border: 0;
+  margin: 24px 0;
+}
+
+/* ---- Form ---- */
+.oe-input {
+  height: 52px;
+  width: 100%;
+  border-radius: var(--oe-radius-pill);
+  border: 1.5px solid var(--oe-grey-300);
+  background: var(--oe-white);
+  padding: 0 24px;
+  font-family: var(--oe-font-ui);
+  font-size: 16px;
+  color: var(--oe-fg-1);
+  outline: none;
+  transition: border-color var(--oe-dur-1) var(--oe-ease);
+}
+.oe-input:focus { border-color: var(--oe-lime); }
+
+/* ---- Status badges ---- */
+.oe-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: var(--oe-radius-pill);
+}
+.oe-badge--live { background: var(--oe-lime); color: var(--oe-near-black); }
+.oe-badge--warn { background: var(--oe-warn-bg); color: var(--oe-warn); }
+.oe-badge--danger { background: var(--oe-danger-bg); color: var(--oe-danger); }
+.oe-badge--neutral { background: var(--oe-grey-100); color: var(--oe-fg-3); }
