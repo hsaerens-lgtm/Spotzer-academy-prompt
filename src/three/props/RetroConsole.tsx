@@ -1,5 +1,5 @@
 import { RoundedBox } from '@react-three/drei'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { CatmullRomCurve3, TubeGeometry, Vector3 } from 'three'
 import { HoverOutline } from '../interactive'
 import { logoBoxes } from '../logo'
@@ -24,6 +24,7 @@ export function RetroConsole(props: ObjectProps) {
       ),
     [],
   )
+  useEffect(() => () => cable.dispose(), [cable])
   const buttons = logoBoxes(0.0012)
   const byColor = { lime: m.lime, mint: m.mint, ink: m.ink }
   return (

@@ -49,7 +49,7 @@ export const layout = {
       { position: [TABLE.center.x + 0.72, TABLE.topY, z] as Vec3, rotationY: Math.PI / 2 },
     ]) as Placement[],
     sideboard: { position: [-1.0, 0, -5.72] } as Placement,
-    lamp: { position: [1.0, 0.7, -5.72] } as Placement,
+    lamp: { position: [1.2, 0.725, -5.72] } as Placement,
     laptop: { position: [-0.8, TABLE.topY, 0.25], rotationY: 0 } as Placement,
     cabinet: { position: [4.62, 0, -1.4], rotationY: -Math.PI / 2 } as Placement,
     tv: { position: [4.6, 0.5, -1.4], rotationY: -Math.PI / 2 } as Placement,

@@ -39,7 +39,7 @@ function build() {
     plasticLight: new MeshStandardMaterial({ color: '#BDBBB4', roughness: 0.6 }),
     plasticDark: new MeshStandardMaterial({ color: '#34373A', roughness: 0.55 }),
     screenOff: new MeshStandardMaterial({ color: '#050607', roughness: 0.3, metalness: 0.1 }),
-    warmGlow: new MeshBasicMaterial({ color: new Color('#FFD29A').multiplyScalar(2), toneMapped: false }),
+    warmGlow: new MeshBasicMaterial({ color: new Color('#FFD29A').multiplyScalar(1.15), toneMapped: false }),
     lime: new MeshStandardMaterial({ color: brand.lime, emissive: brand.lime, emissiveIntensity: 0.45 }),
     mint: new MeshStandardMaterial({ color: brand.mint, emissive: brand.mint, emissiveIntensity: 0.35 }),
     ink: new MeshStandardMaterial({ color: brand.nearBlack, roughness: 0.45 }),

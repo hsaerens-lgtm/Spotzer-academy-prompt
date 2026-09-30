@@ -26,3 +26,15 @@ test('1280 CSS pixels span the screen width', () => {
 test('the presentation view looks at the screen wall', () => {
   expect(layout.rail[2].target[2]).toBeCloseTo(layout.screen.position[2] - 0.04, 1)
 })
+
+test('the lamp stays clear of the wall screen rectangle', () => {
+  // The lamp model spans about 0.13 m around its axis and 0.44 m above its base (dome top, see props/Lamp.tsx).
+  const radius = 0.13
+  const height = 0.44
+  const [sx, sy] = layout.screen.position
+  const [w, h] = layout.screen.size
+  const [lx, ly] = layout.objects.lamp.position
+  const outsideX = lx + radius < sx - w / 2 || lx - radius > sx + w / 2
+  const outsideY = ly + height < sy - h / 2 || ly > sy + h / 2
+  expect(outsideX || outsideY).toBe(true)
+})

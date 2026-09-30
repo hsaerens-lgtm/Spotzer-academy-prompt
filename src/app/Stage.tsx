@@ -10,7 +10,7 @@ export function Stage() {
   return (
     <div className="stage" data-testid="stage">
       <Canvas
-        shadows
+        shadows="percentage"
         dpr={[1, 1.5]}
         frameloop={active ? 'always' : 'demand'}
         camera={{ fov: 45, near: 0.1, far: 60, position: [1.2, 2.3, 5.6] }}

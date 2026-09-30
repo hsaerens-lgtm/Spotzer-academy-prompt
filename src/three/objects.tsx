@@ -54,7 +54,7 @@ export function resolveObject(name: ObjectName, models: Partial<Record<ObjectNam
 }
 
 function GltfObject({ url, ...props }: ObjectProps & { url: string }) {
-  const { scene } = useGLTF(url)
+  const { scene } = useGLTF(url, false)
   const clone = useMemo(() => scene.clone(true), [scene])
   return (
     <group {...props}>

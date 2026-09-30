@@ -37,8 +37,11 @@ export function CameraRig() {
       event.preventDefault()
       s.nudgeRail(wheelDelta(event))
     }
-    canvas.addEventListener('wheel', onWheel, { passive: false })
-    return () => canvas.removeEventListener('wheel', onWheel)
+    // The wall screen's <Html occlude="blending"> makes drei set pointer-events: none on the canvas element,
+    // so wheel events land on its parent container instead.
+    const target = canvas.parentElement ?? canvas
+    target.addEventListener('wheel', onWheel, { passive: false })
+    return () => target.removeEventListener('wheel', onWheel)
   }, [canvas])
 
   useEffect(() => {

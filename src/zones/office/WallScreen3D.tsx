@@ -1,4 +1,5 @@
 import { Html } from '@react-three/drei'
+import { useThree } from '@react-three/fiber'
 import { useScreenRef } from '../../core/selectors'
 import { materials } from '../../three/materials'
 import { ScreenContent } from '../../visuals/ScreenContent'
@@ -14,6 +15,8 @@ export function screenDistanceFactor(widthMetres: number): number {
 export function WallScreen3D() {
   const m = materials()
   const screen = useScreenRef()
+  // Mounting <Html> during the Canvas's first commit loses its content when drei's portal target settles.
+  const connected = useThree((state) => state.events.connected)
   const { position, size } = layout.screen
   return (
     <group position={position} name="screen">
@@ -23,17 +26,20 @@ export function WallScreen3D() {
       <mesh material={m.screenOff}>
         <planeGeometry args={size} />
       </mesh>
-      {/* Sits below the DOM overlay (z-index 10) and never catches the pointer, so the wheel still reaches the canvas. */}
-      <Html
-        transform
-        distanceFactor={screenDistanceFactor(size[0])}
-        position-z={0.003}
-        zIndexRange={[5, 0]}
-        pointerEvents="none"
-        wrapperClass="wall-screen"
-      >
-        <ScreenContent screen={screen} />
-      </Html>
+      {/* Sits below the DOM overlay (z-index 10) and never catches the pointer. occlude="blending" lets foreground meshes hide it. */}
+      {connected && (
+        <Html
+          transform
+          occlude="blending"
+          distanceFactor={screenDistanceFactor(size[0])}
+          position-z={0.003}
+          zIndexRange={[5, 0]}
+          pointerEvents="none"
+          wrapperClass="wall-screen"
+        >
+          <ScreenContent screen={screen} />
+        </Html>
+      )}
     </group>
   )
 }
