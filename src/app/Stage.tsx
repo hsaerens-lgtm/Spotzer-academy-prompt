@@ -6,6 +6,7 @@ import { OfficeScene } from '../zones/office/OfficeScene'
 import { isTuneEnabled } from '../zones/office/tune'
 import { INITIAL_QUALITY, QualityContext, dprFor, reduceQuality } from './quality'
 import { SceneReadySignal } from './SceneReadySignal'
+import { TestApiBridge } from './TestApiBridge'
 import { onContextLost } from './webgl'
 
 const TuneMode = import.meta.env.DEV ? lazy(() => import('../zones/office/TuneMode')) : null
@@ -36,6 +37,7 @@ export function Stage() {
         >
           <QualityContext.Provider value={quality.level}>
             <SceneReadySignal />
+            {import.meta.env.DEV && <TestApiBridge />}
             <Suspense fallback={null}>
               <OfficeScene />
             </Suspense>

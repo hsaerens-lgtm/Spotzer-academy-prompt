@@ -4,6 +4,7 @@ import './brand/oe-tokens.css'
 import './brand/athena.css'
 import './styles/app.css'
 import { App } from './app/App'
+import { installTestApi } from './app/testApi'
 import { detectWebGL2 } from './app/webgl'
 import { i18n, initI18n, resolveLang } from './core/i18n'
 import { installSoundUnlock, sound } from './core/sound'
@@ -21,6 +22,8 @@ appStore.subscribe((state, previous) => {
 appStore.subscribe((state, previous) => {
   if (state.settings.sound !== previous.settings.sound) sound.setEnabled(state.settings.sound)
 })
+
+if (import.meta.env.DEV) installTestApi(appStore)
 
 // No StrictMode: its double-invoked effects break drei <Html> roots under React 19 (wall screen renders empty in dev).
 createRoot(document.getElementById('root')!).render(<App />)
