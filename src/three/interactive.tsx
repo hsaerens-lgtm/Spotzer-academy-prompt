@@ -8,7 +8,8 @@ export const HoverContext = createContext(false)
 /** Put inside a mesh: draws a lime outline while the surrounding Interactive is hovered. `thickness` is in screen pixels. */
 export function HoverOutline({ thickness = 3 }: { thickness?: number }) {
   const hovered = useContext(HoverContext)
-  return hovered ? <Outlines screenspace thickness={thickness} color={brand.lime} /> : null
+  // drei 10.7 Outlines: without screenspace, thickness is in screen pixels (the prop name is inverted in its shader).
+  return hovered ? <Outlines thickness={thickness} color={brand.lime} /> : null
 }
 
 interface InteractiveProps {
