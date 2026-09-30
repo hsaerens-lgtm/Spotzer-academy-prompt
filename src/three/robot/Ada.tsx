@@ -4,10 +4,11 @@ import { easing } from 'maath'
 import { useEffect, useMemo, useRef } from 'react'
 import { AdditiveBlending, CanvasTexture, LatheGeometry, SRGBColorSpace, type Group } from 'three'
 import type { Gesture, Mood } from '../../content/schema'
+import { brand } from '../../core/brand'
 import { HoverOutline } from '../interactive'
 import { logoBoxes } from '../logo'
 import { materials } from '../materials'
-import { FACE_H, FACE_W, drawFace, eyeShapes, faceKey } from './face'
+import { FACE_H, FACE_W, drawFace, eyeShapes, faceKey, quantizePulse } from './face'
 import { ADA, HEAD_Y, VISOR, bodyProfile, bodyRadiusAt } from './geometry'
 import { BLINK_SECONDS, NEUTRAL_POSE, gesturePose, hoverY, nextBlinkDelay } from './motion'
 
@@ -37,8 +38,8 @@ function createHalo() {
   canvas.height = 128
   const ctx = canvas.getContext('2d')!
   const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64)
-  gradient.addColorStop(0, 'rgba(88, 252, 115, 0.9)')
-  gradient.addColorStop(1, 'rgba(88, 252, 115, 0)')
+  gradient.addColorStop(0, `${brand.lime}e6`)
+  gradient.addColorStop(1, `${brand.lime}00`)
   ctx.fillStyle = gradient
   ctx.fillRect(0, 0, 128, 128)
   const texture = new CanvasTexture(canvas)
@@ -114,7 +115,7 @@ export function Ada({ mood, gesture, gestureKey, speaking, reducedMotion, lookAt
       blink.current.next = time + nextBlinkDelay(Math.random)
     }
     const shapes = eyeShapes(mood, time < blink.current.until)
-    const pulse = speaking && !reducedMotion ? 0.5 + 0.5 * Math.sin(time * 18) : 0
+    const pulse = speaking && !reducedMotion ? quantizePulse(0.5 + 0.5 * Math.sin(time * 18)) : 0
     const key = faceKey(shapes, look.current.x, look.current.y, pulse, time)
     if (key !== face.key) {
       drawFace(face.ctx, shapes, { lookX: look.current.x, lookY: look.current.y, pulse, time })
@@ -160,7 +161,7 @@ export function Ada({ mood, gesture, gestureKey, speaking, reducedMotion, lookAt
           <Arm />
         </group>
       </group>
-      <mesh position-y={-0.02} rotation-x={-Math.PI / 2}>
+      <mesh position-y={-0.02} rotation-x={-Math.PI / 2} raycast={() => null}>
         <circleGeometry args={[0.3, 48]} />
         <meshBasicMaterial map={halo} transparent opacity={0.55} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
       </mesh>

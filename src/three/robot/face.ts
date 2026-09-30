@@ -26,6 +26,9 @@ export function eyeShapes(mood: Mood, blinking: boolean): [EyeShape, EyeShape] {
   }
 }
 
+/** Quarter steps: the speaking pulse is drawn in 5 levels so the face is not redrawn every frame. */
+export const quantizePulse = (pulse: number) => Math.round(pulse * 4) / 4
+
 /** A key that only changes when the drawn face would change. */
 export function faceKey(shapes: [EyeShape, EyeShape], lookX: number, lookY: number, pulse: number, time: number): string {
   const dots = shapes.includes('dots') ? Math.floor(time * 4) % 3 : -1

@@ -45,7 +45,14 @@ function build() {
     mint: new MeshStandardMaterial({ color: brand.mint, emissive: brand.mint, emissiveIntensity: 0.35 }),
     ink: new MeshStandardMaterial({ color: brand.nearBlack, roughness: 0.45 }),
     logoLight: new MeshStandardMaterial({ color: brand.onDark, emissive: brand.onDark, emissiveIntensity: 0.15, roughness: 0.6 }),
-    porcelain: new MeshPhysicalMaterial({ color: '#F4F6F5', roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.08 }),
+    porcelain: new MeshPhysicalMaterial({
+      color: '#F4F6F5',
+      emissive: '#ffffff',
+      emissiveIntensity: 0.06,
+      roughness: 0.22,
+      clearcoat: 1,
+      clearcoatRoughness: 0.08,
+    }),
     window: new MeshBasicMaterial({ map: skyTexture(), toneMapped: false }),
   }
 }

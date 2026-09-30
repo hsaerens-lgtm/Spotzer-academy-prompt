@@ -58,7 +58,7 @@ export const layout = {
     logo: { position: [2.6, 1.95, -5.93], rotationY: 0 } as Placement,
   },
   screen: { position: [-1.0, 1.9, -5.93] as Vec3, size: [4.0, 2.25] as [number, number] },
-  ada: { position: [-3.4, 0.95, -4.7], rotationY: 0.5 } as Placement,
+  ada: { position: [-3.15, 1.1, -4.85], rotationY: 0.5 } as Placement,
   lights: {
     hemisphere: { sky: '#FFE6C7', ground: '#1A1512', intensity: 0.5 },
     key: { position: [3, 6, 4] as Vec3, intensity: 1.2, color: '#FFE2BF' },
