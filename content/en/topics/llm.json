@@ -1,0 +1,22 @@
+{
+  "id": "llm",
+  "chapter": "basics",
+  "title": "What is an LLM?",
+  "teaser": "The engine behind chat assistants",
+  "reviewed": "2026-09-29",
+  "basics": [
+    { "say": "LLM stands for Large Language Model. It's the engine inside chat assistants like ChatGPT, Claude or Copilot.", "mood": "happy", "gesture": "pointScreen", "screen": "llm:1" },
+    { "say": "At its core, it plays one game: guess what comes next. 'The cat sat on the…' – what would you say?", "mood": "thinking" },
+    { "say": "It weighs every option. 'Mat' is very likely, 'sofa' less so, 'moon' almost never.", "gesture": "pointScreen", "screen": "llm:2" },
+    { "say": "It picks one, adds it to the sentence and plays again – word after word – until a whole answer appears.", "screen": "llm:3" },
+    { "say": "'Large' because it learned from a huge library of text. That's how guessing the next word turns into explaining, writing and translating.", "mood": "encouraging", "screen": "llm:4" }
+  ],
+  "deeper": [
+    { "say": "Strictly speaking, it predicts tokens – small chunks of text – rather than whole words. That's our next topic.", "mood": "neutral", "screen": "llm:3" },
+    { "say": "What it learned is stored in billions of numbers called parameters, tuned during training so its guesses match real text.", "mood": "thinking", "screen": "llm:4" },
+    { "say": "After that first training, people teach it to follow instructions and be helpful. That's what turns a text predictor into an assistant.", "mood": "happy" },
+    { "say": "On its own, it doesn't remember past chats or browse the web – apps add those as extra features. It works with what's in front of it.", "mood": "encouraging", "gesture": "nod" }
+  ],
+  "takeaway": "An LLM writes by predicting the next piece of text, again and again.",
+  "next": "tokens"
+}

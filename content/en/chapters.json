@@ -1,3 +1,7 @@
 [
-  { "id": "basics", "title": "The basics", "topics": ["what-is-ai"] }
+  { "id": "basics", "title": "The basics", "topics": ["what-is-ai", "generative-ai", "llm"] },
+  { "id": "how-it-works", "title": "How it works", "topics": ["tokens", "context-window", "hallucinations"] },
+  { "id": "talking-to-ai", "title": "Talking to AI", "topics": ["prompt", "multimodal"] },
+  { "id": "going-further", "title": "Going further", "topics": ["agents", "tools", "skills", "mcp"] },
+  { "id": "bonus", "title": "Bonus", "topics": ["ai-safety-at-work"] }
 ]

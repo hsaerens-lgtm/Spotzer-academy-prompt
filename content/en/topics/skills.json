@@ -1,0 +1,22 @@
+{
+  "id": "skills",
+  "chapter": "going-further",
+  "title": "Skills",
+  "teaser": "Know-how the AI loads on demand",
+  "reviewed": "2026-09-29",
+  "basics": [
+    { "say": "Imagine a binder of recipe cards next to the AI: brand voice, weekly report, invoice check. Those are skills.", "mood": "happy", "gesture": "pointScreen", "screen": "skills:1" },
+    { "say": "A skill is a packaged set of instructions – sometimes with files or scripts – for doing one kind of task well.", "mood": "neutral" },
+    { "say": "When a task comes in, like 'write this week's report', the AI pulls out the matching card and follows it.", "screen": "skills:2" },
+    { "say": "The other cards stay on the shelf. Only the skill that's needed takes up room in the context window.", "mood": "thinking", "gesture": "pointScreen" },
+    { "say": "Skills let a team write its know-how down once and reuse it every time, the same way.", "mood": "encouraging", "screen": "skills:3" }
+  ],
+  "deeper": [
+    { "say": "In practice, a skill is often a folder with a main instruction file. Its short description tells the AI when to use it.", "mood": "thinking", "screen": "skills:3" },
+    { "say": "Because only those short descriptions are read up front, you can install many skills without overloading the AI.", "mood": "neutral" },
+    { "say": "Skills and tools work together: a skill can explain how to use certain tools for a specific job.", "mood": "happy" },
+    { "say": "Treat skills like any shared document: keep them up to date, and only install skills from sources you trust.", "mood": "encouraging" }
+  ],
+  "takeaway": "A skill is reusable know-how the AI loads only when a task needs it.",
+  "next": "mcp"
+}

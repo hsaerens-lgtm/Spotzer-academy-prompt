@@ -1,0 +1,22 @@
+{
+  "id": "ai-safety-at-work",
+  "chapter": "bonus",
+  "title": "Using AI safely at work",
+  "teaser": "What to share, and what never to share",
+  "reviewed": "2026-09-29",
+  "basics": [
+    { "say": "Last topic, and maybe the most important: using AI safely at work. A simple traffic light helps.", "mood": "neutral", "gesture": "pointScreen", "screen": "ai-safety-at-work:1" },
+    { "say": "Green: public information and your own drafts – a blog idea, rewording a paragraph, planning your day.", "mood": "happy" },
+    { "say": "Orange: anything about clients or colleagues. Remove names, emails and figures first, or use a company-approved tool.", "mood": "thinking", "screen": "ai-safety-at-work:2" },
+    { "say": "Red: never paste passwords, API keys, contracts or confidential client data into an AI tool – not even 'just once'.", "mood": "surprised", "screen": "ai-safety-at-work:3" },
+    { "say": "And always check the answer before you use it. Your name is on what you send, not the AI's.", "mood": "encouraging", "gesture": "nod", "screen": "ai-safety-at-work:4" }
+  ],
+  "deeper": [
+    { "say": "Why so careful? Depending on the tool and its settings, what you type may be stored, reviewed or used to improve future models.", "mood": "thinking", "screen": "ai-safety-at-work:3" },
+    { "say": "Company-approved tools usually come with contracts that protect your data. Personal accounts usually don't.", "mood": "neutral" },
+    { "say": "Watch for hidden instructions too: a web page or document can contain text meant to trick an AI assistant into doing something else.", "mood": "surprised" },
+    { "say": "When in doubt, ask before you paste, and follow your company's AI policy – it beats any rule of thumb I can give you.", "mood": "encouraging", "gesture": "wave", "screen": "ai-safety-at-work:4" }
+  ],
+  "takeaway": "Share green, anonymize orange, never paste red – and always check the answer.",
+  "next": null
+}

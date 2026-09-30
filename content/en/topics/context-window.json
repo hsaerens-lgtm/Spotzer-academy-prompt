@@ -1,0 +1,22 @@
+{
+  "id": "context-window",
+  "chapter": "how-it-works",
+  "title": "The context window",
+  "teaser": "How much the AI can keep in mind",
+  "reviewed": "2026-09-29",
+  "basics": [
+    { "say": "When you chat, the AI doesn't remember the way you do. Each time, it rereads the part of the conversation it can see.", "mood": "thinking", "gesture": "pointScreen", "screen": "context-window:1" },
+    { "say": "That visible part is called the context window: your messages, its replies and any files you shared." },
+    { "say": "The window has a size limit, measured in tokens. In a very long chat, the oldest messages can slide out of view.", "mood": "surprised", "screen": "context-window:2" },
+    { "say": "Out of view means forgotten. That's why an assistant can lose track of something you said an hour ago.", "gesture": "nod" },
+    { "say": "Tip: for a new task, start a fresh chat, or recap the key points. You keep the AI focused on what matters.", "mood": "encouraging", "screen": "context-window:3" }
+  ],
+  "deeper": [
+    { "say": "Modern models have big windows – often hundreds of thousands of tokens, enough for a long report or even several books.", "mood": "happy", "screen": "context-window:3" },
+    { "say": "Bigger isn't always better: details buried in the middle of a very long context can get less attention.", "mood": "thinking" },
+    { "say": "Some apps offer 'memory'. Behind the scenes, they save notes and slip them back into the context window for you.", "screen": "context-window:2" },
+    { "say": "The golden rule: whatever the AI needs for this task should be inside the window – clear, and close to your request.", "mood": "encouraging" }
+  ],
+  "takeaway": "The AI only knows what fits in its context window right now.",
+  "next": "hallucinations"
+}

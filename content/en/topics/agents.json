@@ -1,0 +1,22 @@
+{
+  "id": "agents",
+  "chapter": "going-further",
+  "title": "Agents",
+  "teaser": "AI that plans and takes action",
+  "reviewed": "2026-09-29",
+  "basics": [
+    { "say": "So far, AI has answered your questions. An agent goes further: you give it a goal, and it works out the steps itself.", "mood": "happy", "gesture": "pointScreen", "screen": "agents:1" },
+    { "say": "Take the goal 'book a meeting room for Friday'. First, it makes a plan: check the calendar, then look for free rooms.", "mood": "thinking" },
+    { "say": "Then it acts, using the tools it's allowed to use, and it observes the result: room 3 is free.", "screen": "agents:3" },
+    { "say": "Then it repeats the loop – book the room, confirm with you – until the goal is reached.", "gesture": "pointScreen", "screen": "agents:4" },
+    { "say": "Plan, act, observe, repeat: that loop is what makes an agent. It's powerful, so good agents ask before doing anything important.", "mood": "encouraging" }
+  ],
+  "deeper": [
+    { "say": "An agent is an LLM running in a loop, with access to tools. The model picks the next action based on what it has seen so far.", "mood": "thinking", "screen": "agents:4" },
+    { "say": "Coding assistants are a good example: they read files, run tests, fix errors and try again, step by step.", "mood": "happy" },
+    { "say": "More autonomy means more risk. Mistakes can add up over many steps, so people set limits and approve key actions.", "mood": "neutral" },
+    { "say": "Your role shifts from doing each step to giving a clear goal, checking the plan and reviewing the result.", "mood": "encouraging", "gesture": "nod" }
+  ],
+  "takeaway": "An agent pursues a goal in a loop: plan, act, observe, repeat.",
+  "next": "tools"
+}

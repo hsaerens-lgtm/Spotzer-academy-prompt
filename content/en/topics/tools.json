@@ -1,0 +1,22 @@
+{
+  "id": "tools",
+  "chapter": "going-further",
+  "title": "Tools",
+  "teaser": "How AI calculates, searches and acts",
+  "reviewed": "2026-09-29",
+  "basics": [
+    { "say": "An LLM on its own can only write text. It can't check today's news, do reliable maths or send an email.", "mood": "neutral", "screen": "tools:1" },
+    { "say": "Tools fix that. A tool is a function the AI is allowed to call: a calculator, a web search, your calendar.", "mood": "happy", "gesture": "pointScreen" },
+    { "say": "Ask for 18% of 2,340. Instead of guessing, the AI writes a request to the calculator tool.", "screen": "tools:2" },
+    { "say": "The tool does the work and sends back the result: 421.2. The AI then writes its answer using that result.", "gesture": "pointScreen", "screen": "tools:3" },
+    { "say": "Tools are what turn a chatbot into an assistant that can look things up and get things done.", "mood": "encouraging" }
+  ],
+  "deeper": [
+    { "say": "The AI doesn't run the tool itself. It asks, the app runs the tool, then hands the result back to the model.", "mood": "thinking", "screen": "tools:2" },
+    { "say": "Each tool comes with a short description. The model reads it to decide when that tool is useful.", "mood": "neutral" },
+    { "say": "Tools that change things – sending, deleting, paying – usually ask for your confirmation first. That's a feature, not a bug.", "mood": "encouraging" },
+    { "say": "Wiring tools in one by one gets messy fast. That's the problem MCP solves – we'll get there in a moment.", "gesture": "pointScreen", "screen": "tools:3" }
+  ],
+  "takeaway": "Tools let AI go beyond text: calculate, search and take actions.",
+  "next": "skills"
+}

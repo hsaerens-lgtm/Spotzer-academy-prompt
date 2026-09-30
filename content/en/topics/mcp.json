@@ -1,0 +1,22 @@
+{
+  "id": "mcp",
+  "chapter": "going-further",
+  "title": "MCP",
+  "teaser": "One standard plug for AI and your tools",
+  "reviewed": "2026-09-29",
+  "basics": [
+    { "say": "Remember tools? Connecting an AI app to each service used to need its own custom connector. A lot of work, all different.", "mood": "thinking", "screen": "mcp:1" },
+    { "say": "MCP – the Model Context Protocol – is a shared standard for those connections. Think of it as USB-C for AI.", "mood": "happy", "gesture": "pointScreen", "screen": "mcp:2" },
+    { "say": "A service like Drive, a calendar or a CRM can offer an 'MCP server'. Any AI app that speaks MCP can plug into it." },
+    { "say": "Build the connector once, use it with many AI assistants. That's why so many tools now come with MCP support.", "screen": "mcp:3" },
+    { "say": "For you, it means the AI can read from and act in the tools you already use – if you allow it.", "mood": "encouraging", "gesture": "nod" }
+  ],
+  "deeper": [
+    { "say": "MCP is an open standard, first published by Anthropic in late 2024 and now supported across many AI products.", "mood": "neutral", "screen": "mcp:3" },
+    { "say": "An MCP server can offer tools to call, data to read and ready-made prompts. The AI app is the client that connects to it.", "mood": "thinking", "screen": "mcp:2" },
+    { "say": "Connecting a server gives the AI real access to your data. Only use servers from trusted sources, approved by your company.", "mood": "surprised" },
+    { "say": "MCP connects the tools, skills bring the know-how, agents run the loop. Together, that's how modern assistants get work done.", "mood": "encouraging", "gesture": "pointScreen" }
+  ],
+  "takeaway": "MCP is a shared standard that plugs AI into tools and data.",
+  "next": "ai-safety-at-work"
+}

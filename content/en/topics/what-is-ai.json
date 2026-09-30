@@ -18,5 +18,5 @@
     { "say": "One consequence: a model only knows what was in its training data, up to a cut-off date. Anything newer, it has to be told.", "mood": "encouraging", "screen": "what-is-ai:4" }
   ],
   "takeaway": "Generative AI is the part of AI that creates new content – text, images, sound.",
-  "next": null
+  "next": "generative-ai"
 }

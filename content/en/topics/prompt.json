@@ -1,0 +1,22 @@
+{
+  "id": "prompt",
+  "chapter": "talking-to-ai",
+  "title": "What is a prompt?",
+  "teaser": "The instructions you give to AI",
+  "reviewed": "2026-09-29",
+  "basics": [
+    { "say": "A prompt is what you type to the AI: a question, a request, a set of instructions. It's how you steer the result.", "mood": "happy", "gesture": "pointScreen", "screen": "prompt:1" },
+    { "say": "Think of briefing a new colleague who is brilliant but knows nothing about your work. What would they need to hear?", "mood": "thinking" },
+    { "say": "A role: who should it be? A task: what exactly should it do?", "screen": "prompt:2" },
+    { "say": "Context: what's the situation, who is it for? And a format: how long, what tone, what structure?", "gesture": "pointScreen", "screen": "prompt:4" },
+    { "say": "Vague prompt, vague answer. Clear prompt, useful answer. Want to practise? The laptop on the table is your workshop.", "mood": "encouraging", "gesture": "nod" }
+  ],
+  "deeper": [
+    { "say": "The AI can't read your mind or see your screen. Anything it needs – facts, examples, the audience – has to be in the prompt.", "mood": "thinking", "screen": "prompt:3" },
+    { "say": "Examples are powerful. Show one or two samples of what 'good' looks like and the AI will follow the pattern.", "mood": "happy" },
+    { "say": "It's a conversation. If the first answer misses, don't start over – say what to change: shorter, warmer, more detail on point two.", "gesture": "nod" },
+    { "say": "Many tools let you save standing instructions, often called custom instructions or system prompts, so you don't repeat yourself.", "mood": "neutral", "screen": "prompt:4" }
+  ],
+  "takeaway": "A good prompt is a good brief: role, task, context and format.",
+  "next": "multimodal"
+}

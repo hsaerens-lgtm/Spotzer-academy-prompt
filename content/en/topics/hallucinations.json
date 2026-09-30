@@ -1,0 +1,22 @@
+{
+  "id": "hallucinations",
+  "chapter": "how-it-works",
+  "title": "Why AI makes things up",
+  "teaser": "Confident is not the same as correct",
+  "reviewed": "2026-09-29",
+  "basics": [
+    { "say": "Time for an important warning. Sometimes AI gives an answer that sounds perfect – and is completely made up.", "mood": "surprised", "screen": "hallucinations:1" },
+    { "say": "Ask about a marathon on Mars in 1987 and it might hand you a winner's name and a finishing time.", "gesture": "pointScreen", "screen": "hallucinations:2" },
+    { "say": "Remember the next-word game? The model predicts what sounds right. Sounding right and being true are not the same thing.", "mood": "thinking" },
+    { "say": "Experts call this a hallucination. It's more likely with rare facts, exact numbers, quotes, links and recent events." },
+    { "say": "So treat answers like a smart colleague's first draft: useful, but worth checking before you rely on it.", "mood": "encouraging", "gesture": "nod", "screen": "hallucinations:3" }
+  ],
+  "deeper": [
+    { "say": "It isn't lying – it has no intention at all. It fills gaps with the most plausible continuation.", "mood": "neutral" },
+    { "say": "You can lower the risk: give it the source document, ask it to quote from it, and tell it that 'I don't know' is fine.", "mood": "encouraging", "screen": "hallucinations:3" },
+    { "say": "Tools help too. When an assistant can search or read your files, it can base its answer on real sources – so check those sources.", "gesture": "pointScreen" },
+    { "say": "For anything that matters – figures, legal points, client facts – verify with a trusted source. You stay responsible for what you share.", "mood": "thinking" }
+  ],
+  "takeaway": "AI can sound confident and still be wrong – always check what matters.",
+  "next": "prompt"
+}
