@@ -1,4 +1,6 @@
 import { ContactShadows } from '@react-three/drei'
+import { useContext } from 'react'
+import { QualityContext } from '../../app/quality'
 import { brand } from '../../core/brand'
 import { Interactive } from '../../three/interactive'
 import { SceneObject } from '../../three/objects'
@@ -12,12 +14,13 @@ import { Room } from './Room'
 import { WallScreen3D } from './WallScreen3D'
 
 export function OfficeScene() {
+  const quality = useContext(QualityContext)
   const { table, chairs, microphones, sideboard, lamp, laptop, cabinet, tv, retroConsole, sofa, logo } = layout.objects
   return (
     <>
       <color attach="background" args={[brand.ink]} />
       <CameraRig />
-      <Lights />
+      <Lights shadows={quality !== 'low'} />
       <Room />
       <SceneObject object="table" name="table" position={table.position} />
       {chairs.map((chair, index) => (
