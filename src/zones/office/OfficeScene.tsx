@@ -2,6 +2,7 @@ import { ContactShadows } from '@react-three/drei'
 import { brand } from '../../core/brand'
 import { Interactive } from '../../three/interactive'
 import { SceneObject } from '../../three/objects'
+import { AdaController } from './AdaController'
 import { CameraRig } from './camera/CameraRig'
 import { CrtScreen } from './CrtScreen'
 import { objectActions } from './interactions'
@@ -39,6 +40,16 @@ export function OfficeScene() {
       <SceneObject object="sofa" name="sofa" position={sofa.position} rotation-y={sofa.rotationY} />
       <SceneObject object="logoCubes" name="logo" position={logo.position} rotation-y={logo.rotationY} />
       <WallScreen3D />
+      <AdaController />
+      <ContactShadows
+        position={[layout.ada.position[0], 0.006, layout.ada.position[2]]}
+        scale={1.4}
+        opacity={0.35}
+        blur={2.5}
+        far={1.6}
+        resolution={256}
+        frames={1}
+      />
       <ContactShadows
         position={[table.position[0], 0.006, table.position[2]]}
         scale={[5, 7.5]}
