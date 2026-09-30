@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { isButtonLike, isEditable } from '../core/dom'
-import { useActiveTopic, useContent } from '../core/selectors'
+import { useActiveTopic, useContent, useScreenRef } from '../core/selectors'
 import { appStore, useApp } from '../core/store'
 import { choicesFor, currentBeat, type Choice } from '../dialogue/engine'
 import { Button } from './Button'
@@ -31,6 +31,7 @@ export function DialogueBox() {
   const { t } = useTranslation()
   const topic = useActiveTopic()
   const content = useContent()
+  const screenRef = useScreenRef()
   const dialogue = useApp((s) => s.dialogue)
   const reduced = useApp((s) => s.reducedMotion)
   const hasDialogue = dialogue !== null
@@ -67,6 +68,11 @@ export function DialogueBox() {
       <header className="dialogue__head">
         <span className="at-kicker">{topic.title}</span>
         <div className="dialogue__tools">
+          {screenRef?.visualId === 'tokens' && (
+            <Button size="sm" variant="solid" onClick={() => setExpandOpen(true)}>
+              {t('dialogue.tryIt')}
+            </Button>
+          )}
           <Button size="sm" variant="solid" onClick={() => setExpandOpen(true)}>
             {t('screen.expand')}
           </Button>

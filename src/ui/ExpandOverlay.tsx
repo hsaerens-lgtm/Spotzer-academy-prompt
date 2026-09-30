@@ -4,6 +4,7 @@ import { useScreenRef } from '../core/selectors'
 import { appStore } from '../core/store'
 import { FitScreen } from '../visuals/FitScreen'
 import { ScreenContent } from '../visuals/ScreenContent'
+import { TokensDemo } from '../visuals/TokensDemo'
 import { Button } from './Button'
 import './overlay.css'
 
@@ -61,6 +62,7 @@ export function ExpandOverlay() {
           <ScreenContent screen={screen} />
         </FitScreen>
       </div>
+      {screen?.visualId === 'tokens' && <TokensDemo />}
     </div>
   )
 }

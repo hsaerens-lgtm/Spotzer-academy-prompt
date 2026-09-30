@@ -68,3 +68,5 @@
 }
 .expand__bar { display: flex; justify-content: flex-end; }
 .expand__stage { flex: 1; min-height: 0; }
+
+.dialogue__tools { display: flex; gap: 8px; }
