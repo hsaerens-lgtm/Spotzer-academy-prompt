@@ -1,6 +1,15 @@
 import { Vector3 } from 'three'
 import { layout } from '../layout'
-import { KEY_STEP, WHEEL_SENSITIVITY, clamp01, easeInOutCubic, lerpPose, makeRail, wheelDelta } from './railMath'
+import {
+  KEY_STEP,
+  WHEEL_SENSITIVITY,
+  clamp01,
+  easeInOutCubic,
+  lerpPose,
+  makeRail,
+  railKeyAction,
+  wheelDelta,
+} from './railMath'
 
 const toArray = (v: Vector3) => v.toArray().map((n) => Number(n.toFixed(6)))
 
@@ -53,4 +62,49 @@ test('clamp01 and the keyboard step', () => {
   expect(clamp01(-1)).toBe(0)
   expect(clamp01(2)).toBe(1)
   expect(KEY_STEP).toBe(0.25)
+})
+
+describe('railKeyAction', () => {
+  const key = (name: string, mods: Partial<{ ctrlKey: boolean; altKey: boolean; metaKey: boolean }> = {}) => ({
+    key: name,
+    ctrlKey: false,
+    altKey: false,
+    metaKey: false,
+    ...mods,
+  })
+  const office = { zone: 'office', transition: null, expandOpen: false }
+
+  it('maps the arrows, Home and End to rail moves', () => {
+    expect(railKeyAction(key('ArrowUp'), office, false)).toEqual({ kind: 'nudge', delta: KEY_STEP })
+    expect(railKeyAction(key('ArrowDown'), office, false)).toEqual({ kind: 'nudge', delta: -KEY_STEP })
+    expect(railKeyAction(key('Home'), office, false)).toEqual({ kind: 'set', t: 0 })
+    expect(railKeyAction(key('End'), office, false)).toEqual({ kind: 'set', t: 1 })
+  })
+
+  it('ignores other keys', () => {
+    expect(railKeyAction(key('a'), office, false)).toBeNull()
+    expect(railKeyAction(key('Enter'), office, false)).toBeNull()
+  })
+
+  it('yields while the expanded view is open', () => {
+    expect(railKeyAction(key('ArrowUp'), { ...office, expandOpen: true }, false)).toBeNull()
+    expect(railKeyAction(key('Home'), { ...office, expandOpen: true }, false)).toBeNull()
+  })
+
+  it('yields during a transition and outside the office', () => {
+    const transition = { to: 'workshop', via: null, stage: 'fade' }
+    expect(railKeyAction(key('ArrowUp'), { ...office, transition }, false)).toBeNull()
+    expect(railKeyAction(key('ArrowUp'), { ...office, zone: 'workshop' }, false)).toBeNull()
+  })
+
+  it('yields when the event comes from an editable field', () => {
+    expect(railKeyAction(key('ArrowDown'), office, true)).toBeNull()
+    expect(railKeyAction(key('End'), office, true)).toBeNull()
+  })
+
+  it('keeps ctrl / alt / meta combinations for the browser', () => {
+    expect(railKeyAction(key('Home', { ctrlKey: true }), office, false)).toBeNull()
+    expect(railKeyAction(key('ArrowUp', { altKey: true }), office, false)).toBeNull()
+    expect(railKeyAction(key('End', { metaKey: true }), office, false)).toBeNull()
+  })
 })

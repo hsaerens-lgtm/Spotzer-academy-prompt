@@ -7,11 +7,11 @@ import { appStore } from '../../../core/store'
 import { layout, layoutVersion } from '../layout'
 import {
   FLIGHT_SECONDS,
-  KEY_STEP,
   RAIL_SMOOTH_TIME,
   easeInOutCubic,
   lerpPose,
   makeRail,
+  railKeyAction,
   wheelDelta,
   type PoseVectors,
 } from './railMath'
@@ -44,15 +44,12 @@ export function CameraRig() {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const s = appStore.getState()
-      if (s.zone !== 'office' || s.transition || isEditable(event.target)) return
-      if (event.key === 'ArrowUp') {
+      const action = railKeyAction(event, s, isEditable(event.target))
+      if (!action) return
+      if (action.kind === 'nudge') {
         event.preventDefault()
-        s.nudgeRail(KEY_STEP)
-      } else if (event.key === 'ArrowDown') {
-        event.preventDefault()
-        s.nudgeRail(-KEY_STEP)
-      } else if (event.key === 'Home') s.setRailTarget(0)
-      else if (event.key === 'End') s.setRailTarget(1)
+        s.nudgeRail(action.delta)
+      } else s.setRailTarget(action.t)
     }
     const onMove = (event: PointerEvent) => {
       pointer.current.x = (event.clientX / window.innerWidth) * 2 - 1
@@ -95,6 +92,8 @@ export function CameraRig() {
       wasInTransition.current = true
       return
     }
+    // Another zone is on screen: leave the camera alone; the snap happens on the first office frame.
+    if (s.zone !== 'office') return
     if (wasInTransition.current) {
       // Back from another zone: snap to the rail while the fader still covers the screen.
       wasInTransition.current = false

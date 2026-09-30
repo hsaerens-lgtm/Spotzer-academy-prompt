@@ -37,3 +37,30 @@ export function wheelDelta(event: { deltaY: number; deltaMode: number }): number
   const pixels = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaMode === 2 ? event.deltaY * 800 : event.deltaY
   return -pixels * WHEEL_SENSITIVITY
 }
+
+export type RailKeyAction = { kind: 'nudge'; delta: number } | { kind: 'set'; t: number }
+
+/**
+ * What a keydown does to the rail, or null when the key must be left alone
+ * (other zone, transition, expanded view, editable target, modifier combos).
+ */
+export function railKeyAction(
+  event: { key: string; ctrlKey: boolean; altKey: boolean; metaKey: boolean },
+  state: { zone: string; transition: unknown; expandOpen: boolean },
+  editable: boolean,
+): RailKeyAction | null {
+  if (state.zone !== 'office' || state.transition || state.expandOpen || editable) return null
+  if (event.ctrlKey || event.altKey || event.metaKey) return null
+  switch (event.key) {
+    case 'ArrowUp':
+      return { kind: 'nudge', delta: KEY_STEP }
+    case 'ArrowDown':
+      return { kind: 'nudge', delta: -KEY_STEP }
+    case 'Home':
+      return { kind: 'set', t: 0 }
+    case 'End':
+      return { kind: 'set', t: 1 }
+    default:
+      return null
+  }
+}
