@@ -15,3 +15,21 @@ export function nextQuality(current: Quality, event: 'decline' | 'incline' | 'fa
 export function dprFor(quality: Quality): number | [number, number] {
   return quality === 'high' ? [1, 1.5] : 1
 }
+
+export interface QualityState {
+  level: Quality
+  changes: number
+  settled: boolean
+}
+export const INITIAL_QUALITY: QualityState = { level: 'high', changes: 0, settled: false }
+const MAX_CHANGES = 3
+
+/** Only real level changes count as flip-flops; after too many, settle on low for good. */
+export function reduceQuality(state: QualityState, event: 'decline' | 'incline'): QualityState {
+  if (state.settled) return state
+  const level = nextQuality(state.level, event)
+  if (level === state.level) return state
+  const changes = state.changes + 1
+  if (changes > MAX_CHANGES) return { level: nextQuality(level, 'fallback'), changes, settled: true }
+  return { level, changes, settled: false }
+}
