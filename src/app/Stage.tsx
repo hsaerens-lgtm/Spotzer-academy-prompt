@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import { appStore, useApp } from '../core/store'
 import { OfficeScene } from '../zones/office/OfficeScene'
 import { SceneReadySignal } from './SceneReadySignal'
+import { onContextLost } from './webgl'
 
 export function Stage() {
   const active = useApp((s) => s.zone === 'office' || s.transition !== null)
@@ -17,10 +18,7 @@ export function Stage() {
         onCreated={({ gl }) => {
           gl.domElement.addEventListener(
             'webglcontextlost',
-            (event) => {
-              event.preventDefault()
-              appStore.getState().reportWebglLost()
-            },
+            onContextLost(gl.domElement, () => appStore.getState().reportWebglLost()),
             { once: true },
           )
         }}

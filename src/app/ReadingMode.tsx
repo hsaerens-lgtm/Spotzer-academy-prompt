@@ -18,46 +18,49 @@ export function ReadingMode() {
   const screen = useScreenRef()
 
   return (
-    <main className="reading panel" aria-label={t('hud.readingMode')}>
-      {webglLost && (
-        <p className="reading__banner" role="status">
-          {t('errors.webglLost')}
-        </p>
-      )}
-      <div className="reading__grid">
-        <aside className="reading__side">
-          <TopicMenu embedded />
-          <div className="reading__zones">
-            <Button variant="ghost" onClick={() => requestZone('workshop')}>
-              {t('welcome.workshop')}
-            </Button>
-            <Button variant="ghost" onClick={() => requestZone('dungeon')}>
-              {t('welcome.dungeon')}
-            </Button>
-          </div>
-        </aside>
-        <section className="reading__main">
-          {activeTopic ? (
-            <>
-              <div className="reading__screen">
-                <FitScreen>
-                  <ScreenContent screen={screen} />
-                </FitScreen>
-              </div>
-              <DialogueBox />
-            </>
-          ) : (
-            <div className="reading__intro at-card">
-              <p className="welcome__greeting">
-                <span className="dialogue__speaker">{t('objects.ada')}</span>
-                {t('welcome.greeting')}
-              </p>
-              <p className="welcome__hint">{t('welcome.pickTopic')}</p>
+    <>
+      <main className="reading panel" aria-label={t('hud.readingMode')}>
+        {webglLost && (
+          <p className="reading__banner" role="status">
+            {t('errors.webglLost')}
+          </p>
+        )}
+        <div className="reading__grid">
+          <aside className="reading__side">
+            <TopicMenu embedded />
+            <div className="reading__zones">
+              <Button variant="ghost" onClick={() => requestZone('workshop')}>
+                {t('welcome.workshop')}
+              </Button>
+              <Button variant="ghost" onClick={() => requestZone('dungeon')}>
+                {t('welcome.dungeon')}
+              </Button>
             </div>
-          )}
-        </section>
-      </div>
+          </aside>
+          <section className="reading__main">
+            {activeTopic ? (
+              <>
+                <div className="reading__screen">
+                  <FitScreen>
+                    <ScreenContent screen={screen} />
+                  </FitScreen>
+                </div>
+                <DialogueBox />
+              </>
+            ) : (
+              <div className="reading__intro at-card">
+                <p className="welcome__greeting">
+                  <span className="dialogue__speaker">{t('objects.ada')}</span>
+                  {t('welcome.greeting')}
+                </p>
+                <p className="welcome__hint">{t('welcome.pickTopic')}</p>
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
+      {/* Outside <main>: positioned against .overlay like in the 3D office, not inside the scrolling reading area. */}
       {activeTopic && expandOpen && <ExpandOverlay />}
-    </main>
+    </>
   )
 }
