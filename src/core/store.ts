@@ -88,6 +88,11 @@ export function createAppStore(deps: StoreDeps): StoreApi<AppState> {
       set({ settings: next })
       saveSettings(next, storage)
     }
+    // A flight is driven by the 3D camera. When 3D goes away mid-flight, finish it as a fade instead.
+    const withoutFlight = (): Partial<Pick<AppState, 'transition'>> => {
+      const t = get().transition
+      return t?.stage === 'flight' ? { transition: { ...t, via: null, stage: 'fade' } } : {}
+    }
 
     return {
       zone: 'office',
@@ -167,8 +172,8 @@ export function createAppStore(deps: StoreDeps): StoreApi<AppState> {
       closeTopic: () => set({ activeTopic: null, dialogue: null, expandOpen: false, menuOpen: true }),
       setSound: (on) => setSettings({ ...get().settings, sound: on }),
       setLang: (lang) => setSettings({ ...get().settings, lang }),
-      setReadingMode: (on) => set({ readingMode: on, hovered: null }),
-      setWebgl: (status) => set({ webgl: status }),
+      setReadingMode: (on) => set({ readingMode: on, hovered: null, ...(on ? withoutFlight() : {}) }),
+      setWebgl: (status) => set({ webgl: status, ...(status === 'unavailable' ? withoutFlight() : {}) }),
       reportWebglLost: () => set({ webgl: 'unavailable', webglLost: true, readingMode: true, transition: null }),
       setSceneReady: (ready) => set({ sceneReady: ready }),
       setHovered: (target) => set({ hovered: target }),

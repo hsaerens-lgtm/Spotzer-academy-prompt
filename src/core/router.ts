@@ -50,11 +50,13 @@ export function startRouter(store: StoreApi<AppState>, win: Window = window): ()
   const onNavigate = () => {
     const route = parseHash(win.location.hash)
     const s = store.getState()
-    if (route.zone !== s.zone) {
-      s.requestZone(route.zone)
-      return
-    }
-    if (route.zone === 'office' && route.topic && route.topic !== s.activeTopic) s.openTopic(route.topic)
+    if (route.zone !== s.zone) s.requestZone(route.zone)
+    else if (route.zone === 'office' && route.topic && route.topic !== s.activeTopic) s.openTopic(route.topic)
+    // While a transition runs, the subscriber reconciles the URL when it ends.
+    if (store.getState().transition) return
+    // State wins: a stale or hand-edited hash is replaced by the canonical one.
+    const hash = currentHash()
+    if (hash !== win.location.hash) win.history.replaceState(null, '', hash)
   }
   win.addEventListener('popstate', onNavigate)
   win.addEventListener('hashchange', onNavigate)

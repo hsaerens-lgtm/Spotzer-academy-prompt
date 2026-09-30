@@ -59,6 +59,51 @@ describe('zones and transitions', () => {
     expect(s().transition).toBeNull()
   })
 
+  // A flight is driven by the 3D camera; if 3D goes away mid-flight the fade must still finish.
+  it('downgrades a running flight to a fade when reading mode is turned on', () => {
+    const { s } = setup()
+    s().requestZone('workshop', 'laptop')
+    s().setReadingMode(true)
+    expect(s().transition).toEqual({ to: 'workshop', via: null, stage: 'fade' })
+    s().transitionStep()
+    expect(s().zone).toBe('workshop')
+    expect(s().transition).toBeNull()
+  })
+
+  it('downgrades a running flight to a fade when WebGL becomes unavailable', () => {
+    const { s } = setup()
+    s().requestZone('dungeon', 'tv')
+    s().setWebgl('unavailable')
+    expect(s().transition).toEqual({ to: 'dungeon', via: null, stage: 'fade' })
+    s().transitionStep()
+    expect(s().zone).toBe('dungeon')
+    expect(s().transition).toBeNull()
+  })
+
+  it('leaves a fade untouched, ignores requests during it, and is not stuck afterwards', () => {
+    const { s } = setup()
+    s().requestZone('workshop')
+    s().setReadingMode(true)
+    s().setWebgl('unavailable')
+    expect(s().transition).toEqual({ to: 'workshop', via: null, stage: 'fade' })
+    s().requestZone('dungeon', 'tv')
+    expect(s().transition).toEqual({ to: 'workshop', via: null, stage: 'fade' })
+    s().transitionStep()
+    expect(s()).toMatchObject({ zone: 'workshop', transition: null })
+    s().requestZone('office')
+    expect(s().transition).toEqual({ to: 'office', via: null, stage: 'fade' })
+    s().transitionStep()
+    expect(s()).toMatchObject({ zone: 'office', transition: null })
+  })
+
+  it('turning reading mode off or restoring WebGL does not touch a running flight', () => {
+    const { s } = setup()
+    s().requestZone('workshop', 'laptop')
+    s().setReadingMode(false)
+    s().setWebgl('ok')
+    expect(s().transition).toEqual({ to: 'workshop', via: 'laptop', stage: 'flight' })
+  })
+
   it('ignores a request for the current zone', () => {
     const { s } = setup()
     s().requestZone('office', 'laptop')

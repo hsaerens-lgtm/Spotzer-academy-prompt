@@ -101,4 +101,66 @@ describe('startRouter', () => {
     expect(store.getState().transition).toBeNull()
     expect(window.location.hash).toBe('#/office')
   })
+
+  // Review focus 4 at runtime: the fragment is edited while the app is open.
+  describe('hand-edited hash while the app is open', () => {
+    const edit = (hash: string) => {
+      window.history.replaceState(null, '', hash)
+      window.dispatchEvent(new HashChangeEvent('hashchange'))
+    }
+    const openAlpha = () => {
+      window.history.replaceState(null, '', '#/office?topic=alpha')
+      const store = newStore()
+      stop = startRouter(store)
+      expect(store.getState().activeTopic).toBe('alpha')
+      return store
+    }
+
+    it('restores the URL when an unknown topic is typed', () => {
+      const store = openAlpha()
+      edit('#/office?topic=ghost')
+      expect(store.getState().activeTopic).toBe('alpha')
+      expect(window.location.hash).toBe('#/office?topic=alpha')
+    })
+
+    it('restores the URL when an unknown zone is typed', () => {
+      const store = openAlpha()
+      edit('#/nope')
+      expect(store.getState().zone).toBe('office')
+      expect(store.getState().transition).toBeNull()
+      expect(window.location.hash).toBe('#/office?topic=alpha')
+    })
+
+    it('keeps an open topic when the topic is removed from the URL', () => {
+      const store = openAlpha()
+      edit('#/office')
+      expect(store.getState().activeTopic).toBe('alpha')
+      expect(window.location.hash).toBe('#/office?topic=alpha')
+    })
+
+    it('normalises without adding history entries', () => {
+      const store = openAlpha()
+      const before = window.history.length
+      edit('#/office?topic=ghost')
+      edit('#/nope')
+      edit('#%%%')
+      expect(store.getState().activeTopic).toBe('alpha')
+      expect(window.location.hash).toBe('#/office?topic=alpha')
+      expect(window.history.length).toBe(before)
+    })
+
+    it('leaves the URL alone while a transition runs and reconciles when it ends', () => {
+      window.history.replaceState(null, '', '#/office')
+      const store = newStore()
+      stop = startRouter(store)
+      store.getState().requestZone('workshop', 'laptop')
+      edit('#/dungeon')
+      expect(window.location.hash).toBe('#/dungeon')
+      expect(store.getState().transition).toEqual({ to: 'workshop', via: 'laptop', stage: 'flight' })
+      store.getState().transitionStep()
+      store.getState().transitionStep()
+      expect(store.getState().zone).toBe('workshop')
+      expect(window.location.hash).toBe('#/workshop')
+    })
+  })
 })
