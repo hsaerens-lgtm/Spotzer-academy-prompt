@@ -3,5 +3,47 @@
     "kicker": "Welcome",
     "title": "Athena Prompt Academy",
     "tagline": "Learn to talk to AI"
+  },
+  "what-is-ai": {
+    "kicker": "The basics",
+    "title": "AI is a family of ideas",
+    "description": "Four nested circles: artificial intelligence contains machine learning, which contains deep learning, which contains generative AI.",
+    "ai": { "name": "Artificial intelligence", "text": "Machines doing tasks that usually need human thinking" },
+    "ml": { "name": "Machine learning", "text": "Learns patterns from examples, not fixed rules" },
+    "dl": { "name": "Deep learning", "text": "Many stacked layers: a neural network" },
+    "gen": { "name": "Generative AI", "text": "Creates new text, images and sound" }
+  },
+  "generative-ai": {
+    "kicker": "The basics",
+    "title": "Recognize or create",
+    "description": "Left: classic AI looks at a cat photo and labels it cat, 98%. Right: generative AI turns the words a cat reading the newspaper into a brand new picture.",
+    "classic": "Classic AI recognizes",
+    "classicLabel": "cat · 98%",
+    "gen": "Generative AI creates",
+    "prompt": "A cat reading the newspaper",
+    "caption": "It learned from millions of examples – now it makes new ones."
+  },
+  "llm": {
+    "kicker": "The basics",
+    "title": "A very well-read autocomplete",
+    "description": "The sentence The cat sat on the, with the likely next words: mat 62%, sofa 18%, floor 11%, moon 1%. The model picks mat, then repeats the process.",
+    "sentence": "The cat sat on the",
+    "options": { "mat": "mat", "sofa": "sofa", "floor": "floor", "moon": "moon" },
+    "again": "…then it does it again, word after word.",
+    "large": "Large: trained on a huge library of text",
+    "model": "Language model: predicts what comes next"
+  },
+  "tokens": {
+    "kicker": "How it works",
+    "title": "AI reads in chunks",
+    "description": "The sentence Prompting is a skill you can learn is split into 9 tokens, for 35 characters. Tokens drive cost, speed and memory limits.",
+    "count": "{{tokens}} tokens · {{chars}} characters",
+    "rule": "In English, 1 token is about ¾ of a word",
+    "why": {
+      "title": "Why it matters",
+      "cost": "Cost is counted in tokens",
+      "speed": "More tokens, slower answers",
+      "memory": "Memory limits are measured in tokens"
+    }
   }
 }
