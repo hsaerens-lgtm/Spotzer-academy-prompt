@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { isButtonLike, isEditable } from '../core/dom'
 import { useActiveTopic, useContent, useScreenRef } from '../core/selectors'
 import { appStore, useApp } from '../core/store'
+import { sound } from '../core/sound'
 import { choicesFor, currentBeat, type Choice } from '../dialogue/engine'
 import { Button } from './Button'
 import { useTypewriter } from './useTypewriter'
@@ -87,6 +88,7 @@ export function DialogueBox() {
           text={beat.say}
           active={dialogue.phase === 'typing' && !reduced}
           onDone={finishTyping}
+          onReveal={(char, index) => sound.blip(char, index)}
         />
       </button>
       <p className="sr-only" aria-live="polite">
