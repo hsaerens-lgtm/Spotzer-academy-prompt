@@ -8,13 +8,13 @@
     { "say": "Early chat assistants only handled text. Many models today are multimodal: they work with several kinds of input.", "mood": "happy", "screen": "multimodal:1" },
     { "say": "You can show one a photo of a whiteboard, a screenshot of an error or a chart, and ask questions about it.", "gesture": "pointScreen", "screen": "multimodal:2" },
     { "say": "You can talk to it and hear it answer. Some tools can also create images or fill in documents for you.", "screen": "multimodal:3" },
-    { "say": "Behind the scenes it's the same idea: everything is turned into tokens the model can work with.", "mood": "thinking" },
+    { "say": "Behind the scenes it's the same idea: everything you give it is turned into tokens the model can work with.", "mood": "thinking" },
     { "say": "Practical tip: when words fall short, add a picture. A screenshot often explains a problem faster than a paragraph.", "mood": "encouraging" }
   ],
   "deeper": [
     { "say": "Images are cut into small patches, a bit like tokens for pictures. Audio is cut into short slices of sound.", "mood": "thinking", "screen": "multimodal:2" },
     { "say": "Seeing isn't understanding perfectly: models can misread small text, miscount objects or miss details in a busy image.", "mood": "neutral" },
-    { "say": "Creating images is often done by a specialised image model that the assistant calls behind the scenes.", "screen": "multimodal:3" },
+    { "say": "Creating images is often done by a specialized image model that the assistant calls behind the scenes.", "screen": "multimodal:3" },
     { "say": "Same rules as text: don't upload confidential documents or photos of client data into tools your company hasn't approved.", "mood": "encouraging" }
   ],
   "takeaway": "Multimodal AI can read and create more than text: images, sound and documents.",

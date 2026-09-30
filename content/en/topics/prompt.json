@@ -9,7 +9,7 @@
     { "say": "Think of briefing a new colleague who is brilliant but knows nothing about your work. What would they need to hear?", "mood": "thinking" },
     { "say": "A role: who should it be? A task: what exactly should it do?", "screen": "prompt:2" },
     { "say": "Context: what's the situation, who is it for? And a format: how long, what tone, what structure?", "gesture": "pointScreen", "screen": "prompt:4" },
-    { "say": "Vague prompt, vague answer. Clear prompt, useful answer. Want to practise? The laptop on the table is your workshop.", "mood": "encouraging", "gesture": "nod" }
+    { "say": "Vague prompt, vague answer. Clear prompt, useful answer. Want to practice? The laptop on the table is your workshop.", "mood": "encouraging", "gesture": "nod" }
   ],
   "deeper": [
     { "say": "The AI can't read your mind or see your screen. Anything it needs – facts, examples, the audience – has to be in the prompt.", "mood": "thinking", "screen": "prompt:3" },

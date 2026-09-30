@@ -8,7 +8,7 @@
     { "say": "When you chat, the AI doesn't remember the way you do. Each time, it rereads the part of the conversation it can see.", "mood": "thinking", "gesture": "pointScreen", "screen": "context-window:1" },
     { "say": "That visible part is called the context window: your messages, its replies and any files you shared." },
     { "say": "The window has a size limit, measured in tokens. In a very long chat, the oldest messages can slide out of view.", "mood": "surprised", "screen": "context-window:2" },
-    { "say": "Out of view means forgotten. That's why an assistant can lose track of something you said an hour ago.", "gesture": "nod" },
+    { "say": "Out of view means forgotten. That's why an assistant can lose track of something you said earlier in a long chat.", "gesture": "nod" },
     { "say": "Tip: for a new task, start a fresh chat, or recap the key points. You keep the AI focused on what matters.", "mood": "encouraging", "screen": "context-window:3" }
   ],
   "deeper": [

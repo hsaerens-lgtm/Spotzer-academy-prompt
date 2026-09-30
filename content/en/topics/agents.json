@@ -6,7 +6,7 @@
   "reviewed": "2026-09-29",
   "basics": [
     { "say": "So far, AI has answered your questions. An agent goes further: you give it a goal, and it works out the steps itself.", "mood": "happy", "gesture": "pointScreen", "screen": "agents:1" },
-    { "say": "Take the goal 'book a meeting room for Friday'. First, it makes a plan: check the calendar, then look for free rooms.", "mood": "thinking" },
+    { "say": "Take the goal 'book a meeting room for Friday'. First, it makes a plan – starting with a look at the calendar.", "mood": "thinking" },
     { "say": "Then it acts, using the tools it's allowed to use, and it observes the result: room 3 is free.", "screen": "agents:3" },
     { "say": "Then it repeats the loop – book the room, confirm with you – until the goal is reached.", "gesture": "pointScreen", "screen": "agents:4" },
     { "say": "Plan, act, observe, repeat: that loop is what makes an agent. It's powerful, so good agents ask before doing anything important.", "mood": "encouraging" }

@@ -5,7 +5,7 @@
   "teaser": "Machines that create, not just recognize",
   "reviewed": "2026-09-29",
   "basics": [
-    { "say": "Most AI you've met so far recognizes things: it spots spam, reads number plates or tags the people in your photos.", "mood": "neutral", "gesture": "pointScreen", "screen": "generative-ai:1" },
+    { "say": "Most AI you've met so far recognizes things: it spots spam, reads license plates or tags the people in your photos.", "mood": "neutral", "gesture": "pointScreen", "screen": "generative-ai:1" },
     { "say": "Generative AI goes one step further: it creates something new – an email, a picture, a summary, even a song.", "mood": "happy", "screen": "generative-ai:2" },
     { "say": "You describe what you want in plain words, and it produces a fresh result that didn't exist a second before.", "gesture": "pointScreen" },
     { "say": "How? It studied millions of examples and learned what usually goes together – then it builds new content piece by piece.", "mood": "thinking", "screen": "generative-ai:3" },

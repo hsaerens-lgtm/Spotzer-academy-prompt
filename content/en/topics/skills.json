@@ -8,7 +8,7 @@
     { "say": "Imagine a binder of recipe cards next to the AI: brand voice, weekly report, invoice check. Those are skills.", "mood": "happy", "gesture": "pointScreen", "screen": "skills:1" },
     { "say": "A skill is a packaged set of instructions – sometimes with files or scripts – for doing one kind of task well.", "mood": "neutral" },
     { "say": "When a task comes in, like 'write this week's report', the AI pulls out the matching card and follows it.", "screen": "skills:2" },
-    { "say": "The other cards stay on the shelf. Only the skill that's needed takes up room in the context window.", "mood": "thinking", "gesture": "pointScreen" },
+    { "say": "The other cards stay on the shelf – the AI only sees a one-line label on each. It reads in full only the card it picks.", "mood": "thinking", "gesture": "pointScreen" },
     { "say": "Skills let a team write its know-how down once and reuse it every time, the same way.", "mood": "encouraging", "screen": "skills:3" }
   ],
   "deeper": [

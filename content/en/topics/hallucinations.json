@@ -12,7 +12,7 @@
     { "say": "So treat answers like a smart colleague's first draft: useful, but worth checking before you rely on it.", "mood": "encouraging", "gesture": "nod", "screen": "hallucinations:3" }
   ],
   "deeper": [
-    { "say": "It isn't lying – it has no intention at all. It fills gaps with the most plausible continuation.", "mood": "neutral" },
+    { "say": "It isn't lying – it isn't trying to deceive you. It fills gaps with the most plausible continuation.", "mood": "neutral" },
     { "say": "You can lower the risk: give it the source document, ask it to quote from it, and tell it that 'I don't know' is fine.", "mood": "encouraging", "screen": "hallucinations:3" },
     { "say": "Tools help too. When an assistant can search or read your files, it can base its answer on real sources – so check those sources.", "gesture": "pointScreen" },
     { "say": "For anything that matters – figures, legal points, client facts – verify with a trusted source. You stay responsible for what you share.", "mood": "thinking" }
