@@ -1,0 +1,63 @@
+.hud { position: absolute; top: 18px; left: 24px; right: 24px; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.hud__brand { display: flex; align-items: center; gap: 12px; color: var(--at-on-dark); }
+.hud__logo { width: 22px; height: auto; color: var(--at-on-dark); }
+.hud__name { font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+.hud__tools { display: flex; align-items: center; gap: 10px; }
+.hud__progress { margin-right: 6px; font-size: 13px; font-weight: 700; color: var(--at-on-dark-2); font-variant-numeric: tabular-nums; }
+.hud__lang select {
+  height: 38px; padding: 0 14px; border-radius: var(--oe-radius-pill); border: 1px solid var(--at-hairline);
+  background: rgba(255, 255, 255, 0.07); color: var(--at-on-dark); font: inherit; font-size: 13px; font-weight: 700;
+}
+
+.small-screen {
+  position: absolute; top: 72px; left: 50%; z-index: 20; transform: translateX(-50%); margin: 0; padding: 10px 16px;
+  border-radius: var(--oe-radius-md); border: 1px solid var(--at-hairline-2); background: var(--at-surface-2); font-size: 13px;
+}
+
+.bottom-panel { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); width: min(880px, calc(100vw - 48px)); }
+
+.dialogue__speaker { margin-right: 12px; font-size: 12px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--oe-lime); }
+
+.welcome { display: flex; flex-direction: column; gap: 12px; }
+.welcome__greeting { margin: 0; font-size: 17px; line-height: 1.5; }
+.welcome__hint { margin: 0; font-size: 14px; color: var(--at-on-dark-2); }
+.welcome__actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.welcome__scroll {
+  position: absolute; left: 50%; top: -34px; transform: translateX(-50%); margin: 0; white-space: nowrap;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--at-on-dark-2);
+  animation: hint-pulse 2.4s var(--oe-ease) infinite;
+}
+@keyframes hint-pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+.dialogue__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.dialogue__line {
+  display: block; width: 100%; min-height: 3.3em; padding: 4px 0; border: 0; background: none; cursor: pointer;
+  color: var(--at-on-dark); font: inherit; font-size: 18px; line-height: 1.55; text-align: left;
+}
+.dialogue__hint { margin: 6px 0 0; font-size: 12px; color: var(--at-on-dark-3); }
+.dialogue__choices { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--at-hairline); }
+.dialogue__takeaway { margin: 0 0 12px; color: var(--at-on-dark-2); }
+.dialogue__takeaway strong { margin-right: 6px; color: var(--at-on-dark); }
+.dialogue__buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.topic-menu { display: flex; flex-direction: column; max-height: min(56vh, 540px); }
+.topic-menu--embedded { max-height: none; }
+.topic-menu__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.topic-menu__tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0; }
+.topic-menu__tab {
+  height: 34px; padding: 0 14px; border-radius: var(--oe-radius-pill); border: 1px solid var(--at-hairline);
+  background: transparent; color: var(--at-on-dark-2); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.topic-menu__tab[aria-selected='true'] { border-color: var(--at-hairline-2); background: rgba(255, 255, 255, 0.08); color: var(--at-on-dark); }
+.topic-menu__tab .num { margin-right: 8px; color: var(--oe-lime); font-variant-numeric: tabular-nums; }
+.topic-menu__list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; overflow-y: auto; }
+.topic-pill {
+  position: relative; padding: 14px 52px 14px 16px; border-radius: var(--oe-radius-md); border: 1px solid var(--at-hairline);
+  background: var(--at-surface-2); color: var(--at-on-dark); font: inherit; text-align: left; cursor: pointer;
+  transition: border-color var(--oe-dur-1) var(--oe-ease), background var(--oe-dur-1) var(--oe-ease);
+}
+.topic-pill:hover { border-color: var(--oe-lime); background: var(--at-surface-3); }
+.topic-pill__title { display: block; font-weight: 700; }
+.topic-pill__teaser { display: block; margin-top: 2px; font-size: 13px; color: var(--at-on-dark-2); }
+.topic-pill__marks { position: absolute; top: 12px; right: 12px; display: flex; gap: 4px; color: var(--oe-lime); }
+.icon { width: 16px; height: 16px; }
