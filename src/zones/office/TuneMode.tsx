@@ -18,7 +18,7 @@ export default function TuneMode() {
     object: { options: [...TUNABLE], value: 'laptop' },
     mode: { options: ['translate', 'rotate'], value: 'translate' },
     'copy layout': button(() => {
-      void navigator.clipboard.writeText(JSON.stringify(layoutSnapshot(), null, 2))
+      navigator.clipboard.writeText(JSON.stringify(layoutSnapshot(), null, 2)).catch((error) => console.warn('copy layout failed', error))
     }),
   })
 
@@ -53,7 +53,8 @@ export default function TuneMode() {
     <TransformControls
       object={target}
       mode={mode as 'translate' | 'rotate'}
-      showY={mode === 'translate'}
+      showX={mode === 'translate'}
+      showZ={mode === 'translate'}
       onObjectChange={() => applyTransform(object as Tunable, target.position.toArray() as Vec3, target.rotation.y)}
     />
   )
