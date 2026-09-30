@@ -1,6 +1,7 @@
 import { useApp } from '../../core/store'
 import { DialogueBox } from '../../ui/DialogueBox'
 import { ExpandOverlay } from '../../ui/ExpandOverlay'
+import { ObjectLabel } from '../../ui/ObjectLabel'
 import { TopicMenu } from '../../ui/TopicMenu'
 import { WelcomeBar } from '../../ui/WelcomeBar'
 
@@ -14,6 +15,7 @@ export function OfficeOverlay() {
     <>
       {activeTopic ? <DialogueBox /> : menuOpen ? <TopicMenu /> : <WelcomeBar />}
       {activeTopic && expandOpen && <ExpandOverlay />}
+      <ObjectLabel />
     </>
   )
 }

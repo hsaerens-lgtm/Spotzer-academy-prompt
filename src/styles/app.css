@@ -41,3 +41,9 @@ body { margin: 0; overflow: hidden; }
 }
 
 .wall-screen { pointer-events: none; }
+
+.object-label {
+  position: fixed; z-index: 25; pointer-events: none;
+  display: inline-block; padding: 6px 12px; border-radius: var(--oe-radius-pill); border: 1px solid var(--oe-lime);
+  background: var(--at-surface-2); color: var(--at-on-dark); font: 700 13px var(--oe-font-ui); white-space: nowrap;
+}

@@ -1,7 +1,10 @@
 import { ContactShadows } from '@react-three/drei'
 import { brand } from '../../core/brand'
+import { Interactive } from '../../three/interactive'
 import { SceneObject } from '../../three/objects'
 import { CameraRig } from './camera/CameraRig'
+import { CrtScreen } from './CrtScreen'
+import { objectActions } from './interactions'
 import { layout } from './layout'
 import { Lights } from './Lights'
 import { Room } from './Room'
@@ -24,10 +27,15 @@ export function OfficeScene() {
       ))}
       <SceneObject object="sideboard" name="sideboard" position={sideboard.position} />
       <SceneObject object="lamp" name="lamp" position={lamp.position} />
-      <SceneObject object="laptop" name="laptop" position={laptop.position} rotation-y={laptop.rotationY} />
+      <Interactive id="laptop" onActivate={objectActions.laptop}>
+        <SceneObject object="laptop" name="laptop" position={laptop.position} rotation-y={laptop.rotationY} />
+      </Interactive>
       <SceneObject object="cabinet" name="cabinet" position={cabinet.position} rotation-y={cabinet.rotationY} />
-      <SceneObject object="crtTv" name="tv" position={tv.position} rotation-y={tv.rotationY} />
-      <SceneObject object="retroConsole" name="retroConsole" position={retroConsole.position} rotation-y={retroConsole.rotationY} />
+      <Interactive id="tv" onActivate={objectActions.tv}>
+        <SceneObject object="crtTv" name="tv" position={tv.position} rotation-y={tv.rotationY} />
+        <CrtScreen />
+        <SceneObject object="retroConsole" name="retroConsole" position={retroConsole.position} rotation-y={retroConsole.rotationY} />
+      </Interactive>
       <SceneObject object="sofa" name="sofa" position={sofa.position} rotation-y={sofa.rotationY} />
       <SceneObject object="logoCubes" name="logo" position={logo.position} rotation-y={logo.rotationY} />
       <WallScreen3D />

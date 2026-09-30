@@ -67,5 +67,9 @@
     "note": "Each AI model splits text a little differently.",
     "limit": "Limited to {{max}} characters.",
     "loadError": "The live demo couldn't load."
+  },
+  "crt": {
+    "title": "The Dungeon",
+    "pressStart": "Press start"
   }
 }
