@@ -35,6 +35,7 @@
 .vz-idle__logo { width: 72px; height: auto; color: var(--at-on-dark); }
 .vz-idle__title { margin: 0; font-size: 76px; font-weight: 800; line-height: 1.02; letter-spacing: -0.02em; text-transform: uppercase; }
 .vz-idle__tagline { margin: 0; font-size: 48px; }
+.vz-idle .at-kicker { font-size: 22px; }
 
 /* what-is-ai */
 .vz-rings { flex: none; width: 470px; height: 470px; }
@@ -48,11 +49,12 @@
 .vz-legend__item.is-current strong { color: var(--oe-lime); }
 
 /* generative-ai */
-.vz-gen { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; width: 100%; }
-.vz-gen__io { display: flex; align-items: center; gap: 22px; margin-top: 18px; }
+.vz-gen { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; width: 100%; }
+.vz-gen__io { display: flex; flex-wrap: wrap; align-items: center; gap: 22px; margin-top: 18px; }
+.vz-gen .vz-chip { height: auto; min-height: 52px; padding: 10px 22px; white-space: normal; }
 .vz-gen__card--new { border-color: var(--oe-lime); }
 .vz-gen__caption { grid-column: 1 / -1; }
-.vz-photo { flex: none; width: 190px; height: 142px; }
+.vz-photo { flex: none; width: 150px; height: 112px; }
 .vz-photo__frame { fill: var(--at-surface-3); stroke: var(--at-hairline-2); stroke-width: 2; }
 .vz-photo__cat { fill: var(--at-on-dark-2); }
 .vz-photo__paper { fill: var(--at-on-dark); }
