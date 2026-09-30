@@ -3,7 +3,8 @@ import { on, VisualShell, type VisualProps } from '../parts'
 
 const MESSAGE_COUNT = 8
 const ROW = 68 // 56 px message + 12 px gap
-const FRAME_TOP = 210
+const FRAME_TOP = 160 // the frame's CSS top (152 px) + 8 px, so the first message sits just inside the frame
+const LABEL_GAP = 36 // the slid-out messages move this much further up, to leave room for the frame label
 
 export function ContextWindow({ step }: VisualProps) {
   const { t } = useTranslation('visuals')
@@ -19,8 +20,9 @@ export function ContextWindow({ step }: VisualProps) {
               <li
                 key={index}
                 className={`vz-ctx__msg vz-ctx__msg--${index % 2 === 0 ? 'user' : 'ai'}${index < firstInside ? ' is-out' : ''}`}
+                style={index < firstInside ? { transform: `translateY(${-LABEL_GAP}px)` } : undefined}
               >
-                {t(`context-window.messages.${index}`)}
+                <span className="vz-ctx__text">{t(`context-window.messages.${index}`)}</span>
               </li>
             ))}
           </ol>

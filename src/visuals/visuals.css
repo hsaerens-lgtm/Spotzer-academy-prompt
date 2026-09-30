@@ -80,17 +80,18 @@
 .vz-tokens__count { margin: 0; font-size: 34px; font-weight: 800; color: var(--oe-lime); }
 
 /* context-window */
-.vz-ctx { position: relative; flex: none; width: 560px; height: 500px; overflow: hidden; }
+.vz-ctx { position: relative; flex: none; width: 560px; height: 454px; overflow: hidden; }
 .vz-ctx__list { position: absolute; top: 0; left: 0; right: 0; margin: 0; padding: 0; list-style: none; transition: transform 700ms var(--oe-ease); }
 .vz-ctx__msg {
   display: flex; align-items: center; height: 56px; margin-bottom: 12px; padding: 0 20px; overflow: hidden;
-  border-radius: 16px; font-size: 22px; white-space: nowrap; text-overflow: ellipsis; transition: opacity 500ms var(--oe-ease);
+  border-radius: 16px; font-size: 22px; transition: opacity 500ms var(--oe-ease), transform 700ms var(--oe-ease);
 }
+.vz-ctx__text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .vz-ctx__msg--user { margin-left: 36px; background: rgba(255, 255, 255, 0.08); }
 .vz-ctx__msg--ai { margin-right: 36px; background: var(--at-surface-3); }
 .vz-ctx__msg.is-out { opacity: 0.25; }
-.vz-ctx__frame { position: absolute; top: 202px; bottom: 6px; left: 0; right: 0; border: 3px solid var(--oe-lime); border-radius: 22px; pointer-events: none; }
-.vz-ctx__frame-label { position: absolute; top: -18px; left: 24px; padding: 0 10px; background: var(--at-surface-1); font-size: 22px; font-weight: 700; color: var(--oe-lime); }
+.vz-ctx__frame { position: absolute; top: 152px; bottom: 6px; left: 0; right: 0; border: 3px solid var(--oe-lime); border-radius: 22px; pointer-events: none; }
+.vz-ctx__frame-label { position: absolute; bottom: 100%; left: 20px; margin-bottom: 6px; font-size: 22px; font-weight: 700; line-height: 1.2; color: var(--oe-lime); }
 .vz-ctx__side { display: flex; flex-direction: column; gap: 22px; max-width: 520px; }
 .vz-ctx__out { margin: 0; font-size: 26px; color: var(--at-on-dark-3); }
 
@@ -163,8 +164,8 @@
 .vz-mcp__tools { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
 
 /* ai-safety-at-work */
-.vz-safety { display: flex; flex-direction: column; gap: 18px; width: 100%; }
-.vz-safety__row { display: flex; align-items: center; gap: 24px; padding: 18px 24px; border: 1px solid var(--at-hairline); border-radius: 20px; background: var(--at-surface-2); }
+.vz-safety { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+.vz-safety__row { display: flex; align-items: center; gap: 24px; padding: 14px 24px; border: 1px solid var(--at-hairline); border-radius: 20px; background: var(--at-surface-2); }
 .vz-safety__row strong { display: block; font-size: 28px; }
 .vz-safety__row span { font-size: 23px; color: var(--at-on-dark-2); }
 .vz-safety__lamp { flex: none; width: 44px; height: 44px; border-radius: 50%; }
