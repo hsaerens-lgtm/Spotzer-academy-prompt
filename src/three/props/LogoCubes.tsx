@@ -5,7 +5,7 @@ import type { ObjectProps } from '../types'
 /** The five-square mark as cubes on the wall, 0.72 m wide. Front faces +z. */
 export function LogoCubes(props: ObjectProps) {
   const m = materials()
-  const byColor = { lime: m.lime, mint: m.mint, ink: m.ink }
+  const byColor = { lime: m.lime, mint: m.mint, ink: m.logoLight }
   return (
     <group {...props}>
       {logoBoxes(0.012).map((box, index) => (

@@ -1,4 +1,3 @@
-import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './fonts'
 import './brand/oe-tokens.css'
@@ -17,8 +16,5 @@ appStore.subscribe((state, previous) => {
   if (state.settings.lang !== previous.settings.lang) void i18n.changeLanguage(resolveLang(state.settings.lang))
 })
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+// No StrictMode: its double-invoked effects break drei <Html> roots under React 19 (wall screen renders empty in dev).
+createRoot(document.getElementById('root')!).render(<App />)

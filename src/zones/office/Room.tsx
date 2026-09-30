@@ -52,15 +52,15 @@ function CeilingCove() {
   const z0 = -5.2
   const z1 = 1.4
   const strips: { position: [number, number, number]; size: [number, number, number] }[] = [
-    { position: [(x0 + x1) / 2, y, z0], size: [x1 - x0, 0.03, 0.05] },
-    { position: [(x0 + x1) / 2, y, z1], size: [x1 - x0, 0.03, 0.05] },
-    { position: [x0, y, (z0 + z1) / 2], size: [0.05, 0.03, z1 - z0] },
-    { position: [x1, y, (z0 + z1) / 2], size: [0.05, 0.03, z1 - z0] },
+    { position: [(x0 + x1) / 2, y, z0], size: [x1 - x0, 0.015, 0.035] },
+    { position: [(x0 + x1) / 2, y, z1], size: [x1 - x0, 0.015, 0.035] },
+    { position: [x0, y, (z0 + z1) / 2], size: [0.035, 0.015, z1 - z0] },
+    { position: [x1, y, (z0 + z1) / 2], size: [0.035, 0.015, z1 - z0] },
   ]
   return (
     <group>
       {strips.map((strip, index) => (
-        <mesh key={index} position={strip.position} material={m.warmGlow}>
+        <mesh key={index} position={strip.position} material={m.coveGlow}>
           <boxGeometry args={strip.size} />
         </mesh>
       ))}

@@ -55,7 +55,7 @@ export const layout = {
     tv: { position: [4.6, 0.5, -1.4], rotationY: -Math.PI / 2 } as Placement,
     retroConsole: { position: [4.5, 0.5, -0.9], rotationY: -Math.PI / 2 } as Placement,
     sofa: { position: [2.9, 0, -1.4], rotationY: Math.PI / 2 } as Placement,
-    logo: { position: [4.93, 1.9, -4.2], rotationY: -Math.PI / 2 } as Placement,
+    logo: { position: [2.6, 1.95, -5.93], rotationY: 0 } as Placement,
   },
   screen: { position: [-1.0, 1.9, -5.93] as Vec3, size: [4.0, 2.25] as [number, number] },
   ada: { position: [-3.4, 0.95, -4.7], rotationY: 0.5 } as Placement,
