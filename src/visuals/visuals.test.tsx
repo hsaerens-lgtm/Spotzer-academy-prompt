@@ -44,3 +44,7 @@ test('the tokens sample matches the real o200k tokenizer', async () => {
   expect(encode(SAMPLE_TEXT).map((id) => decode([id]))).toEqual([...SAMPLE_TOKENS])
   expect(SAMPLE_TOKENS.join('')).toBe(SAMPLE_TEXT)
 })
+
+test('every visual of the manifest has a component', () => {
+  expect(Object.keys(visualComponents).sort()).toEqual(Object.keys(visualManifest).sort())
+})

@@ -45,5 +45,110 @@
       "speed": "More tokens, slower answers",
       "memory": "Memory limits are measured in tokens"
     }
+  },
+  "context-window": {
+    "kicker": "How it works",
+    "title": "The context window",
+    "description": "A conversation of eight messages. Only the last four fit inside the context window; the first four slide out of view and are forgotten.",
+    "window": "Context window",
+    "messages": {
+      "0": "Hi. I need a slogan for our bakery.",
+      "1": "Sure – what makes it special?",
+      "2": "We bake everything at night, by hand.",
+      "3": "How about: Fresh by dawn, made by hand.",
+      "4": "Nice. Now a short social media post?",
+      "5": "Here's a draft with three hashtags…",
+      "6": "Make it a bit warmer, please.",
+      "7": "Done. Remind me – when do you bake?"
+    },
+    "forgotten": "Out of view means forgotten",
+    "caption": "Everything the AI can see at once – measured in tokens.",
+    "tip": "Long chat? Start fresh or recap the key points."
+  },
+  "hallucinations": {
+    "kicker": "How it works",
+    "title": "Confident is not correct",
+    "description": "A user asks who won the 1987 Mars Marathon. The AI confidently gives a name and a time, but the race never existed. Stamp: plausible is not true. Checklist: ask for sources, check key facts, allow I don't know.",
+    "question": "Who won the 1987 Mars Marathon?",
+    "answer": "Elena Ruiz won it, in 3 hours 12 minutes.",
+    "tag": "Sounds right… but that race never existed.",
+    "stamp": "Plausible ≠ true",
+    "check": {
+      "sources": "Ask for sources",
+      "facts": "Check key facts",
+      "dontKnow": "Allow 'I don't know'"
+    }
+  },
+  "prompt": {
+    "kicker": "Talking to AI",
+    "title": "Anatomy of a good prompt",
+    "description": "A prompt card built in four parts: role, task, context and format.",
+    "role": { "label": "Role", "text": "You are a friendly customer support agent." },
+    "task": { "label": "Task", "text": "Reply to this customer's email." },
+    "context": { "label": "Context", "text": "Their order is 3 days late; we can offer free shipping." },
+    "format": { "label": "Format", "text": "3 short paragraphs, warm and clear." },
+    "cta": "Build your own on the laptop."
+  },
+  "multimodal": {
+    "kicker": "Talking to AI",
+    "title": "More than words",
+    "description": "Text, images and audio go into one AI model, which can answer with text, images or speech.",
+    "in": { "text": "Text", "image": "Image", "audio": "Audio" },
+    "model": "AI model",
+    "out": { "text": "Text", "image": "Image", "speech": "Speech" },
+    "caption": "Multimodal: many kinds of input and output."
+  },
+  "agents": {
+    "kicker": "Going further",
+    "title": "The agent loop",
+    "description": "Around the goal book a meeting room for Friday, four steps in a loop: plan (check the calendar), act (search for free rooms), observe (room 3 is free), repeat (book it, then confirm).",
+    "goalLabel": "Goal",
+    "goal": "Book a meeting room for Friday",
+    "plan": { "name": "Plan", "text": "Check the calendar" },
+    "act": { "name": "Act", "text": "Search for free rooms" },
+    "observe": { "name": "Observe", "text": "Room 3 is free at 10:00" },
+    "repeat": { "name": "Repeat", "text": "Book it, then confirm with you" }
+  },
+  "tools": {
+    "kicker": "Going further",
+    "title": "Tools do the heavy lifting",
+    "description": "Asked for 18% of 2,340, the AI calls a calculator tool instead of guessing, gets 421.2 back and uses it in its answer.",
+    "question": "What's 18% of 2,340?",
+    "thinking": "Let me use the calculator.",
+    "call": "calculator(2340 × 0.18)",
+    "toolLabel": "Tool",
+    "toolName": "Calculator",
+    "result": "421.2",
+    "answer": "18% of 2,340 is 421.2."
+  },
+  "skills": {
+    "kicker": "Going further",
+    "title": "Know-how on demand",
+    "description": "A shelf of skill cards: brand voice, weekly report, invoice check. When the task write this week's report arrives, only the weekly report card is pulled out.",
+    "taskLabel": "New task",
+    "task": "Write this week's report",
+    "cards": { "voice": "Brand voice", "report": "Weekly report", "invoice": "Invoice check" },
+    "caption": "A skill: instructions and files the AI loads only when needed."
+  },
+  "mcp": {
+    "kicker": "Going further",
+    "title": "One plug for every tool",
+    "description": "Before: the AI app needs a different custom connector for each tool. With MCP: one standard plug connects it to Drive, Calendar, a CRM and a database.",
+    "before": "Before: a custom connector for every tool",
+    "after": "With MCP: one standard plug",
+    "ai": "AI app",
+    "custom": "custom connector",
+    "port": "MCP",
+    "tools": { "drive": "Drive", "calendar": "Calendar", "crm": "CRM", "database": "Database" },
+    "caption": "An open standard to plug AI into tools and data – like USB-C."
+  },
+  "ai-safety-at-work": {
+    "kicker": "Bonus",
+    "title": "The traffic light",
+    "description": "Green: public information and your own drafts are fine. Orange: anonymize client and colleague details first. Red: never paste passwords, API keys or confidential client data. Always check the answer.",
+    "green": { "title": "Green – fine to share", "text": "Public information, your own drafts and ideas" },
+    "orange": { "title": "Orange – anonymize first", "text": "Client or colleague names, emails, figures" },
+    "red": { "title": "Red – never paste", "text": "Passwords, API keys, contracts, confidential client data" },
+    "verify": "Always check the answer before you use it – and follow your company's AI policy."
   }
 }
