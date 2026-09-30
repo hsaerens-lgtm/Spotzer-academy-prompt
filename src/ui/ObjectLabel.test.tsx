@@ -1,4 +1,5 @@
 import { act, render, screen } from '@testing-library/react'
+import { Profiler } from 'react'
 import { appStore } from '../core/store'
 import { resetAppStore } from '../test/resetAppStore'
 import { ObjectLabel } from './ObjectLabel'
@@ -40,4 +41,21 @@ test('disappears when the hover ends', () => {
   expect(screen.getByRole('tooltip')).toBeInTheDocument()
   act(() => appStore.getState().setHovered(null))
   expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+})
+
+test('does not re-render on pointer moves while nothing is hovered, then uses the last position', () => {
+  const onRender = vi.fn()
+  render(
+    <Profiler id="object-label" onRender={onRender}>
+      <ObjectLabel />
+    </Profiler>,
+  )
+  const commits = onRender.mock.calls.length
+  movePointer(50, 60)
+  movePointer(70, 80)
+  expect(onRender).toHaveBeenCalledTimes(commits)
+  expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+
+  act(() => appStore.getState().setHovered('laptop'))
+  expect(screen.getByRole('tooltip')).toHaveStyle({ left: '86px', top: '98px' })
 })

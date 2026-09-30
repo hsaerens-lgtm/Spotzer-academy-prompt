@@ -5,10 +5,10 @@ import { appStore, useApp, type HoverTarget } from '../core/store'
 
 export const HoverContext = createContext(false)
 
-/** Put inside a mesh: draws a lime outline while the surrounding Interactive is hovered. */
-export function HoverOutline({ thickness = 0.008 }: { thickness?: number }) {
+/** Put inside a mesh: draws a lime outline while the surrounding Interactive is hovered. `thickness` is in screen pixels. */
+export function HoverOutline({ thickness = 3 }: { thickness?: number }) {
   const hovered = useContext(HoverContext)
-  return hovered ? <Outlines thickness={thickness} color={brand.lime} /> : null
+  return hovered ? <Outlines screenspace thickness={thickness} color={brand.lime} /> : null
 }
 
 interface InteractiveProps {

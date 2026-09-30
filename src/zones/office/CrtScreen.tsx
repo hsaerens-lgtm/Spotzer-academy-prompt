@@ -41,7 +41,7 @@ function drawTitle(title: string, pressStart: string) {
   base.height = H
   const ctx = base.getContext('2d')!
   ctx.imageSmoothingEnabled = false
-  ctx.fillStyle = '#0B1F33'
+  ctx.fillStyle = brand.blueGrey
   ctx.fillRect(0, 0, W, H)
   const colors = { lime: brand.lime, mint: brand.mint, ink: brand.onDark }
   for (const box of logoBoxes(0.5)) {
