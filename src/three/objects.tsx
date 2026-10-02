@@ -27,7 +27,8 @@ export type ObjectName =
   | 'microphone'
 
 /**
- * Declare a GLB in /public/models to replace an object's procedural version, e.g. { sofa: '/models/sofa.glb' }.
+ * Declare a GLB in public/models to replace an object's procedural version, e.g. { sofa: publicUrl('models/sofa.glb') }
+ * (`publicUrl` is in src/core/publicUrl.ts: a URL under public/ must never start with `/`, or a subfolder host breaks).
  * The model must share the procedural origin (floor level, centred) and orientation (front = +z), in metres.
  */
 export const glbModels: Partial<Record<ObjectName, string>> = {}

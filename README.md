@@ -11,6 +11,8 @@ npm run dev
 
 Open http://localhost:5173 — best on Chrome or Edge, window at least 1280 × 720.
 
+Requires Node.js `^22.22.2` or `^24.15.0` (jsdom 30, used by the unit tests, needs it).
+
 ## Check
 
 ```bash
@@ -44,7 +46,7 @@ Open http://localhost:5173/?tune (development only). Pick an object, drag it, ed
 
 ## Replace a procedural object with a 3D model
 
-Put the file in `public/models/` and declare it in `glbModels` (`src/three/objects.tsx`). The model must share the procedural object's origin (floor level, centred), orientation (front = +z) and scale (metres).
+Put the file in `public/models/` and declare it in `glbModels` (`src/three/objects.tsx`) with `publicUrl('models/<file>.glb')` from `src/core/publicUrl.ts`, for example `{ sofa: publicUrl('models/sofa.glb') }`. Never write a URL under `public/` with a leading `/`: the site must keep working when it is served from a subfolder. The model must share the procedural object's origin (floor level, centred), orientation (front = +z) and scale (metres).
 
 ## Project docs
 
