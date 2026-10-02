@@ -41,3 +41,17 @@ test('offers the available languages', () => {
   render(<Hud />)
   expect(screen.getByRole('combobox', { name: /Language/ })).toHaveValue('en')
 })
+
+// The HUD (z-index 20) sits above the overlay (z-index 10): an aria-modal dialog must not leave it clickable or focusable.
+test('the HUD is inert while the expanded view is open', () => {
+  render(<Hud />)
+  const hud = screen.getByRole('banner')
+  expect(hud).not.toHaveAttribute('inert')
+  act(() => {
+    appStore.getState().openTopic('what-is-ai')
+    appStore.getState().setExpandOpen(true)
+  })
+  expect(hud).toHaveAttribute('inert')
+  act(() => appStore.getState().setExpandOpen(false))
+  expect(hud).not.toHaveAttribute('inert')
+})

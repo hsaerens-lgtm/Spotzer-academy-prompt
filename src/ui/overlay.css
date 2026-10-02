@@ -1,4 +1,6 @@
 .hud { position: absolute; top: 18px; left: 24px; right: 24px; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+/* Above the overlay in the stacking order, so an open aria-modal dialog makes it inert (see Hud.tsx). */
+.hud[inert] { opacity: 0.4; }
 .hud__brand { display: flex; align-items: center; gap: 12px; color: var(--at-on-dark); }
 .hud__logo { width: 22px; height: auto; color: var(--at-on-dark); }
 .hud__name { font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
@@ -10,9 +12,11 @@
 }
 
 .small-screen {
-  position: absolute; top: 72px; left: 50%; z-index: 20; transform: translateX(-50%); margin: 0; padding: 10px 16px;
+  position: absolute; top: 72px; left: 50%; z-index: 20; transform: translateX(-50%); display: flex; align-items: center; gap: 14px;
+  margin: 0; padding: 10px 12px 10px 16px;
   border-radius: var(--oe-radius-md); border: 1px solid var(--at-hairline-2); background: var(--at-surface-2); font-size: 13px;
 }
+.small-screen__text { margin: 0; }
 
 .bottom-panel { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); width: min(880px, calc(100vw - 48px)); }
 
@@ -70,3 +74,20 @@
 .expand__stage { flex: 1; min-height: 0; }
 
 .dialogue__tools { display: flex; gap: 8px; }
+
+/*
+ * Short viewports: the minimum screen, 1280 × 720, leaves a browser viewport of about 1280 × 600. A more compact
+ * dialogue (tighter padding and gaps, slightly smaller text, never under 14 px) keeps it off the wall screen.
+ */
+@media (max-height: 700px) {
+  .dialogue.bottom-panel { bottom: 14px; }
+  .dialogue.at-card { padding: 14px 20px; }
+  .dialogue__head { margin-bottom: 2px; }
+  .dialogue__tools .at-btn { height: 32px; }
+  .dialogue__line { min-height: 2.9em; padding: 2px 0; font-size: 16px; line-height: 1.5; }
+  .dialogue__hint { margin-top: 2px; }
+  .dialogue__choices { margin-top: 8px; padding-top: 8px; }
+  .dialogue__takeaway { margin-bottom: 8px; font-size: 14px; }
+  .dialogue__buttons { gap: 8px; }
+  .dialogue__buttons .at-btn { height: 32px; }
+}

@@ -41,13 +41,18 @@ export function ExpandOverlay() {
   const close = () => appStore.getState().setExpandOpen(false)
 
   useEffect(() => {
+    // The button that opened the dialog: focus goes back to it when the dialog closes.
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
     closeRef.current?.focus()
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') appStore.getState().setExpandOpen(false)
       else if (event.key === 'Tab' && dialogRef.current) trapTab(event, dialogRef.current)
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      if (opener && opener !== document.body && opener.isConnected) opener.focus()
+    }
   }, [])
 
   return (

@@ -14,11 +14,12 @@ export function Hud() {
   const lang = useApp((s) => s.settings.lang)
   const readingMode = useApp((s) => s.readingMode)
   const webglOk = useApp((s) => s.webgl === 'ok')
+  const expandOpen = useApp((s) => s.expandOpen)
   const { setSound, setLang, setReadingMode } = appStore.getState()
   const seenCount = content.topics.filter((topic) => seen.includes(topic.id)).length
 
   return (
-    <header className="hud panel">
+    <header className="hud panel" inert={expandOpen}>
       <div className="hud__brand">
         <Logo className="hud__logo" />
         <span className="hud__name">{t('app.name')}</span>

@@ -1,6 +1,6 @@
 import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { appStore } from '../core/store'
+import { appStore, useApp } from '../core/store'
 import { resetAppStore } from '../test/resetAppStore'
 import { DialogueBox } from './DialogueBox'
 import { ExpandOverlay } from './ExpandOverlay'
@@ -63,4 +63,42 @@ test('Escape closes only the expanded view, not the topic', async () => {
   )
   await user.keyboard('{Escape}')
   expect(appStore.getState()).toMatchObject({ expandOpen: false, activeTopic: 'what-is-ai' })
+})
+
+// Like the office overlay: the dialogue (and its Expand button) stays mounted while the expanded view is open.
+function OpenableExpand() {
+  const open = useApp((state) => state.expandOpen)
+  return (
+    <>
+      <DialogueBox />
+      {open && <ExpandOverlay />}
+    </>
+  )
+}
+
+test('gives focus back to the Expand button that opened it, on Close and on Escape', async () => {
+  const user = userEvent.setup()
+  act(() => {
+    appStore.getState().setExpandOpen(false)
+    appStore.getState().finishTyping()
+  })
+  render(<OpenableExpand />)
+  const expandButton = screen.getByRole('button', { name: 'Expand' })
+
+  await user.click(expandButton)
+  expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus()
+  await user.click(screen.getByRole('button', { name: 'Close' }))
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  expect(expandButton).toHaveFocus()
+
+  await user.click(expandButton)
+  expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus()
+  await user.keyboard('{Escape}')
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  expect(expandButton).toHaveFocus()
+})
+
+test('closing does not throw when nothing opened it', () => {
+  const { unmount } = render(<ExpandOverlay />)
+  expect(() => unmount()).not.toThrow()
 })

@@ -2,7 +2,8 @@
   "app": {
     "name": "Athena Prompt Academy",
     "loading": "Setting up the office…",
-    "smallScreen": "This experience works best on a larger screen."
+    "smallScreen": "This experience works best on a larger screen.",
+    "smallScreenDismiss": "Got it"
   },
   "hud": {
     "language": "Language",
