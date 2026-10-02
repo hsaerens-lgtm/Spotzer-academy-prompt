@@ -7,7 +7,7 @@
   "basics": [
     { "say": "Remember tools? Connecting an AI app to each service used to need its own custom connector. A lot of work, all different.", "mood": "thinking", "screen": "mcp:1" },
     { "say": "MCP – the Model Context Protocol – is a shared standard for those connections. Think of it as USB-C for AI.", "mood": "happy", "gesture": "pointScreen", "screen": "mcp:2" },
-    { "say": "A service like Drive, a calendar or a CRM can offer an 'MCP server'. Any AI app that speaks MCP can plug into it." },
+    { "say": "A service like Drive, a calendar or a CRM (the tool where a company keeps its customer details) can offer an 'MCP server'. Any AI app that speaks MCP can plug into it." },
     { "say": "Build the connector once, use it with many AI assistants. That's why so many tools now come with MCP support.", "screen": "mcp:3" },
     { "say": "For you, it means the AI can read from and act in the tools you already use – if you allow it.", "mood": "encouraging", "gesture": "nod" }
   ],

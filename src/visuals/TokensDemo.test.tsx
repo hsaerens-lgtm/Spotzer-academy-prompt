@@ -36,6 +36,26 @@ test('updates as the user types', async () => {
   expect(screen.getByText('5 tokens · 5 characters')).toBeInTheDocument()
 })
 
+test('uses singular forms for one token and one character', async () => {
+  const user = userEvent.setup()
+  await renderDemo()
+  const box = screen.getByRole('textbox', { name: 'Type a sentence' })
+  await user.clear(box)
+  expect(screen.getByText('0 tokens · 0 characters')).toBeInTheDocument()
+  await user.type(box, 'a')
+  expect(screen.getByText('1 token · 1 character')).toBeInTheDocument()
+})
+
+test('says "1 token" but "characters" for a single token spanning a whole sentence', async () => {
+  const user = userEvent.setup()
+  const oneToken: Tokenizer = { encode: (text) => (text ? [1] : []), decode: () => 'chunk' }
+  await renderDemo(() => Promise.resolve(oneToken))
+  const box = screen.getByRole('textbox', { name: 'Type a sentence' })
+  await user.clear(box)
+  await user.type(box, 'Hello world')
+  expect(screen.getByText('1 token · 11 characters')).toBeInTheDocument()
+})
+
 // Review focus 5: a huge paste stays capped and responsive.
 test('caps pasted text at the demo limit', async () => {
   const user = userEvent.setup()

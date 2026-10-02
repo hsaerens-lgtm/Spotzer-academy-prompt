@@ -64,7 +64,10 @@
   "tokensDemo": {
     "label": "Type a sentence",
     "loading": "Loading the tokenizer…",
-    "count": "{{tokens}} tokens · {{chars}} characters",
+    "count_one": "{{count}} token · {{chars}}",
+    "count_other": "{{count}} tokens · {{chars}}",
+    "chars_one": "{{count}} character",
+    "chars_other": "{{count}} characters",
     "note": "Each AI model splits text a little differently.",
     "limit": "Limited to {{max}} characters.",
     "loadError": "The live demo couldn't load."

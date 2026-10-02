@@ -131,7 +131,12 @@ export function createAppStore(deps: StoreDeps): StoreApi<AppState> {
         set({ zone: t.to, transition: null, expandOpen: false, ...officeReset })
       },
       setRailTarget: (t) => set({ railTarget: clamp01(t) }),
-      nudgeRail: (delta) => set({ railTarget: clamp01(get().railTarget + delta), hasScrolled: true }),
+      nudgeRail: (delta) => {
+        // Scrolling against an end stop changes nothing: it must not count as "has scrolled" (it would hide the hint).
+        const current = get().railTarget
+        const next = clamp01(current + delta)
+        if (next !== current) set({ railTarget: next, hasScrolled: true })
+      },
       openMenu: () => set({ menuOpen: true, railTarget: 1 }),
       closeMenu: () => set({ menuOpen: false }),
       openTopic: (id) => {
@@ -174,7 +179,7 @@ export function createAppStore(deps: StoreDeps): StoreApi<AppState> {
       setLang: (lang) => setSettings({ ...get().settings, lang }),
       setReadingMode: (on) => set({ readingMode: on, hovered: null, ...(on ? withoutFlight() : {}) }),
       setWebgl: (status) => set({ webgl: status, ...(status === 'unavailable' ? withoutFlight() : {}) }),
-      reportWebglLost: () => set({ webgl: 'unavailable', webglLost: true, readingMode: true, transition: null }),
+      reportWebglLost: () => set({ webgl: 'unavailable', webglLost: true, readingMode: true, ...withoutFlight() }),
       setSceneReady: (ready) => set({ sceneReady: ready }),
       setHovered: (target) => set({ hovered: target }),
       pokeAda: () => set({ adaPokes: get().adaPokes + 1 }),

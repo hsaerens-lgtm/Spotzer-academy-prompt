@@ -9,20 +9,28 @@ export interface ZoneModule {
   Overlay?: ComponentType
 }
 
-type LazyZoneId = Exclude<ZoneId, 'office'>
+export type LazyZoneId = Exclude<ZoneId, 'office'>
 
-const loaders: Record<LazyZoneId, () => Promise<ZoneModule>> = {
+type ZoneLoaders = Record<LazyZoneId, () => Promise<ZoneModule>>
+
+export function createZoneLoader(loaders: ZoneLoaders): (id: LazyZoneId) => Promise<ZoneModule> {
+  const cache = new Map<LazyZoneId, Promise<ZoneModule>>()
+  return (id) => {
+    let promise = cache.get(id)
+    if (!promise) {
+      const created = loaders[id]()
+      promise = created
+      cache.set(id, created)
+      // A rejected import (a stale tab after a redeploy) must not stay cached forever: the next attempt retries.
+      created.catch(() => {
+        if (cache.get(id) === created) cache.delete(id)
+      })
+    }
+    return promise
+  }
+}
+
+export const loadZone = createZoneLoader({
   workshop: () => import('../zones/workshop').then((m) => m.workshopZone),
   dungeon: () => import('../zones/dungeon').then((m) => m.dungeonZone),
-}
-
-const cache = new Map<LazyZoneId, Promise<ZoneModule>>()
-
-export function loadZone(id: LazyZoneId): Promise<ZoneModule> {
-  let promise = cache.get(id)
-  if (!promise) {
-    promise = loaders[id]()
-    cache.set(id, promise)
-  }
-  return promise
-}
+})

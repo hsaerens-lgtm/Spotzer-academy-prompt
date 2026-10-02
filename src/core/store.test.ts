@@ -134,6 +134,18 @@ describe('rail', () => {
     expect(s().railTarget).toBe(0)
   })
 
+  it('scrolling against an end stop does not count as a scroll, so the hint stays', () => {
+    const { s } = setup()
+    s().nudgeRail(-0.5)
+    expect(s()).toMatchObject({ railTarget: 0, hasScrolled: false })
+    s().nudgeRail(0.5)
+    expect(s()).toMatchObject({ railTarget: 0.5, hasScrolled: true })
+    const atTop = setup()
+    atTop.s().setRailTarget(1)
+    atTop.s().nudgeRail(0.5)
+    expect(atTop.s()).toMatchObject({ railTarget: 1, hasScrolled: false })
+  })
+
   it('opening the menu moves to the presentation view', () => {
     const { s } = setup()
     s().openMenu()
@@ -198,11 +210,30 @@ describe('settings and 3D status', () => {
     expect(JSON.parse(storage.data.get(SETTINGS_KEY)!)).toEqual({ sound: false, lang: 'en' })
   })
 
-  it('a lost WebGL context switches to reading mode and cancels transitions', () => {
+  it('a lost WebGL context switches to reading mode and turns a flight into a fade', () => {
     const { s } = setup()
     s().requestZone('workshop', 'laptop')
     s().reportWebglLost()
-    expect(s()).toMatchObject({ webgl: 'unavailable', webglLost: true, readingMode: true, transition: null })
+    expect(s()).toMatchObject({ webgl: 'unavailable', webglLost: true, readingMode: true })
+    expect(s().transition).toEqual({ to: 'workshop', via: null, stage: 'fade' })
+    s().transitionStep()
+    expect(s()).toMatchObject({ zone: 'workshop', transition: null })
+  })
+
+  it('a lost WebGL context during a fade lets the fade finish in the target zone', () => {
+    const { s } = setup()
+    s().requestZone('workshop')
+    expect(s().transition).toEqual({ to: 'workshop', via: null, stage: 'fade' })
+    s().reportWebglLost()
+    expect(s().transition).toEqual({ to: 'workshop', via: null, stage: 'fade' })
+    s().transitionStep()
+    expect(s()).toMatchObject({ zone: 'workshop', transition: null, readingMode: true })
+  })
+
+  it('a lost WebGL context with no transition leaves none', () => {
+    const { s } = setup()
+    s().reportWebglLost()
+    expect(s().transition).toBeNull()
   })
 
   it('counts pokes on Ada and tracks hover and the expand overlay', () => {

@@ -64,7 +64,7 @@ export function TokensDemo({ loader = loadTokenizer }: { loader?: () => Promise<
           {tokenizer ? (
             <>
               <p className="tokens-demo__count" aria-live="polite">
-                {t('tokensDemo.count', { tokens: tokens.length, chars: text.length })}
+                {t('tokensDemo.count', { count: tokens.length, chars: t('tokensDemo.chars', { count: text.length }) })}
               </p>
               <div className="tokens-demo__chips">
                 {tokens.map((token, index) => (

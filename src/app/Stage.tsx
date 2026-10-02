@@ -36,10 +36,11 @@ export function Stage() {
           onIncline={() => dispatchQuality('incline')}
         >
           <QualityContext.Provider value={quality.level}>
-            <SceneReadySignal />
             {import.meta.env.DEV && <TestApiBridge />}
             <Suspense fallback={null}>
               <OfficeScene />
+              {/* Inside the boundary, after the scene: while the scene suspends (a future GLB), the loading screen stays. */}
+              <SceneReadySignal />
             </Suspense>
             {TuneMode && tuneEnabled && (
               <Suspense fallback={null}>
