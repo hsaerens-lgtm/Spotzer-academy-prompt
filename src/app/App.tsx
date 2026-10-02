@@ -2,6 +2,7 @@ import { appStore, useApp } from '../core/store'
 import { ErrorBoundary } from './ErrorBoundary'
 import { Fader } from './Fader'
 import { LoadingScreen } from './LoadingScreen'
+import { DialogueAnnouncer } from '../ui/DialogueAnnouncer'
 import { Hud } from '../ui/Hud'
 import { SmallScreenNotice } from '../ui/SmallScreenNotice'
 import { Stage } from './Stage'
@@ -21,6 +22,7 @@ export function App() {
         <ZoneOverlayHost />
       </div>
       <Hud />
+      <DialogueAnnouncer />
       <SmallScreenNotice />
       {threeD && showLoading && <LoadingScreen />}
       <Fader />

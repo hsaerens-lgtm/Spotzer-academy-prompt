@@ -1,5 +1,6 @@
 import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { getContent } from '../content/load'
 import { appStore } from '../core/store'
 import { resetAppStore } from '../test/resetAppStore'
 import { Hud } from '../ui/Hud'
@@ -20,6 +21,19 @@ test('without WebGL, the office opens in reading mode with the same content', as
   await userEvent.click(screen.getByRole('button', { name: /What is AI\?/ }))
   expect(screen.getByTestId('screen-content').querySelector('.vz--what-is-ai')).not.toBeNull()
   expect(screen.getByRole('button', { name: 'Click or press Space to continue' })).toBeInTheDocument()
+})
+
+// The announcer is mounted by <App /> for the office overlay and reading mode alike: it exists before any topic opens.
+test("Ada's lines are announced by one live region that existed before the topic opened", async () => {
+  resetAppStore({ webgl: 'unavailable' })
+  await renderApp()
+  const regions = () => Array.from(document.querySelectorAll('[aria-live="polite"]'))
+  const region = regions()[0]
+  expect(region).toBeEmptyDOMElement()
+  await userEvent.click(screen.getByRole('button', { name: /What is AI\?/ }))
+  expect(regions()[0]).toBe(region)
+  expect(region).toHaveTextContent(getContent('en').topicById.get('what-is-ai')!.basics[0].say)
+  expect(regions().filter((el) => el.textContent)).toHaveLength(1)
 })
 
 test('explains that 3D stopped working', async () => {

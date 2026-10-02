@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { getContent } from '../content/load'
 import { appStore } from '../core/store'
@@ -41,10 +41,12 @@ test('types the line, reveals it on click, then advances', async () => {
   expect(appStore.getState().dialogue).toMatchObject({ beatIndex: 1, phase: 'typing' })
 })
 
-test('exposes the full line to screen readers', () => {
+// The announcement lives in DialogueAnnouncer (always mounted): a region created with its text is never announced.
+test('has no live region of its own: the visible line is aria-hidden and announced by DialogueAnnouncer', () => {
   open()
   render(<DialogueBox />)
-  expect(screen.getByText(topic.basics[0].say, { selector: '.sr-only' })).toHaveAttribute('aria-live', 'polite')
+  expect(document.querySelector('[aria-live]')).toBeNull()
+  expect(screen.getByTestId('dialogue-line')).toHaveAttribute('aria-hidden', 'true')
 })
 
 // Review focus 3: one key press, one action.
@@ -65,6 +67,44 @@ test('Space with focus elsewhere uses the global shortcut', async () => {
   ;(document.activeElement as HTMLElement | null)?.blur()
   await user.keyboard(' ')
   expect(appStore.getState().dialogue).toMatchObject({ beatIndex: 0, phase: 'waiting' })
+})
+
+// Holding Space or Enter fires keydown repeatedly: only the first press may advance the dialogue.
+test('a held key advances once, not once per repeat', () => {
+  open()
+  act(() => appStore.getState().finishTyping())
+  render(<DialogueBox />)
+  ;(document.activeElement as HTMLElement | null)?.blur()
+  fireEvent.keyDown(window, { key: ' ' })
+  expect(appStore.getState().dialogue).toMatchObject({ beatIndex: 1, phase: 'typing' })
+  act(() => appStore.getState().finishTyping())
+  for (const key of [' ', 'Enter']) {
+    for (let i = 0; i < 5; i++) fireEvent.keyDown(window, { key, repeat: true })
+  }
+  expect(appStore.getState().dialogue).toMatchObject({ beatIndex: 1, phase: 'waiting' })
+})
+
+test('Space or Enter with Ctrl, Alt or Meta held is a browser shortcut, not an advance', () => {
+  open()
+  act(() => appStore.getState().finishTyping())
+  render(<DialogueBox />)
+  ;(document.activeElement as HTMLElement | null)?.blur()
+  for (const key of [' ', 'Enter']) {
+    for (const modifier of ['ctrlKey', 'altKey', 'metaKey']) {
+      const notPrevented = fireEvent.keyDown(window, { key, [modifier]: true })
+      expect(notPrevented).toBe(true)
+    }
+  }
+  expect(appStore.getState().dialogue).toMatchObject({ beatIndex: 0, phase: 'waiting' })
+})
+
+test('a held Enter on the focused line does not skip beats through repeated clicks', () => {
+  open()
+  act(() => appStore.getState().finishTyping())
+  render(<DialogueBox />)
+  // Browsers turn every repeated Enter keydown on a focused button into a click: the repeat must be cancelled.
+  expect(fireEvent.keyDown(lineButton(), { key: 'Enter', repeat: true })).toBe(false)
+  expect(fireEvent.keyDown(lineButton(), { key: 'Enter' })).toBe(true)
 })
 
 test('Enter on a focused choice triggers only that choice', async () => {

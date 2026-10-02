@@ -47,8 +47,10 @@ export function DialogueBox() {
         return
       }
       if ((event.key === ' ' || event.key === 'Enter') && !isButtonLike(event.target)) {
+        // Ctrl/Alt/Meta + key is a browser or system shortcut. A held key repeats: only the first press advances.
+        if (event.ctrlKey || event.altKey || event.metaKey) return
         event.preventDefault()
-        state.advanceDialogue()
+        if (!event.repeat) state.advanceDialogue()
       }
     }
     window.addEventListener('keydown', onKey)
@@ -79,7 +81,16 @@ export function DialogueBox() {
           </Button>
         </div>
       </header>
-      <button type="button" className="dialogue__line" onClick={advanceDialogue} aria-label={t('dialogue.continueHint')}>
+      <button
+        type="button"
+        className="dialogue__line"
+        onClick={advanceDialogue}
+        onKeyDown={(event) => {
+          // A browser turns each repeated Enter keydown on a focused button into a click: a held key must not skip beats.
+          if (event.repeat) event.preventDefault()
+        }}
+        aria-label={t('dialogue.continueHint')}
+      >
         <span className="dialogue__speaker" aria-hidden="true">
           {t('objects.ada')}
         </span>
@@ -91,9 +102,6 @@ export function DialogueBox() {
           onReveal={(char, index) => sound.blip(char, index)}
         />
       </button>
-      <p className="sr-only" aria-live="polite">
-        {beat.say}
-      </p>
       {dialogue.phase !== 'choices' && (
         <p className="dialogue__hint" aria-hidden="true">
           {t('dialogue.continueHint')}
