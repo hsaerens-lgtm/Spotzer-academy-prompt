@@ -18,12 +18,15 @@ async function pressUntilVisible(page: Page, name: string) {
 
 const screenPosition = (page: Page, name: string) => page.evaluate((n) => window.__academy!.screenPosition!(n), name)
 
+type Point = { x: number; y: number }
+
 /**
- * Waits until a named 3D object stops moving on screen (two consecutive samples less than 1 px apart),
- * i.e. until the camera, the rail easing and the parallax have settled. Returns its final position.
+ * Waits until a named 3D object stops moving on screen (two consecutive samples, at least one poll interval apart,
+ * less than 1 px apart), i.e. until the camera, the rail easing and the parallax have settled. Returns its final position.
+ * `previous` starts as null, so the first sample never counts as "settled" on its own.
  */
 async function settledPosition(page: Page, name: string) {
-  let previous = await screenPosition(page, name)
+  let previous = null as Point | null
   await expect
     .poll(
       async () => {
@@ -93,6 +96,9 @@ test('the real 3D laptop and the TV lead to their zones and back', async ({ page
 
   await page.evaluate(() => window.__academy!.clickObject('tv'))
   await expect(page.getByRole('heading', { name: 'The Dungeon' })).toBeVisible()
+  // The screen fades in after the zone switch: wait for the fader to be fully off, so the picture is the same on every run.
+  await expect(page.getByTestId('fader')).toHaveCSS('opacity', '0')
+  await page.screenshot({ path: `${EVIDENCE}/10-dungeon-soon.png` })
   await page.goBack()
   await expect.poll(async () => (await state(page)).zone).toBe('office')
   await expect(page).toHaveURL(/#\/office$/)
@@ -143,4 +149,60 @@ test('deep links open topics and bad links land on the office', async ({ page })
   expect(await state(page)).toMatchObject({ zone: 'office', dialogue: null })
   await openOffice(page, '#/nowhere')
   await expect(page).toHaveURL(/#\/office$/)
+})
+
+// Spec 9, evidence: one wall-screen visual per chapter (chapters 1 and 2 are in the first journey and in 06).
+const chapterVisuals = [
+  { topic: 'prompt', title: 'Anatomy of a good prompt', file: '07-visual-prompt.png' },
+  { topic: 'agents', title: 'The agent loop', file: '08-visual-agents.png' },
+  { topic: 'ai-safety-at-work', title: 'The traffic light', file: '09-visual-ai-safety.png' },
+]
+
+for (const { topic, title, file } of chapterVisuals) {
+  test(`deep link to "${topic}" shows its wall-screen visual`, async ({ page }) => {
+    await openOffice(page, `#/office?topic=${topic}`)
+    await expect(page.locator('.wall-screen [data-testid="screen-content"]')).toContainText(title)
+    // Ada's first line is fully written and the camera is at rest: the screenshot is the same on every run.
+    await expectDialoguePhase(page, 'waiting')
+    await settledPosition(page, 'laptop')
+    await page.screenshot({ path: `${EVIDENCE}/${file}` })
+  })
+}
+
+// Spec 8.6: the minimum is a 1280 × 720 screen, whose browser viewport is only about 1280 × 600.
+test.describe('smallest supported viewport (1280 × 600)', () => {
+  // Set on the context, not with page.setViewportSize: that call also resets window.screen to the viewport size.
+  test.use({ viewport: { width: 1280, height: 600 }, contextOptions: { screen: { width: 1280, height: 720 } } })
+
+  test('the overview, a topic with its choices and the expanded view all fit', async ({ page }) => {
+    await openOffice(page)
+    // A 1280 × 720 screen is supported: no "larger screen" notice, even though the window is only 600 px tall.
+    await expect(page.locator('.small-screen')).toHaveCount(0)
+    await expect(page.getByText('Scroll to take a seat')).toBeVisible()
+    await page.waitForTimeout(1000)
+    await page.screenshot({ path: `${EVIDENCE}/11-small-overview.png` })
+
+    await page.mouse.move(640, 200)
+    await page.mouse.wheel(0, -1500)
+    await expect.poll(async () => (await state(page)).railTarget).toBe(1)
+    await page.getByRole('button', { name: /Learn the basics/ }).click()
+    await page.getByRole('button', { name: /What is AI\?/ }).click()
+    await expect(page.locator('.wall-screen [data-testid="screen-content"]')).toContainText('AI is a family of ideas')
+    await pressUntilVisible(page, 'Go deeper')
+    await expectDialoguePhase(page, 'choices')
+    await settledPosition(page, 'laptop')
+    await page.screenshot({ path: `${EVIDENCE}/12-small-presentation.png` })
+
+    const expand = page.getByRole('button', { name: 'Expand' })
+    await expand.click()
+    await expect(page.getByRole('dialog', { name: 'Expand' })).toBeVisible()
+    // The HUD sits above the overlay in the stacking order: while the modal is open it must be inert.
+    await expect(page.locator('.hud')).toHaveAttribute('inert', '')
+    await expect(page.locator('.hud')).toHaveCSS('opacity', '0.4')
+    await page.screenshot({ path: `${EVIDENCE}/13-small-expand.png` })
+    await page.getByRole('button', { name: 'Close' }).click()
+    await expect(page.getByRole('dialog', { name: 'Expand' })).toHaveCount(0)
+    await expect(page.locator('.hud')).not.toHaveAttribute('inert')
+    await expect(expand).toBeFocused()
+  })
 })
