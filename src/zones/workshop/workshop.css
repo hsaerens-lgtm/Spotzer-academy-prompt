@@ -1,0 +1,85 @@
+/* Workshop: a retro 90s PC in Athena colours. VT323 only for the chrome; content stays in Montserrat. */
+.ws-desktop {
+  --ws-chrome: 'VT323', 'Courier New', monospace;
+  --ws-bevel-light: var(--oe-blue-grey-soft);
+  --ws-bevel-dark: var(--at-ink);
+  position: absolute; inset: 0; pointer-events: auto; overflow: hidden;
+  background-color: var(--at-ink);
+  background-image: radial-gradient(var(--at-surface-3) 1px, transparent 1px);
+  background-size: 14px 14px;
+  color: var(--at-on-dark); font-family: var(--oe-font-ui); font-size: 15px;
+}
+
+.ws-window {
+  display: flex; flex-direction: column; min-width: 0; min-height: 0;
+  background: var(--at-surface-1);
+  border: 2px solid; border-color: var(--ws-bevel-light) var(--ws-bevel-dark) var(--ws-bevel-dark) var(--ws-bevel-light);
+}
+.ws-window__bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 8px;
+  background: var(--oe-blue-grey); color: var(--at-on-dark);
+}
+.ws-window--primary > .ws-window__bar { background: var(--oe-lime); color: var(--at-ink); }
+.ws-window__title { margin: 0; font-family: var(--ws-chrome); font-size: 20px; font-weight: 400; letter-spacing: 0.04em; }
+.ws-window__tools { display: flex; align-items: center; gap: 6px; font-family: var(--ws-chrome); font-size: 18px; }
+.ws-window__body { flex: 1; min-height: 0; overflow: auto; padding: 12px 14px; }
+
+.ws-btn {
+  padding: 3px 14px; border: 2px solid; cursor: pointer;
+  font-family: var(--oe-font-ui); font-size: 14px; font-weight: 700;
+  background: var(--at-surface-2); color: var(--at-on-dark);
+  border-color: var(--ws-bevel-light) var(--ws-bevel-dark) var(--ws-bevel-dark) var(--ws-bevel-light);
+}
+.ws-btn:active { border-color: var(--ws-bevel-dark) var(--ws-bevel-light) var(--ws-bevel-light) var(--ws-bevel-dark); }
+.ws-btn--primary { background: var(--oe-lime); color: var(--at-ink); }
+.ws-btn--primary:hover { background: var(--oe-lime-hover); }
+.ws-btn--sm { padding: 1px 10px; font-size: 13px; }
+.ws-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.ws-btn[aria-pressed='true'] { background: var(--at-ink); border-color: var(--ws-bevel-dark) var(--ws-bevel-light) var(--ws-bevel-light) var(--ws-bevel-dark); }
+
+.ws-taskbar {
+  grid-area: task; display: flex; align-items: center; gap: 10px; padding: 3px 6px;
+  background: var(--at-surface-1); border-top: 2px solid var(--ws-bevel-light);
+}
+.ws-start { position: relative; }
+.ws-start .ws-btn { font-family: var(--ws-chrome); font-size: 18px; font-weight: 400; }
+.ws-start__menu {
+  position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 5; min-width: 220px; margin: 0; padding: 4px; list-style: none;
+  background: var(--at-surface-1); border: 2px solid; border-color: var(--ws-bevel-light) var(--ws-bevel-dark) var(--ws-bevel-dark) var(--ws-bevel-light);
+}
+.ws-start__item { display: block; width: 100%; padding: 6px 10px; border: 0; background: none; color: var(--at-on-dark); font: inherit; text-align: left; cursor: pointer; }
+.ws-start__item:hover, .ws-start__item:focus-visible { background: var(--oe-lime); color: var(--at-ink); }
+.ws-taskbar__tabs { display: flex; gap: 6px; }
+.ws-taskbar__end { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.ws-taskbar__counter { font-family: var(--ws-chrome); font-size: 18px; color: var(--at-on-dark-2); }
+
+.ws-icons { grid-area: icons; display: flex; flex-direction: column; gap: 16px; }
+.ws-icon { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px; border: 1px dashed transparent; background: none; color: var(--at-on-dark); cursor: pointer; }
+.ws-icon:hover { border-color: var(--oe-lime-mint); }
+.ws-icon__art { width: 34px; height: 28px; background: var(--at-surface-2); border: 2px solid var(--oe-lime-mint); }
+.ws-icon--corrector .ws-icon__art { border-color: var(--oe-lime); }
+.ws-icon__label { font-family: var(--ws-chrome); font-size: 17px; }
+
+.ws-ada-dock { position: absolute; right: 18px; bottom: 50px; z-index: 4; display: flex; align-items: flex-end; gap: 10px; pointer-events: none; }
+.ws-bubble {
+  position: relative; max-width: 340px; padding: 10px 30px 10px 12px; pointer-events: auto;
+  background: var(--at-surface-1); border: 2px solid var(--oe-lime); font-size: 14px; line-height: 1.5;
+}
+.ws-bubble__text { margin: 0; }
+.ws-bubble__actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ws-bubble__close { position: absolute; top: 2px; right: 4px; border: 0; background: none; color: var(--at-on-dark-2); font-size: 18px; cursor: pointer; }
+.ws-ada { flex: none; animation: ws-float 3s ease-in-out infinite; }
+.ws-ada__shadow { fill: var(--oe-lime); opacity: 0.35; }
+.ws-ada__body, .ws-ada__head, .ws-ada__arm { fill: var(--at-on-dark); }
+.ws-ada__belt { fill: none; stroke: var(--oe-lime-mint); stroke-width: 2; }
+.ws-ada__visor { fill: var(--at-ink); }
+.ws-ada__eyes { fill: var(--oe-lime); stroke: var(--oe-lime); stroke-width: 3; stroke-linecap: round; animation: ws-blink 4s infinite; transform-box: fill-box; transform-origin: center; }
+.ws-ada__eyes path { fill: none; }
+.ws-ada__arm--right { transform-box: fill-box; transform-origin: 50% 15%; transition: transform 300ms var(--oe-ease); }
+.ws-ada--pointing .ws-ada__arm--right { transform: rotate(-150deg); }
+@keyframes ws-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes ws-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+@media (prefers-reduced-motion: reduce) {
+  .ws-ada, .ws-ada__eyes { animation: none; }
+  .ws-ada__arm--right { transition: none; }
+}
