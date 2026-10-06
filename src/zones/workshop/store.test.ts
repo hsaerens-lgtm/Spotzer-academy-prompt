@@ -110,6 +110,32 @@ test('a tip shown before an attempt can appear again after it; muting lasts for 
   expect(store.getState().sessions['florist-post'].tipsShown).toEqual(['role-job'])
 })
 
+// "It's already there" re-evaluates the last attempt: it starts no new typing round, so the tips Ada gave stay given.
+test('"It\'s already there" keeps the tips already shown', () => {
+  const store = makeWorkshopStore()
+  fill(store, { ...fullLetter, context: "The client is Martin's Bakery. The photos arrived late, new launch soon." })
+  const attempt = store.getState().test('delayed-website')!
+  store.getState().markTipShown('delayed-website', 'role-job')
+  store.getState().alreadyThere('delayed-website', 'new-date')
+  const session = store.getState().sessions['delayed-website']
+  expect(session.last!.id).toBe(attempt.id + 1)
+  expect(session.tipsShown).toEqual(['role-job'])
+})
+
+test('resetting a draft that is already at its initial state changes nothing', () => {
+  const store = makeWorkshopStore()
+  const listener = vi.fn()
+  store.subscribe(listener)
+  const before = store.getState().sessions
+  store.getState().resetDraft('delayed-website')
+  store.getState().resetDraft('newsletter')
+  expect(store.getState().sessions).toBe(before)
+  expect(listener).not.toHaveBeenCalled()
+  store.getState().setText('newsletter', 'Something else')
+  store.getState().resetDraft('newsletter')
+  expect(listener).toHaveBeenCalledTimes(2)
+})
+
 test('unknown missions are ignored', () => {
   const store = makeWorkshopStore()
   expect(store.getState().test('ghost')).toBeNull()
@@ -171,6 +197,110 @@ describe('corrector', () => {
     await store.getState().checkPrompt()
     await store.getState().runBoth()
     expect(store.getState().corrector.run).toMatchObject({ status: 'error', error: 'timeout' })
+  })
+
+  // A rejected call (the api layer should not throw, but a bug there must not lock the screen) counts as "unavailable".
+  describe('when an api call rejects', () => {
+    it('reads as offline, and the health check can be retried', async () => {
+      const health = vi.fn().mockRejectedValueOnce(new Error('network down')).mockResolvedValueOnce({ ok: true, data: { corrector: true } })
+      const store = makeWorkshopStore({ api: { health } })
+      await store.getState().checkHealth()
+      expect(store.getState().corrector.health).toBe('offline')
+      await store.getState().checkHealth()
+      expect(health).toHaveBeenCalledTimes(2)
+      expect(store.getState().corrector.health).toBe('online')
+    })
+
+    it('ends the check in an unavailable error, and the check can be retried', async () => {
+      const correct = vi.fn().mockRejectedValueOnce(new Error('network down')).mockResolvedValueOnce({ ok: true, data: makeReport() })
+      const store = makeWorkshopStore({ api: { correct } })
+      store.getState().setCorrectorPrompt('Write a post')
+      await store.getState().checkPrompt()
+      expect(store.getState().corrector).toMatchObject({ status: 'error', error: 'unavailable', prompt: 'Write a post', report: null, checks: 0 })
+      await store.getState().checkPrompt()
+      expect(correct).toHaveBeenCalledTimes(2)
+      expect(store.getState().corrector).toMatchObject({ status: 'done', error: null, checks: 1 })
+    })
+
+    it('ends the run in an unavailable error, and the run can be retried', async () => {
+      const run = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('network down'))
+        .mockImplementation(async (prompt: string) => ({ ok: true, data: { answer: `Answer to: ${prompt}` } }))
+      const store = makeWorkshopStore({ api: { run } })
+      store.getState().setCorrectorPrompt('Write a post')
+      await store.getState().checkPrompt()
+      await store.getState().runBoth()
+      expect(store.getState().corrector.run).toMatchObject({ status: 'error', error: 'unavailable' })
+      await store.getState().runBoth()
+      expect(store.getState().corrector.run).toMatchObject({ status: 'done', original: 'Answer to: Write a post', error: null })
+    })
+  })
+
+  describe('runs and re-checks', () => {
+    function pendingRuns() {
+      const pending: { prompt: string; resolve: (answer: string) => void }[] = []
+      const run = vi.fn(
+        (prompt: string) => new Promise((resolve) => pending.push({ prompt, resolve: (answer) => resolve({ ok: true, data: { answer } }) })),
+      )
+      return { pending, run: run as never }
+    }
+    const first = makeReport({ improvedPrompt: 'First improved prompt.' })
+    const second = makeReport({ score: 90, improvedPrompt: 'Second improved prompt.' })
+    const twoReports = () => vi.fn().mockResolvedValueOnce({ ok: true, data: first }).mockResolvedValueOnce({ ok: true, data: second })
+    const idle = { status: 'idle', original: null, improved: null, error: null }
+
+    it('drops the result of a run that started on an older report', async () => {
+      const { pending, run } = pendingRuns()
+      const store = makeWorkshopStore({ api: { correct: twoReports(), run } })
+      store.getState().setCorrectorPrompt('Write a post')
+      await store.getState().checkPrompt()
+      const stale = store.getState().runBoth()
+      await store.getState().checkPrompt()
+      expect(store.getState().corrector).toMatchObject({ status: 'done', run: idle })
+      for (const call of pending) call.resolve(`Answer to: ${call.prompt}`)
+      await stale
+      expect(store.getState().corrector.run).toEqual(idle)
+      expect(store.getState().corrector.report).toBe(second)
+    })
+
+    it('lets a new run start on the new report and keeps only its result', async () => {
+      const { pending, run } = pendingRuns()
+      const store = makeWorkshopStore({ api: { correct: twoReports(), run } })
+      store.getState().setCorrectorPrompt('Write a post')
+      await store.getState().checkPrompt()
+      const stale = store.getState().runBoth()
+      await store.getState().checkPrompt()
+      const fresh = store.getState().runBoth()
+      expect(pending.map((call) => call.prompt)).toEqual(['Write a post', 'First improved prompt.', 'Write a post', 'Second improved prompt.'])
+      pending[0].resolve('stale original')
+      pending[1].resolve('stale improved')
+      await stale
+      expect(store.getState().corrector.run).toMatchObject({ status: 'running' })
+      pending[2].resolve('fresh original')
+      pending[3].resolve('fresh improved')
+      await fresh
+      expect(store.getState().corrector.run).toEqual({ status: 'done', original: 'fresh original', improved: 'fresh improved', error: null })
+    })
+
+    it('does not start a run while a check is in flight', async () => {
+      let resolveCheck!: (value: unknown) => void
+      const correct = vi
+        .fn()
+        .mockResolvedValueOnce({ ok: true, data: first })
+        .mockImplementationOnce(() => new Promise((resolve) => (resolveCheck = resolve)))
+      const { pending, run } = pendingRuns()
+      const store = makeWorkshopStore({ api: { correct, run } })
+      store.getState().setCorrectorPrompt('Write a post')
+      await store.getState().checkPrompt()
+      const check = store.getState().checkPrompt()
+      await store.getState().runBoth()
+      expect(pending).toHaveLength(0)
+      expect(store.getState().corrector.run).toEqual(idle)
+      resolveCheck({ ok: true, data: second })
+      await check
+      expect(store.getState().corrector).toMatchObject({ status: 'done', checks: 2 })
+    })
   })
 })
 

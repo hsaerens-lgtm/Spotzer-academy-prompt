@@ -8,7 +8,7 @@ import type { ApiError, BlockType, CorrectRequest, CorrectorReport, Mission, Pro
 export type WorkshopView = 'missions' | 'prompts' | 'corrector'
 
 export interface Attempt {
-  /** 0 is the starter prompt of a fix mission; tests by the learner count from 1. */
+  /** Ids increase across the whole workshop (one counter for every mission); 0 is the starter prompt of a fix mission. */
   id: number
   input: PromptInput
   evaluation: Evaluation
@@ -90,6 +90,21 @@ function initialDraft(mission: Mission): PromptInput {
   return { mode: 'fix', text: mission.starter ?? '' }
 }
 
+function isInitialDraft(draft: PromptInput, mission: Mission): boolean {
+  const initial = initialDraft(mission)
+  if (draft.mode === 'blocks') return initial.mode === 'blocks' && Object.keys(draft.blocks).length === 0
+  return initial.mode !== 'blocks' && draft.text === initial.text
+}
+
+/** An api call that rejects counts as an unavailable server, so no state is ever left waiting for it. */
+async function settle<T>(call: () => Promise<ApiResult<T>>): Promise<ApiResult<T>> {
+  try {
+    return await call()
+  } catch {
+    return { ok: false, error: 'unavailable' }
+  }
+}
+
 function initialSession(mission: Mission): MissionSession {
   const draft = initialDraft(mission)
   const starter: Attempt | null = mission.mode === 'fix' ? { id: 0, input: draft, evaluation: evaluate(mission, draft) } : null
@@ -144,7 +159,8 @@ export function createWorkshopStore({ content, passMission, api }: WorkshopDeps)
         update(missionId, (session) => (session.addedBlocks.includes(type) ? session : { ...session, addedBlocks: [...session.addedBlocks, type] })),
       setText: (missionId, value) =>
         update(missionId, (session) => (session.draft.mode === 'blocks' ? session : { ...session, draft: { mode: session.draft.mode, text: value } })),
-      resetDraft: (missionId) => update(missionId, (session, mission) => ({ ...session, draft: initialDraft(mission) })),
+      resetDraft: (missionId) =>
+        update(missionId, (session, mission) => (isInitialDraft(session.draft, mission) ? session : { ...session, draft: initialDraft(mission) })),
       test: (missionId) => {
         const session = get().sessions[missionId]
         // A test ends the attempt Ada was advising on: the next one may hear the same tips again.
@@ -153,6 +169,7 @@ export function createWorkshopStore({ content, passMission, api }: WorkshopDeps)
       alreadyThere: (missionId, detailId) => {
         const session = get().sessions[missionId]
         if (!session) return
+        // Unlike test(), this keeps tipsShown: it re-evaluates the last attempt and starts no new typing round.
         const overrides = session.overrides.includes(detailId) ? session.overrides : [...session.overrides, detailId]
         if (session.last && session.last.id > 0) record(missionId, session.last.input, overrides, session.tipsShown)
         else update(missionId, (current) => ({ ...current, overrides }))
@@ -166,7 +183,7 @@ export function createWorkshopStore({ content, passMission, api }: WorkshopDeps)
         const status = get().corrector.health
         if (status === 'checking' || status === 'online') return
         patchCorrector({ health: 'checking' })
-        const result = await api.health()
+        const result = await settle(() => api.health())
         patchCorrector({ health: result.ok && result.data.corrector ? 'online' : 'offline' })
       },
       setCorrectorPrompt: (value) => patchCorrector({ prompt: value }),
@@ -175,7 +192,7 @@ export function createWorkshopStore({ content, passMission, api }: WorkshopDeps)
         const { prompt, purpose, status } = get().corrector
         if (status === 'checking' || prompt.trim() === '') return
         patchCorrector({ status: 'checking', error: null })
-        const result = await api.correct({ prompt, purpose: purpose.trim() || undefined, lang: 'en' })
+        const result = await settle(() => api.correct({ prompt, purpose: purpose.trim() || undefined, lang: 'en' }))
         if (result.ok) {
           patchCorrector({ status: 'done', report: result.data, checkedPrompt: prompt.trim(), checks: get().corrector.checks + 1, run: IDLE_RUN })
         } else {
@@ -183,10 +200,12 @@ export function createWorkshopStore({ content, passMission, api }: WorkshopDeps)
         }
       },
       runBoth: async () => {
-        const { report, checkedPrompt, run } = get().corrector
-        if (!report || !checkedPrompt || run.status === 'running') return
+        const { report, checkedPrompt, run, status, checks } = get().corrector
+        if (!report || !checkedPrompt || run.status === 'running' || status === 'checking') return
         patchCorrector({ run: { ...IDLE_RUN, status: 'running' } })
-        const [original, improved] = await Promise.all([api.run(checkedPrompt), api.run(report.improvedPrompt)])
+        const [original, improved] = await Promise.all([settle(() => api.run(checkedPrompt)), settle(() => api.run(report.improvedPrompt))])
+        // A re-check made a newer report (and reset the run) while these answers were on their way: they are about the old one.
+        if (get().corrector.checks !== checks) return
         if (original.ok && improved.ok) {
           patchCorrector({ run: { status: 'done', original: original.data.answer, improved: improved.data.answer, error: null } })
         } else {
