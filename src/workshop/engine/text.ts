@@ -10,7 +10,7 @@ export interface Span {
   end: number
 }
 
-const APOSTROPHES = /[''ʼ`]/g
+const APOSTROPHES = /[‘’ʼ`]/g
 const MARKS = /\p{M}/gu
 const SPACE = /\s/u
 const WORD_CHAR = /[\p{L}\p{N}]/u
@@ -74,15 +74,41 @@ export function findFirst(source: NormalizedText, patterns: readonly string[]): 
   return { start: source.map[best.index], end: source.map[best.index + best.length - 1] + 1 }
 }
 
-const SENTENCE_END = /[.!?\n]/
+const CLOSING_PUNCT = /['""\)]/
+
+/** Check if position i is a sentence-ending punctuation that ends the sentence. */
+function isSentenceBoundary(source: string, i: number): boolean {
+  if (i >= source.length) return true
+  const char = source[i]
+  if (char === '\n') return true
+  if (char === '.' || char === '!' || char === '?') {
+    // Sentence-ending punctuation: check what follows
+    let j = i + 1
+    // Skip closing quotes/parens
+    while (j < source.length && CLOSING_PUNCT.test(source[j])) {
+      j++
+    }
+    // Must be followed by whitespace or end of text
+    return j >= source.length || SPACE.test(source[j])
+  }
+  return false
+}
 
 /** Grows a span to the sentence (or line) that contains it, without the surrounding spaces. */
 export function sentenceSpan(source: string, span: Span): Span {
   let start = span.start
-  while (start > 0 && !SENTENCE_END.test(source[start - 1])) start--
+  while (start > 0 && !isSentenceBoundary(source, start - 1)) start--
   let end = span.end
-  while (end < source.length && !SENTENCE_END.test(source[end])) end++
-  if (end < source.length && source[end] !== '\n') end++
+  while (end < source.length && !isSentenceBoundary(source, end)) end++
+  // Move past the sentence-ending punctuation and any following closing quotes
+  if (end < source.length && (source[end] === '.' || source[end] === '!' || source[end] === '?')) {
+    end++
+    while (end < source.length && CLOSING_PUNCT.test(source[end])) {
+      end++
+    }
+  } else if (end < source.length && source[end] === '\n') {
+    end++
+  }
   while (start < end && SPACE.test(source[start])) start++
   while (end > start && SPACE.test(source[end - 1])) end--
   return { start, end }

@@ -7,7 +7,7 @@ const slice = (text: string, ...patterns: string[]) => {
 }
 
 test('normalizing lowercases, strips accents, unifies apostrophes and collapses spaces', () => {
-  expect(normalizeText("  Café  au\n\n LAIT 's ").text).toBe("cafe au lait 's")
+  expect(normalizeText("  Café  au\n\n LAIT ’s ").text).toBe("cafe au lait 's")
 })
 
 test('the map points back to the original characters', () => {
@@ -31,7 +31,7 @@ test('punctuation and numbers inside patterns are matched literally', () => {
   expect(slice('Get 15% off now', '15%')).toBe('15%')
   expect(slice('for instance, e.g. a café', 'e.g.')).toBe('e.g.')
   expect(slice('Open 24/7 all year', '24/7')).toBe('24/7')
-  expect(slice("Please don't blame them", "don't")).toBe("don't")
+  expect(slice("Please don’t blame them", "don’t")).toBe("don’t")
 })
 
 test('multi-word patterns survive line breaks and extra spaces', () => {
@@ -43,7 +43,7 @@ test('the earliest match among patterns wins', () => {
 })
 
 test('accented text maps back to the accented original', () => {
-  expect(slice("Écrire à Martín's bakery", 'martin*')).toBe('Martín')
+  expect(slice("Écrire à Martín’s bakery", 'martin*')).toBe('Martín')
 })
 
 test('compiled patterns are cached', () => {
@@ -61,4 +61,18 @@ test('a sentence also stops at line breaks', () => {
   const text = 'Role: writer\nClient: Martin\nTone: warm'
   const sentence = sentenceSpan(text, find(text, 'martin')!)
   expect(text.slice(sentence.start, sentence.end)).toBe('Client: Martin')
+})
+
+test('periods in decimals do not end sentences', () => {
+  const text = 'The price is 3.5 euros. Ok.'
+  const span = find(text, 'euros')!
+  const sentence = sentenceSpan(text, span)
+  expect(text.slice(sentence.start, sentence.end)).toBe('The price is 3.5 euros.')
+})
+
+test('periods in filenames do not end sentences', () => {
+  const text = 'Open config.json now. Then stop.'
+  const span = find(text, 'now')!
+  const sentence = sentenceSpan(text, span)
+  expect(text.slice(sentence.start, sentence.end)).toBe('Open config.json now.')
 })
