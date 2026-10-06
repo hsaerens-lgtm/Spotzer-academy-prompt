@@ -1,7 +1,8 @@
 import { createReadStream } from 'node:fs'
 import { stat } from 'node:fs/promises'
 import type { ServerResponse } from 'node:http'
-import { extname, resolve, sep } from 'node:path'
+import { extname, relative, resolve, sep } from 'node:path'
+import { pipeline } from 'node:stream'
 
 const TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -38,6 +39,8 @@ export async function serveStatic(distDir: string, pathname: string, res: Server
   if (path.endsWith('/')) path += 'index.html'
   const file = resolve(root, `.${path}`)
   if (file !== root && !file.startsWith(root + sep)) return plain(res, 403, 'Forbidden')
+  // Dotfiles and dot folders (dist/.vite/manifest.json, a stray .env) are never part of the site.
+  if (relative(root, file).split(sep).some((segment) => segment.startsWith('.'))) return plain(res, 404, 'Not found')
   let size: number
   try {
     const info = await stat(file)
@@ -56,9 +59,8 @@ export async function serveStatic(distDir: string, pathname: string, res: Server
     res.end()
     return 200
   }
-  // The file can vanish between stat and open: drop the connection rather than crash on an unhandled stream error.
-  createReadStream(file)
-    .on('error', () => res.destroy())
-    .pipe(res)
+  // pipeline closes both ends when either fails or goes away: a client that abandons a download, or a file that
+  // vanishes between stat and open, neither leaks the file handle nor raises an unhandled stream error.
+  pipeline(createReadStream(file), res, () => {})
   return 200
 }

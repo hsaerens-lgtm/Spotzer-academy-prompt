@@ -18,8 +18,12 @@ export function graderInstructions(blocks: BlocksFile): string {
   ].join('\n\n')
 }
 
-/** The writer's text sits between two markers: break any marker they type, so they cannot close the block early. */
-const neutralizeMarkers = (text: string) => text.replace(/<<<(?=\s*PROMPT)/gi, '<< <').replace(/(PROMPT\s*)>>>/gi, '$1> >>')
+/**
+ * The writer's text sits between two markers made of <<< and >>>. Break every run of three or more of those characters
+ * (they become "< < <"), so the text can neither close the block early nor open a second one, and cannot join the real
+ * markers either: a prompt starting with ">>>" would otherwise read "<<<PROMPT" then ">>>".
+ */
+const neutralizeMarkers = (text: string) => text.replace(/<{3,}|>{3,}/g, (run) => [...run].join(' '))
 
 export function graderInput(prompt: string, purpose: string | undefined): string {
   return [

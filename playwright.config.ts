@@ -22,6 +22,8 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm run dev -- --port 5199 --strictPort',
+    // A variable already set wins over .env.local: an empty key keeps the corrector off, so e2e never calls OpenAI.
+    env: { OPENAI_API_KEY: '' },
     url: 'http://localhost:5199',
     reuseExistingServer: true,
     timeout: 60_000,

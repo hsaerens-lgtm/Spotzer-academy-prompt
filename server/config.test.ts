@@ -17,6 +17,11 @@ test('without any variable the corrector is off and safe defaults apply', () => 
   })
 })
 
+test('an empty or blank key means no key, so the corrector is off', () => {
+  expect(readConfig({ OPENAI_API_KEY: '' }).apiKey).toBeNull()
+  expect(readConfig({ OPENAI_API_KEY: '   ' }).apiKey).toBeNull()
+})
+
 test('variables are trimmed; invalid numbers fall back to the defaults', () => {
   const config = readConfig({
     OPENAI_API_KEY: '  test-key  ',

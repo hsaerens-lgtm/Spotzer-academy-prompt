@@ -24,15 +24,9 @@ const handler = createHandler({
   log: (entry) => console.log(JSON.stringify(entry)),
 })
 
+// The handler answers its own failures (a bare 500, logged without detail); this only guards its logger.
 const server = createServer((req, res) => {
-  handler(req, res).catch(() => {
-    if (!res.headersSent) {
-      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' })
-      res.end('{"error":"error"}')
-    } else {
-      res.end()
-    }
-  })
+  handler(req, res).catch(() => res.destroy())
 })
 
 server.on('error', (error: NodeJS.ErrnoException) => {
@@ -40,7 +34,11 @@ server.on('error', (error: NodeJS.ErrnoException) => {
   process.exit(1)
 })
 
-server.listen(config.port, () => {
+// Every interface by default (production, behind its own reverse proxy); "npm run dev" sets HOST=127.0.0.1 so a
+// development key can only be spent from this machine.
+const host = process.env.HOST?.trim() || undefined
+
+server.listen(config.port, host, () => {
   const corrector = config.apiKey ? `corrector on (${config.model})` : 'corrector off: no OPENAI_API_KEY in .env.local'
-  console.log(`Athena workshop server on http://localhost:${config.port} - ${corrector}${distDir ? ', serving dist/' : ''}`)
+  console.log(`Athena workshop server on http://${host ?? 'localhost'}:${config.port} - ${corrector}${distDir ? ', serving dist/' : ''}`)
 })

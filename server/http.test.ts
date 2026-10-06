@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer, request, type IncomingMessage, type Server } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -32,8 +32,19 @@ async function start(options: { env?: Record<string, string>; distDir?: string |
   base = `http://127.0.0.1:${port}`
 }
 
+const tempDirs: string[] = []
+const tempDist = () => {
+  const dir = mkdtempSync(join(tmpdir(), 'academy-dist-'))
+  tempDirs.push(dir)
+  return dir
+}
+
 afterEach(async () => {
   await new Promise((resolve) => server.close(resolve))
+})
+
+afterAll(() => {
+  for (const dir of tempDirs) rmSync(dir, { recursive: true, force: true })
 })
 
 const post = (path: string, body: unknown) =>
@@ -115,6 +126,44 @@ test('the body limit is 32 KiB: the longest run prompt in 3-byte characters fits
   expect(call).toHaveBeenCalledTimes(1)
 })
 
+test('a streamed body is refused as soon as it passes the limit, without waiting for the rest', async () => {
+  await start()
+  const status = await new Promise<number>((resolve) => {
+    const req = request(
+      { host: '127.0.0.1', port, path: '/api/run', method: 'POST', headers: { 'Content-Type': 'application/json', 'Transfer-Encoding': 'chunked' } },
+      (res) => {
+        res.resume()
+        resolve(res.statusCode ?? 0)
+        req.destroy()
+      },
+    )
+    req.on('error', () => {})
+    // The request is never ended: only an answer given on the way can resolve this.
+    for (let sent = 0; sent <= MAX_BODY_BYTES; sent += 8 * 1024) req.write(Buffer.alloc(8 * 1024, 'x'))
+  })
+  expect(status).toBe(413)
+  expect(call).not.toHaveBeenCalled()
+})
+
+test('the content type is compared as a media type, not searched for a substring', async () => {
+  await start()
+  const body = JSON.stringify({ prompt: 'Hi' })
+  for (const type of ['Application/JSON', 'application/json; charset=utf-8']) {
+    expect((await raw('/api/run', { method: 'POST', headers: { 'Content-Type': type }, body })).status, type).toBe(200)
+  }
+  for (const type of ['text/plain; x=application/json', 'application/jsonp', 'text/application/json']) {
+    expect((await raw('/api/run', { method: 'POST', headers: { 'Content-Type': type }, body })).status, type).toBe(415)
+  }
+})
+
+test('a request from the site itself, with Origin equal to Host, goes through; another port is another origin', async () => {
+  await start()
+  const body = JSON.stringify({ prompt: 'Hi' })
+  const from = (origin: string) => raw('/api/run', { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: origin }, body })
+  expect((await from(`http://127.0.0.1:${port}`)).status).toBe(200)
+  expect((await from(`http://127.0.0.1:${port + 1}`)).status).toBe(403)
+})
+
 test('without a key the corrector is unavailable and never calls OpenAI', async () => {
   await start({ env: {} })
   const response = await post('/api/correct', { prompt: 'Hi', lang: 'en' })
@@ -156,7 +205,7 @@ test('unknown API routes are 404 and other methods are 405', async () => {
 })
 
 test('serves the built site with the right types and blocks path traversal', async () => {
-  const dist = mkdtempSync(join(tmpdir(), 'academy-dist-'))
+  const dist = tempDist()
   mkdirSync(join(dist, 'assets'))
   writeFileSync(join(dist, 'index.html'), '<!doctype html><title>Academy</title>')
   writeFileSync(join(dist, 'assets', 'app.js'), 'console.log(1)')
@@ -169,20 +218,72 @@ test('serves the built site with the right types and blocks path traversal', asy
   expect(script.headers.get('cache-control')).toContain('immutable')
   expect((await fetch(`${base}/missing.txt`)).status).toBe(404)
   expect((await raw('/..%2fpackage.json')).status).toBe(403)
+  // An encoded backslash is a separator on Windows (403) and an ordinary character elsewhere (no such file).
+  expect((await raw('/..%5cpackage.json')).status).toBe(process.platform === 'win32' ? 403 : 404)
+  expect((await raw('/assets/..%5c..%5cpackage.json')).status).toBe(process.platform === 'win32' ? 403 : 404)
   const head = await raw('/', { method: 'HEAD' })
   expect(head.status).toBe(200)
   expect(head.body).toBe('')
 })
 
+test('never serves dotfiles such as the build manifest, however the path is written', async () => {
+  const dist = tempDist()
+  mkdirSync(join(dist, '.vite'))
+  writeFileSync(join(dist, 'index.html'), '<!doctype html><title>Academy</title>')
+  writeFileSync(join(dist, '.vite', 'manifest.json'), '{"build":"details"}')
+  writeFileSync(join(dist, '.env'), 'SECRET=1')
+  await start({ distDir: dist })
+  for (const path of ['/.vite/manifest.json', '/%2evite/manifest.json', '/assets/../.vite/manifest.json', '/.env']) {
+    const response = await raw(path)
+    expect(response.status, path).toBe(404)
+    expect(response.body, path).not.toContain('details')
+  }
+  expect((await fetch(`${base}/`)).status).toBe(200)
+})
+
+test('answers a malformed request target with 400 and logs no route', async () => {
+  await start()
+  const response = await raw('//')
+  expect(response.status).toBe(400)
+  expect(JSON.parse(response.body)).toEqual({ error: 'invalid' })
+  expect((await raw('//api/health')).status).toBe(400)
+  expect((await raw('/api\\health')).status).toBe(400)
+  expect(logs).toEqual([
+    { route: '?', status: 400, ms: expect.any(Number) },
+    { route: '?', status: 400, ms: expect.any(Number) },
+    { route: '?', status: 400, ms: expect.any(Number) },
+  ])
+  expect(call).not.toHaveBeenCalled()
+})
+
+test('an unexpected failure answers a bare 500 and logs nothing from the error', async () => {
+  await start()
+  call.mockRejectedValueOnce(new Error('boom sk-leaky-detail'))
+  const response = await post('/api/run', { prompt: 'My secret client plan' })
+  expect(response.status).toBe(500)
+  expect(response.headers.get('cache-control')).toBe('no-store')
+  expect(response.headers.get('x-content-type-options')).toBe('nosniff')
+  expect(await response.json()).toEqual({ error: 'error' })
+  expect(logs).toEqual([{ route: '?', status: 500, ms: expect.any(Number) }])
+  expect(JSON.stringify(logs)).not.toMatch(/boom|leaky|secret/)
+  // The server is still up.
+  expect((await fetch(`${base}/api/health`)).status).toBe(200)
+})
+
 const fakeRequest = (headers: Record<string, string>, remoteAddress?: string) => ({ headers, socket: { remoteAddress } }) as unknown as IncomingMessage
 
-test('the client key is the socket address with IPv4-mapped IPv6 normalised, or the forwarded address when trusted', () => {
+test('the client key is the socket address with IPv4-mapped IPv6 normalised, or the address the trusted proxy appended', () => {
   expect(clientKey(fakeRequest({}, '::ffff:1.2.3.4'), false)).toBe('1.2.3.4')
   expect(clientKey(fakeRequest({}, '::FFFF:10.0.0.7'), false)).toBe('10.0.0.7')
   expect(clientKey(fakeRequest({}, '127.0.0.1'), false)).toBe('127.0.0.1')
   expect(clientKey(fakeRequest({}, '2001:db8::1'), false)).toBe('2001:db8::1')
   expect(clientKey(fakeRequest({}, undefined), false)).toBe('unknown')
-  // A forwarded address is only believed behind a proxy we were told about.
-  expect(clientKey(fakeRequest({ 'x-forwarded-for': '9.9.9.9, 10.0.0.1' }, '::ffff:1.2.3.4'), true)).toBe('9.9.9.9')
-  expect(clientKey(fakeRequest({ 'x-forwarded-for': '9.9.9.9' }, '::ffff:1.2.3.4'), false)).toBe('1.2.3.4')
+  // A forwarded address is only believed behind a proxy we were told about, and then only the last entry:
+  // the one our single trusted proxy appended. Anything before it is whatever the client chose to send.
+  expect(clientKey(fakeRequest({ 'x-forwarded-for': '9.9.9.9' }, '::ffff:1.2.3.4'), true)).toBe('9.9.9.9')
+  expect(clientKey(fakeRequest({ 'x-forwarded-for': '6.6.6.6, 9.9.9.9' }, '10.0.0.1'), true)).toBe('9.9.9.9')
+  expect(clientKey(fakeRequest({ 'x-forwarded-for': '6.6.6.6,7.7.7.7 , 9.9.9.9 ' }, '10.0.0.1'), true)).toBe('9.9.9.9')
+  expect(clientKey(fakeRequest({ 'x-forwarded-for': '::ffff:9.9.9.9' }, '10.0.0.1'), true)).toBe('9.9.9.9')
+  expect(clientKey(fakeRequest({ 'x-forwarded-for': ' ' }, '10.0.0.1'), true)).toBe('10.0.0.1')
+  expect(clientKey(fakeRequest({ 'x-forwarded-for': '6.6.6.6, 9.9.9.9' }, '::ffff:1.2.3.4'), false)).toBe('1.2.3.4')
 })
