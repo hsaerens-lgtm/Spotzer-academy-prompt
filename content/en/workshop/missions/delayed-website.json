@@ -1,0 +1,76 @@
+{
+  "id": "delayed-website",
+  "level": 1,
+  "mode": "blocks",
+  "title": "The delayed website",
+  "situation": "Martin's Bakery, a small family business, expected its new website on Monday. The photos arrived late, so the launch moves to next Friday.",
+  "goal": "Get the AI to draft the email that tells them.",
+  "blocks": {
+    "role": {
+      "required": true,
+      "placeholder": "e.g. An account manager at a web agency",
+      "details": [
+        { "id": "role-job", "label": "Who the AI should be", "patterns": ["account manager", "project manager", "customer success", "web agency", "web designer", "you are", "act as"], "hint": "Who should the AI be? Give it a job, like an account manager at a web agency." }
+      ]
+    },
+    "task": {
+      "required": true,
+      "placeholder": "e.g. Write an email to the client",
+      "details": [
+        { "id": "task-email", "label": "Write an email", "patterns": ["email", "e-mail", "message", "letter"], "hint": "What should it produce? Say it plainly: write an email to the client." }
+      ]
+    },
+    "context": {
+      "required": true,
+      "placeholder": "e.g. Who the client is, what happened, the new date",
+      "details": [
+        { "id": "client", "label": "The client's name", "patterns": ["martin*", "bakery"], "hint": "Who is the client? The AI can't guess it's Martin's Bakery." },
+        { "id": "reason", "label": "Why it's late", "patterns": ["photo*", "pictures", "images"], "hint": "Why is it late? Mention the photos that arrived late." },
+        { "id": "new-date", "label": "The new date", "patterns": ["friday", "next week", "one week", "a week", "seven days", "7 days"], "hint": "When will it be ready? Give the new date: next Friday." }
+      ]
+    },
+    "format": {
+      "required": true,
+      "placeholder": "e.g. Friendly and apologetic, under 120 words",
+      "details": [
+        { "id": "tone", "label": "The tone", "patterns": ["friendly", "warm", "polite", "apologetic", "reassuring", "professional", "positive"], "hint": "What tone? Friendly and apologetic works well for bad news." },
+        { "id": "length", "label": "The length", "patterns": ["short", "brief", "concise", "words", "sentences", "lines", "paragraph*"], "hint": "How long should it be? For example: under 120 words." }
+      ]
+    },
+    "example": {
+      "required": false,
+      "placeholder": "e.g. A sentence in the tone you like",
+      "details": [
+        { "id": "example", "label": "An example to follow", "patterns": ["for example", "e.g.", "like this", "here is an example", "such as"], "hint": "Bonus: show a sentence in the tone you like, so the AI can copy the style." }
+      ]
+    },
+    "constraint": {
+      "required": false,
+      "placeholder": "e.g. Don't blame the client",
+      "details": [
+        { "id": "constraint", "label": "A rule to respect", "patterns": ["don't", "do not", "avoid", "no more than", "never", "must not", "without"], "hint": "Bonus: add a rule, like don't blame the client." }
+      ]
+    }
+  },
+  "conflicts": [
+    { "id": "length-clash", "block": "format", "a": ["short", "brief", "concise"], "b": ["in detail", "detailed", "thorough", "very long"], "explain": "Short and detailed at the same time? The AI can't do both. Pick one length." }
+  ],
+  "answers": {
+    "vague": "Dear customer,\n\nWe would like to inform you about an update regarding your project. There may be some changes to the timeline. We will keep you informed.\n\nBest regards",
+    "passable": "Dear customer,\n\nWe are writing to let you know that your website has been delayed. We apologise for any inconvenience and will let you know the new date as soon as possible.\n\nBest regards,\nThe web team",
+    "excellent": "Hi Martin's Bakery team,\n\nQuick update on your new website: the launch is moving from this Monday to next Friday. The photos reached us a little later than planned, and we want them to look their best on your pages.\n\nSorry for the wait. We'll send you a preview link on Wednesday so you can see everything before it goes live.\n\nWarm regards,\nYour account manager"
+  },
+  "ada": {
+    "intro": "First mission: a client email with bad news. Fill in the four blocks, then press Build & test to see if your prompt holds.",
+    "success": "It holds! Every block is solid stone, so the AI wrote exactly the email you needed.",
+    "takeaway": "Context turns a generic email into the right one: who, why and when."
+  },
+  "samples": [
+    { "input": { "mode": "blocks", "blocks": { "task": "Write an email about the delay" } }, "expect": "vague" },
+    { "input": { "mode": "blocks", "blocks": { "role": "An account manager at a web agency", "task": "Write an email to the client about the delay", "context": "The website is late", "format": "Friendly" } }, "expect": "passable" },
+    { "input": { "mode": "blocks", "blocks": { "role": "An account manager at a web agency", "task": "Write an email to the client", "context": "The client is Martin's Bakery. The launch moves from Monday to next Friday because the photos arrived late.", "format": "Friendly and apologetic, under 120 words" } }, "expect": "excellent" },
+    { "input": { "mode": "blocks", "blocks": { "role": "An account manager at a web agency", "task": "Write an email to the client", "context": "The client is Martin's Bakery. The launch moves from Monday to next Friday because the photos arrived late.", "format": "Friendly and apologetic, under 120 words", "constraint": "Don't blame the client" } }, "expect": "excellent" },
+    { "input": { "mode": "blocks", "blocks": { "role": "An account manager at a web agency", "task": "Write an email to the client", "context": "The client is Martin's Bakery. The launch moves from Monday to next Friday because the photos arrived late.", "format": "Friendly, short and detailed" } }, "expect": "passable" }
+  ],
+  "reviewed": "2026-10-06"
+}

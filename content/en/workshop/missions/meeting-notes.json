@@ -1,0 +1,75 @@
+{
+  "id": "meeting-notes",
+  "level": 1,
+  "mode": "blocks",
+  "title": "Meeting notes for your manager",
+  "situation": "You took these raw notes in today's meeting with Green Leaf Gardening: homepage photos approved, blog moved to phase 2, booking form live by the 15th, Sam sends the hosting invoice, next check-in Thursday. Your manager wasn't there.",
+  "goal": "Get the AI to turn the notes into a summary your manager can read in one minute.",
+  "blocks": {
+    "role": {
+      "required": true,
+      "placeholder": "e.g. A project coordinator at a web agency",
+      "details": [
+        { "id": "role-job", "label": "Who the AI should be", "patterns": ["project coordinator", "project manager", "account manager", "assistant", "you are", "act as"], "hint": "Who should the AI be? For example, a project coordinator at a web agency." }
+      ]
+    },
+    "task": {
+      "required": true,
+      "placeholder": "e.g. Summarise these meeting notes",
+      "details": [
+        { "id": "task-summary", "label": "Summarise the notes", "patterns": ["summar*", "sum up", "recap", "digest", "overview"], "hint": "What should it do with the notes? Ask it to summarise them." }
+      ]
+    },
+    "context": {
+      "required": true,
+      "placeholder": "e.g. Who will read it, then the notes themselves",
+      "details": [
+        { "id": "notes", "label": "The notes themselves", "patterns": ["photos approved", "booking form", "invoice", "phase 2", "green leaf"], "hint": "The AI wasn't in the meeting. Paste the notes into the prompt." },
+        { "id": "audience", "label": "Who will read it", "patterns": ["manager", "boss", "team lead", "director", "head of"], "hint": "Who is it for? Say it's for your manager, who wasn't there." }
+      ]
+    },
+    "format": {
+      "required": true,
+      "placeholder": "e.g. Bullet points: decisions first, then next steps",
+      "details": [
+        { "id": "structure", "label": "Decisions and next steps", "patterns": ["decision*", "next step*", "action*", "to do", "to-do", "who does what", "owner*"], "hint": "What structure? Ask for the decisions first, then the next steps with who does what." },
+        { "id": "bullets", "label": "Bullet points", "patterns": ["bullet*", "list", "points"], "hint": "What shape? Bullet points are quick to read." }
+      ]
+    },
+    "example": {
+      "required": false,
+      "placeholder": "e.g. A sample line in the style you want",
+      "details": [
+        { "id": "example", "label": "An example to follow", "patterns": ["for example", "e.g.", "like this", "here is an example", "such as"], "hint": "Bonus: show one sample line, like Booking form: live by the 15th." }
+      ]
+    },
+    "constraint": {
+      "required": false,
+      "placeholder": "e.g. No more than 6 bullets",
+      "details": [
+        { "id": "constraint", "label": "A rule to respect", "patterns": ["don't", "do not", "avoid", "no more than", "never", "must not", "without"], "hint": "Bonus: add a rule, like no more than 6 bullets." }
+      ]
+    }
+  },
+  "conflicts": [
+    { "id": "shape-clash", "block": "format", "a": ["bullet*", "list"], "b": ["one paragraph", "a paragraph", "prose"], "explain": "Bullet points and a single paragraph at the same time? The roof cracks. Choose one shape." }
+  ],
+  "answers": {
+    "vague": "The meeting covered several topics related to the project. Various items were discussed and some decisions were made. Follow-up actions will be taken.",
+    "passable": "Summary of the meeting: the homepage photos were approved, the blog was moved to a later phase, and the client wants the booking form soon. There are some follow-ups, including an invoice and another meeting.",
+    "excellent": "Green Leaf Gardening: meeting recap\n\nDecisions\n- Homepage photos: approved\n- Blog section: moved to phase 2\n\nNext steps\n- Booking form live by the 15th (our team)\n- Hosting invoice: Sam sends it\n- Next check-in: Thursday"
+  },
+  "ada": {
+    "intro": "Your manager missed the meeting. Build a prompt that turns your messy notes into a one-minute read.",
+    "success": "Solid! The AI knew the notes, the reader and the shape, so the summary is ready to send.",
+    "takeaway": "The AI only knows what you paste in. Give it the material, the reader and the shape."
+  },
+  "samples": [
+    { "input": { "mode": "blocks", "blocks": { "task": "Summarise my notes" } }, "expect": "vague" },
+    { "input": { "mode": "blocks", "blocks": { "role": "You are a project coordinator", "task": "Summarise the meeting", "context": "For my manager", "format": "Bullet points" } }, "expect": "passable" },
+    { "input": { "mode": "blocks", "blocks": { "role": "A project coordinator at a web agency", "task": "Summarise these meeting notes", "context": "It's for my manager, who wasn't there. Notes: homepage photos approved, blog moved to phase 2, booking form live by the 15th, Sam sends the hosting invoice, next check-in Thursday.", "format": "Bullet points: decisions first, then next steps with who does what" } }, "expect": "excellent" },
+    { "input": { "mode": "blocks", "blocks": { "role": "A project coordinator at a web agency", "task": "Summarise these meeting notes", "context": "It's for my manager, who wasn't there. Notes: homepage photos approved, blog moved to phase 2, booking form live by the 15th, Sam sends the hosting invoice, next check-in Thursday.", "format": "Bullet points: decisions first, then next steps with who does what", "constraint": "No more than 6 bullets" } }, "expect": "excellent" },
+    { "input": { "mode": "blocks", "blocks": { "role": "A project coordinator at a web agency", "task": "Summarise these meeting notes", "context": "It's for my manager, who wasn't there. Notes: homepage photos approved, blog moved to phase 2, booking form live by the 15th, Sam sends the hosting invoice, next check-in Thursday.", "format": "Bullet points in one paragraph, decisions first" } }, "expect": "passable" }
+  ],
+  "reviewed": "2026-10-06"
+}

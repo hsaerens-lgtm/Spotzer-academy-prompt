@@ -1,0 +1,71 @@
+{
+  "id": "florist-post",
+  "level": 2,
+  "mode": "free",
+  "title": "A post for a florist",
+  "situation": "Rosa's Flowers, a florist client, runs a Mother's Day offer: 15% off all bouquets until Sunday, with free delivery in town. They want a post for their Instagram page.",
+  "goal": "Write a prompt that gets the AI to draft the post.",
+  "blocks": {
+    "role": {
+      "required": true,
+      "details": [
+        { "id": "role-job", "label": "Who the AI should be", "patterns": ["social media manager", "community manager", "copywriter", "marketer", "marketing", "you are", "act as"], "hint": "Who should the AI be? A social media manager knows how posts work." }
+      ]
+    },
+    "task": {
+      "required": true,
+      "details": [
+        { "id": "task-post", "label": "A social media post", "patterns": ["post", "caption"], "hint": "What should it write? Say it's a social media post." }
+      ]
+    },
+    "context": {
+      "required": true,
+      "details": [
+        { "id": "client", "label": "The shop's name", "patterns": ["rosa*", "florist", "flower shop"], "hint": "Who is it for? Name the shop: Rosa's Flowers." },
+        { "id": "offer", "label": "The offer", "patterns": ["15%", "15 %", "15 percent", "fifteen percent", "discount", "off all bouquets", "mother's day offer"], "hint": "What's the offer? The AI needs the facts: 15% off all bouquets." },
+        { "id": "deadline", "label": "When it ends", "patterns": ["until sunday", "sunday", "this weekend"], "hint": "Until when? Say the offer ends on Sunday." }
+      ]
+    },
+    "format": {
+      "required": true,
+      "details": [
+        { "id": "platform", "label": "Where it will be posted", "patterns": ["instagram", "facebook", "linkedin", "tiktok"], "hint": "Where will it be posted? Instagram posts have their own style." },
+        { "id": "tone", "label": "The tone", "patterns": ["warm", "friendly", "joyful", "cheerful", "playful", "emotional", "fun", "upbeat"], "hint": "What tone? Warm and joyful suits Mother's Day." },
+        { "id": "cta", "label": "A call to action", "patterns": ["call to action", "link in bio", "order", "shop now", "visit", "book"], "hint": "What should readers do? Ask for a call to action, like order before Sunday." }
+      ]
+    },
+    "example": {
+      "required": false,
+      "details": [
+        { "id": "example", "label": "An example to follow", "patterns": ["for example", "e.g.", "like this", "here is an example", "such as"], "hint": "Bonus: give an example of a post you liked, so the AI can follow the style." }
+      ]
+    },
+    "constraint": {
+      "required": false,
+      "details": [
+        { "id": "constraint", "label": "A rule to respect", "patterns": ["don't", "do not", "avoid", "no more than", "never", "must not", "without"], "hint": "Bonus: add a rule, like no more than 3 hashtags." }
+      ]
+    }
+  },
+  "conflicts": [
+    { "id": "tone-clash", "block": "format", "a": ["formal", "serious", "corporate"], "b": ["playful", "fun", "casual", "jokey"], "explain": "Formal and playful at the same time? The roof cracks. Pick one voice for the post." }
+  ],
+  "answers": {
+    "vague": "Check out our flowers! We have a great offer for Mother's Day. Don't miss it!",
+    "passable": "Mother's Day is coming! Rosa's Flowers has a special offer on bouquets this week. Visit us to find the perfect gift for your mum.",
+    "excellent": "Mum deserves flowers that say it all. This Mother's Day, Rosa's Flowers takes 15% off every bouquet, and we deliver for free in town. The offer ends Sunday, so order today via the link in our bio and make her smile. #MothersDay #RosasFlowers"
+  },
+  "ada": {
+    "intro": "Level 2: no more blocks to fill. Write your prompt in your own words, and I'll point out what's missing while you type.",
+    "success": "Beautiful, the building holds. The AI had the shop, the offer, the platform and the call to action.",
+    "takeaway": "In free text the blocks are still there: you just write them as sentences."
+  },
+  "samples": [
+    { "input": { "mode": "free", "text": "Write a post about flowers." }, "expect": "vague" },
+    { "input": { "mode": "free", "text": "You are a social media manager. Write an Instagram post for Rosa's Flowers about their Mother's Day discount." }, "expect": "passable" },
+    { "input": { "mode": "free", "text": "You are a social media manager. Write an Instagram post for Rosa's Flowers, a florist. The offer: 15% off all bouquets until Sunday, with free delivery in town. Make it warm and joyful, and end with a call to action to order via the link in bio." }, "expect": "excellent" },
+    { "input": { "mode": "free", "text": "You are a social media manager. Write an Instagram post for Rosa's Flowers, a florist. The offer: 15% off all bouquets until Sunday, with free delivery in town. Make it warm and joyful, and end with a call to action to order via the link in bio. Don't use more than 3 hashtags." }, "expect": "excellent" },
+    { "input": { "mode": "free", "text": "You are a social media manager. Write an Instagram post for Rosa's Flowers, a florist. The offer: 15% off all bouquets until Sunday. Make it formal and playful, with a call to action to order via the link in bio." }, "expect": "passable" }
+  ],
+  "reviewed": "2026-10-06"
+}

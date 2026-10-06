@@ -1,0 +1,38 @@
+{
+  "role": {
+    "label": "Role",
+    "building": "the foundation",
+    "good": "Says who the AI should be: a job, an expertise, a point of view.",
+    "example": "You are an account manager at a web agency."
+  },
+  "task": {
+    "label": "Task",
+    "building": "the ground floor",
+    "good": "Says exactly what to produce, with an action verb.",
+    "example": "Write an email to the client about the delay."
+  },
+  "context": {
+    "label": "Context",
+    "building": "the upper floor",
+    "good": "Gives the facts the AI cannot know: who, what, why, when.",
+    "example": "The client is Martin's Bakery. The photos arrived late, so the launch moves to next Friday."
+  },
+  "format": {
+    "label": "Format",
+    "building": "the roof",
+    "good": "Describes the result: length, tone, structure and where it will be used.",
+    "example": "Friendly and apologetic, under 120 words."
+  },
+  "example": {
+    "label": "Example",
+    "building": "a pillar",
+    "good": "Shows a sample of what good looks like, so the AI can follow the pattern.",
+    "example": "For example: Quick update on your website..."
+  },
+  "constraint": {
+    "label": "Constraint",
+    "building": "the braces",
+    "good": "Sets a rule to respect: something to avoid or a limit not to cross.",
+    "example": "Don't blame the client. No more than 120 words."
+  }
+}
