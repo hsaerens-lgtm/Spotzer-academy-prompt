@@ -136,8 +136,12 @@ function firstMissing(mission: Mission, result: BlockResult): Detail {
 export function adviceFor(mission: Mission, evaluation: Evaluation): Advice {
   if (evaluation.passed || evaluation.weakest === null) return { kind: 'success' }
   const result = blockResult(evaluation, evaluation.weakest)
-  if (result.quality === 0) return { kind: 'hole', block: result.type, detail: firstMissing(mission, result) }
-  if (result.quality < 3) return { kind: 'weak', block: result.type, quality: result.quality as 1 | 2, detail: firstMissing(mission, result) }
+  // A required block below stone comes first. Otherwise `weakest` was chosen through the crack fallback
+  // (a stone block, or an optional one), and the contradiction is the problem, not a missing detail.
+  if (result.required && result.quality === 0) return { kind: 'hole', block: result.type, detail: firstMissing(mission, result) }
+  if (result.required && result.quality < 3) {
+    return { kind: 'weak', block: result.type, quality: result.quality as 1 | 2, detail: firstMissing(mission, result) }
+  }
   const conflict = mission.conflicts.find((c) => c.block === result.type && evaluation.conflicts.includes(c.id))!
   return { kind: 'cracked', block: result.type, conflict }
 }

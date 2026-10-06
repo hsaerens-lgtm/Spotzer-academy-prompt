@@ -91,6 +91,26 @@ test('advice names the weakest block and its first missing detail', () => {
   expect(adviceFor(mission, evaluate(mission, blocks(full)))).toEqual({ kind: 'success' })
 })
 
+test('a clash in an optional block is advised as a crack, not as a missing detail', () => {
+  const optional = makeMission({
+    conflicts: [{ id: 'rule-clash', block: 'constraint', a: ['short'], b: ['detailed'], explain: 'Short or detailed? Pick one.' }],
+  })
+  const inBlocks = evaluate(optional, blocks({ ...full, constraint: 'Be short and detailed' }))
+  expect(blockResult(inBlocks, 'constraint')).toMatchObject({ cracked: true, quality: 1 })
+  expect(inBlocks.weakest).toBe('constraint')
+  expect(adviceFor(optional, inBlocks)).toMatchObject({ kind: 'cracked', block: 'constraint', conflict: { id: 'rule-clash' } })
+
+  const text = 'You are an account manager. Write an email to Martin. The photos were late, launch next Friday. Keep it friendly, 100 words. Be short and detailed.'
+  const inText = evaluate(optional, { mode: 'free', text })
+  expect(blockResult(inText, 'constraint')).toMatchObject({ cracked: true, quality: 0 })
+  expect(inText.weakest).toBe('constraint')
+  expect(adviceFor(optional, inText)).toMatchObject({ kind: 'cracked', block: 'constraint', conflict: { id: 'rule-clash' } })
+
+  // A required block below stone still comes first.
+  const weakAndCracked = evaluate(optional, blocks({ ...full, context: 'Martin', constraint: 'Be short and detailed' }))
+  expect(adviceFor(optional, weakAndCracked)).toMatchObject({ kind: 'weak', block: 'context' })
+})
+
 test('live tips point at the first hole or cardboard block, once per detail', () => {
   const evaluation = evaluate(mission, { mode: 'free', text: 'Write an email to Martin about the photos, next Friday.' })
   const first = nextTip(mission, evaluation, new Set())
@@ -112,7 +132,7 @@ test('blank inputs and word counts', () => {
 
 // Review focus 1: a long pasted prompt stays fast and its highlights land on the right sentence.
 test('long pasted prompts evaluate quickly and map back to the right sentence', () => {
-  const filler = 'Ceci est une phrase de remplissage, avec des accents et des \u2018guillemets\u2019. '.repeat(40)
+  const filler = 'Ceci est une phrase de remplissage, avec des accents, caf\u00E9 \u00E0 c\u00F4t\u00E9, et des\u2018guillemets\u2019. '.repeat(40)
   const text = `${filler}You are an account manager.\n\nWrite an email to Mart\u00EDn. ${filler}`
   const started = performance.now()
   const evaluation = evaluate(mission, { mode: 'free', text })
