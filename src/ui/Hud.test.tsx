@@ -42,6 +42,12 @@ test('offers the available languages', () => {
   expect(screen.getByRole('combobox', { name: /Language/ })).toHaveValue('en')
 })
 
+test('is hidden in the workshop, whose taskbar replaces it', () => {
+  appStore.setState({ zone: 'workshop' })
+  const { container } = render(<Hud />)
+  expect(container).toBeEmptyDOMElement()
+})
+
 // The HUD (z-index 20) sits above the overlay (z-index 10): an aria-modal dialog must not leave it clickable or focusable.
 test('the HUD is inert while the expanded view is open', () => {
   render(<Hud />)

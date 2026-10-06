@@ -10,6 +10,8 @@ import {
   markSeen,
   saveProgress,
   saveSettings,
+  withMissionPassed,
+  withoutWorkshopPrompts,
   type Progress,
   type Settings,
   type StorageLike,
@@ -19,6 +21,11 @@ export type ZoneId = 'office' | 'workshop' | 'dungeon'
 export const ZONES: readonly ZoneId[] = ['office', 'workshop', 'dungeon']
 export type Via = 'laptop' | 'tv'
 export type HoverTarget = 'laptop' | 'tv' | 'ada'
+export type WorkshopApp = 'corrector' | 'prompts'
+export interface WorkshopRoute {
+  mission: string | null
+  app: WorkshopApp | null
+}
 
 export interface Transition {
   to: ZoneId
@@ -44,6 +51,7 @@ export interface AppState {
   hovered: HoverTarget | null
   adaPokes: number
   expandOpen: boolean
+  workshopRoute: WorkshopRoute
 
   requestZone: (to: ZoneId, via?: Via) => void
   transitionStep: () => void
@@ -65,6 +73,9 @@ export interface AppState {
   setHovered: (target: HoverTarget | null) => void
   pokeAda: () => void
   setExpandOpen: (open: boolean) => void
+  setWorkshopRoute: (route: WorkshopRoute) => void
+  passWorkshopMission: (id: string, prompt: string, total: number) => void
+  clearWorkshopPrompts: () => void
 }
 
 export interface StoreDeps {
@@ -112,6 +123,7 @@ export function createAppStore(deps: StoreDeps): StoreApi<AppState> {
       hovered: null,
       adaPokes: 0,
       expandOpen: false,
+      workshopRoute: { mission: null, app: null },
 
       requestZone: (to, via) => {
         const s = get()
@@ -184,6 +196,13 @@ export function createAppStore(deps: StoreDeps): StoreApi<AppState> {
       setHovered: (target) => set({ hovered: target }),
       pokeAda: () => set({ adaPokes: get().adaPokes + 1 }),
       setExpandOpen: (open) => set({ expandOpen: open }),
+      setWorkshopRoute: (route) => {
+        const current = get().workshopRoute
+        if (current.mission === route.mission && current.app === route.app) return
+        set({ workshopRoute: route })
+      },
+      passWorkshopMission: (id, prompt, total) => setProgress(withMissionPassed(get().progress, id, prompt, total)),
+      clearWorkshopPrompts: () => setProgress(withoutWorkshopPrompts(get().progress)),
     }
   })
 }

@@ -19,6 +19,7 @@
     "clickableHint": "Psst – the laptop and the old console are clickable too.",
     "learn": "Learn the basics",
     "workshop": "Prompt workshop",
+    "workshopProgress": "Prompt workshop · {{done}}/{{total}}",
     "dungeon": "The dungeon",
     "pickTopic": "Pick a topic to start."
   },

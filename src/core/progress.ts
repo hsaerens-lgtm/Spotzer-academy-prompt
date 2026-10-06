@@ -3,6 +3,8 @@ import { z } from 'zod'
 export const PROGRESS_KEY = 'athena-prompt-academy:v1'
 export const SETTINGS_KEY = 'athena-prompt-academy:settings'
 
+const workshopSchema = z.object({ passed: z.array(z.string()), prompts: z.record(z.string(), z.string()) })
+
 const progressSchema = z.object({
   version: z.literal(1),
   topicsSeen: z.array(z.string()),
@@ -10,8 +12,11 @@ const progressSchema = z.object({
   workshopDone: z.boolean(),
   dungeon: z.object({ passed: z.boolean(), bestScore: z.number() }).nullable(),
   firstVisitDone: z.boolean(),
+  /** Added by the workshop (spec 2); progress saved before it simply has no such key. */
+  workshop: workshopSchema.optional(),
 })
 export type Progress = z.infer<typeof progressSchema>
+export type WorkshopProgress = z.infer<typeof workshopSchema>
 
 const settingsSchema = z.object({ sound: z.boolean(), lang: z.string() })
 export type Settings = z.infer<typeof settingsSchema>
@@ -72,4 +77,25 @@ export function markSeen(progress: Progress, topicId: string, section: 'basics' 
   const key = section === 'basics' ? 'topicsSeen' : 'deeperSeen'
   if (progress[key].includes(topicId)) return progress
   return { ...progress, [key]: [...progress[key], topicId] }
+}
+
+/** The workshop part of the progress, empty when absent. Returns a new object when absent: not for useApp selectors. */
+export const workshopProgress = (progress: Progress): WorkshopProgress => progress.workshop ?? { passed: [], prompts: {} }
+
+export function withMissionPassed(progress: Progress, id: string, prompt: string, total: number): Progress {
+  const current = workshopProgress(progress)
+  const known = current.passed.includes(id)
+  if (known && current.prompts[id] === prompt) return progress
+  const passed = known ? current.passed : [...current.passed, id]
+  return {
+    ...progress,
+    workshop: { passed, prompts: { ...current.prompts, [id]: prompt } },
+    workshopDone: progress.workshopDone || passed.length >= total,
+  }
+}
+
+export function withoutWorkshopPrompts(progress: Progress): Progress {
+  const current = workshopProgress(progress)
+  if (Object.keys(current.prompts).length === 0) return progress
+  return { ...progress, workshop: { ...current, prompts: {} } }
 }

@@ -18,6 +18,13 @@ test('workshop and dungeon buttons fly to their objects', async () => {
   expect(appStore.getState().transition).toEqual({ to: 'workshop', via: 'laptop', stage: 'flight' })
 })
 
+test('the workshop button shows the missions passed', () => {
+  render(<WelcomeBar />)
+  expect(screen.getByRole('button', { name: 'Prompt workshop' })).toBeInTheDocument()
+  act(() => appStore.getState().passWorkshopMission('delayed-website', 'Prompt', 6))
+  expect(screen.getByRole('button', { name: 'Prompt workshop · 1/6' })).toBeInTheDocument()
+})
+
 test('first-visit hints disappear once scrolled and once a topic was opened', () => {
   render(<WelcomeBar />)
   expect(screen.getByText('Scroll to take a seat')).toBeInTheDocument()

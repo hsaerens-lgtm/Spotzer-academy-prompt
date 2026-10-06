@@ -4,25 +4,40 @@ import { formatHash, parseHash, startRouter } from './router'
 import { createAppStore } from './store'
 
 describe('parseHash', () => {
+  const route = (zone: string, extra: Partial<{ topic: string; mission: string; app: string }> = {}) => ({
+    zone,
+    topic: null,
+    mission: null,
+    app: null,
+    ...extra,
+  })
   it.each([
-    ['', { zone: 'office', topic: null }],
-    ['#/office', { zone: 'office', topic: null }],
-    ['#/workshop', { zone: 'workshop', topic: null }],
-    ['#/dungeon', { zone: 'dungeon', topic: null }],
-    ['#/office?topic=tokens', { zone: 'office', topic: 'tokens' }],
-    ['#/office?topic=', { zone: 'office', topic: null }],
-    ['#/dungeon?topic=tokens', { zone: 'dungeon', topic: null }],
-    ['#/nope', { zone: 'office', topic: null }],
-    ['#garbage??', { zone: 'office', topic: null }],
-  ])('%s', (hash, route) => {
-    expect(parseHash(hash)).toEqual(route)
+    ['', route('office')],
+    ['#/office', route('office')],
+    ['#/workshop', route('workshop')],
+    ['#/dungeon', route('dungeon')],
+    ['#/office?topic=tokens', route('office', { topic: 'tokens' })],
+    ['#/office?topic=', route('office')],
+    ['#/dungeon?topic=tokens', route('dungeon')],
+    ['#/nope', route('office')],
+    ['#garbage??', route('office')],
+    ['#/workshop?mission=florist-post', route('workshop', { mission: 'florist-post' })],
+    ['#/workshop?app=corrector', route('workshop', { app: 'corrector' })],
+    ['#/workshop?app=prompts&mission=newsletter', route('workshop', { app: 'prompts', mission: 'newsletter' })],
+    ['#/workshop?app=hack', route('workshop')],
+    ['#/office?mission=florist-post', route('office')],
+  ])('%s', (hash, expected) => {
+    expect(parseHash(hash)).toEqual(expected)
   })
 })
 
 test('formatHash', () => {
-  expect(formatHash({ zone: 'office', topic: null })).toBe('#/office')
-  expect(formatHash({ zone: 'office', topic: 'tokens' })).toBe('#/office?topic=tokens')
-  expect(formatHash({ zone: 'workshop', topic: 'tokens' })).toBe('#/workshop')
+  const route = { topic: null, mission: null, app: null }
+  expect(formatHash({ ...route, zone: 'office' })).toBe('#/office')
+  expect(formatHash({ ...route, zone: 'office', topic: 'tokens' })).toBe('#/office?topic=tokens')
+  expect(formatHash({ ...route, zone: 'workshop', topic: 'tokens' })).toBe('#/workshop')
+  expect(formatHash({ ...route, zone: 'workshop', mission: 'florist-post' })).toBe('#/workshop?mission=florist-post')
+  expect(formatHash({ ...route, zone: 'workshop', mission: 'florist-post', app: 'corrector' })).toBe('#/workshop?app=corrector')
 })
 
 describe('startRouter', () => {
@@ -161,6 +176,88 @@ describe('startRouter', () => {
       store.getState().transitionStep()
       expect(store.getState().zone).toBe('workshop')
       expect(window.location.hash).toBe('#/workshop')
+    })
+  })
+
+  describe('workshop', () => {
+    it('opens a deep-linked mission', () => {
+      window.history.replaceState(null, '', '#/workshop?mission=florist-post')
+      const store = newStore()
+      stop = startRouter(store)
+      expect(store.getState()).toMatchObject({ zone: 'workshop', workshopRoute: { mission: 'florist-post', app: null } })
+      expect(window.location.hash).toBe('#/workshop?mission=florist-post')
+    })
+
+    // Like ?topic= in the office: moving inside a zone never adds a history entry, so Back leaves the zone.
+    it('fills in the mission, then changes mission or program, without history entries', () => {
+      window.history.replaceState(null, '', '#/workshop')
+      const store = newStore()
+      stop = startRouter(store)
+      const before = window.history.length
+      store.getState().setWorkshopRoute({ mission: 'delayed-website', app: null })
+      expect(window.location.hash).toBe('#/workshop?mission=delayed-website')
+      expect(window.history.length).toBe(before)
+      store.getState().setWorkshopRoute({ mission: 'newsletter', app: null })
+      expect(window.location.hash).toBe('#/workshop?mission=newsletter')
+      store.getState().setWorkshopRoute({ mission: 'newsletter', app: 'corrector' })
+      expect(window.location.hash).toBe('#/workshop?app=corrector')
+      expect(window.history.length).toBe(before)
+    })
+
+    it('normalises an unknown mission without a history entry, and Back is not trapped', async () => {
+      window.history.replaceState(null, '', '#/office')
+      window.history.pushState(null, '', '#/workshop?mission=ghost')
+      const store = newStore()
+      stop = startRouter(store)
+      expect(store.getState().workshopRoute).toEqual({ mission: 'ghost', app: null })
+      const before = window.history.length
+      // The workshop swaps an unknown mission for the suggested one.
+      store.getState().setWorkshopRoute({ mission: 'florist-post', app: null })
+      expect(window.location.hash).toBe('#/workshop?mission=florist-post')
+      expect(window.history.length).toBe(before)
+      window.history.back()
+      await new Promise<void>((resolve) => window.addEventListener('popstate', () => resolve(), { once: true }))
+      expect(store.getState().transition).toEqual({ to: 'office', via: null, stage: 'fade' })
+      expect(window.location.hash).toBe('#/office')
+      expect(window.history.length).toBe(before)
+    })
+
+    // Review focus 4: Back and Forward between missions.
+    it('follows Back to the previous mission', () => {
+      window.history.replaceState(null, '', '#/workshop?mission=newsletter')
+      const store = newStore()
+      stop = startRouter(store)
+      window.history.replaceState(null, '', '#/workshop?mission=delayed-website')
+      window.dispatchEvent(new PopStateEvent('popstate'))
+      expect(store.getState().workshopRoute).toEqual({ mission: 'delayed-website', app: null })
+    })
+
+    it('keeps the last mission when leaving for the office and coming back', () => {
+      window.history.replaceState(null, '', '#/workshop?mission=newsletter')
+      const store = newStore()
+      stop = startRouter(store)
+      store.getState().requestZone('office')
+      store.getState().transitionStep()
+      expect(window.location.hash).toBe('#/office')
+      store.getState().requestZone('workshop')
+      store.getState().transitionStep()
+      expect(window.location.hash).toBe('#/workshop?mission=newsletter')
+    })
+
+    it('landing on a workshop entry from the office does not rewrite the office entry', () => {
+      window.history.replaceState(null, '', '#/office')
+      const store = newStore()
+      stop = startRouter(store)
+      const before = window.history.length
+      // Forward (or Back) to a workshop entry: the browser has already moved the URL.
+      window.history.replaceState(null, '', '#/workshop?mission=newsletter')
+      window.dispatchEvent(new PopStateEvent('popstate'))
+      expect(store.getState().transition).toEqual({ to: 'workshop', via: null, stage: 'fade' })
+      expect(window.location.hash).toBe('#/workshop?mission=newsletter')
+      store.getState().transitionStep()
+      expect(store.getState()).toMatchObject({ zone: 'workshop', workshopRoute: { mission: 'newsletter', app: null } })
+      expect(window.location.hash).toBe('#/workshop?mission=newsletter')
+      expect(window.history.length).toBe(before)
     })
   })
 })
