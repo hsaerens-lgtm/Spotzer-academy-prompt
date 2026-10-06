@@ -18,12 +18,15 @@ export function graderInstructions(blocks: BlocksFile): string {
   ].join('\n\n')
 }
 
+/** The writer's text sits between two markers: break any marker they type, so they cannot close the block early. */
+const neutralizeMarkers = (text: string) => text.replace(/<<<(?=\s*PROMPT)/gi, '<< <').replace(/(PROMPT\s*)>>>/gi, '$1> >>')
+
 export function graderInput(prompt: string, purpose: string | undefined): string {
   return [
-    `Purpose of the prompt (may be empty): ${purpose ?? ''}`,
+    `Purpose of the prompt (may be empty): ${neutralizeMarkers(purpose ?? '')}`,
     'The prompt to inspect is between the markers.',
     '<<<PROMPT',
-    prompt,
+    neutralizeMarkers(prompt),
     'PROMPT>>>',
   ].join('\n')
 }

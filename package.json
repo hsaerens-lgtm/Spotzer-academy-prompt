@@ -7,7 +7,9 @@
     "node": "^22.22.2 || ^24.15.0"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/dev.mjs",
+    "dev:site": "vite",
+    "start": "node --env-file-if-exists=.env.local server/index.ts",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p .",
