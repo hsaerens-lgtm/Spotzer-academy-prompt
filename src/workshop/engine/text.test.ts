@@ -7,7 +7,7 @@ const slice = (text: string, ...patterns: string[]) => {
 }
 
 test('normalizing lowercases, strips accents, unifies apostrophes and collapses spaces', () => {
-  expect(normalizeText("  Café  au\n\n LAIT ’s ").text).toBe("cafe au lait 's")
+  expect(normalizeText("  Caf\u00E9  au\n\n LAIT \u2019s ").text).toBe("cafe au lait 's")
 })
 
 test('the map points back to the original characters', () => {
@@ -29,9 +29,9 @@ test('a trailing star matches the rest of the word, not a word that ends with it
 
 test('punctuation and numbers inside patterns are matched literally', () => {
   expect(slice('Get 15% off now', '15%')).toBe('15%')
-  expect(slice('for instance, e.g. a café', 'e.g.')).toBe('e.g.')
+  expect(slice('for instance, e.g. a caf\u00E9', 'e.g.')).toBe('e.g.')
   expect(slice('Open 24/7 all year', '24/7')).toBe('24/7')
-  expect(slice("Please don’t blame them", "don’t")).toBe("don’t")
+  expect(slice("Please don\u2019t blame them", "don\u2019t")).toBe("don\u2019t")
 })
 
 test('multi-word patterns survive line breaks and extra spaces', () => {
@@ -43,7 +43,7 @@ test('the earliest match among patterns wins', () => {
 })
 
 test('accented text maps back to the accented original', () => {
-  expect(slice("Écrire à Martín’s bakery", 'martin*')).toBe('Martín')
+  expect(slice("Écrire à Mart\u00EDn\u2019s bakery", 'martin*')).toBe('Mart\u00EDn')
 })
 
 test('compiled patterns are cached', () => {
@@ -75,4 +75,22 @@ test('periods in filenames do not end sentences', () => {
   const span = find(text, 'now')!
   const sentence = sentenceSpan(text, span)
   expect(text.slice(sentence.start, sentence.end)).toBe('Open config.json now.')
+})
+
+test('closing quotes after punctuation belong to previous sentence', () => {
+  const text = 'He said "stop." Then Martin left.'
+  const spanMartin = find(text, 'martin')!
+  const sentenceMartin = sentenceSpan(text, spanMartin)
+  expect(text.slice(sentenceMartin.start, sentenceMartin.end)).toBe('Then Martin left.')
+  
+  const spanStop = find(text, 'stop')!
+  const sentenceStop = sentenceSpan(text, spanStop)
+  expect(text.slice(sentenceStop.start, sentenceStop.end)).toBe('He said "stop."')
+})
+
+test('closing parens after punctuation belong to previous sentence', () => {
+  const text = 'See (the doc.) Then Martin left.'
+  const span = find(text, 'martin')!
+  const sentence = sentenceSpan(text, span)
+  expect(text.slice(sentence.start, sentence.end)).toBe('Then Martin left.')
 })

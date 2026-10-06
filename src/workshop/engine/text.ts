@@ -10,7 +10,7 @@ export interface Span {
   end: number
 }
 
-const APOSTROPHES = /[‘’ʼ`]/g
+const APOSTROPHES = /[\u2018\u2019\u02BC`]/g
 const MARKS = /\p{M}/gu
 const SPACE = /\s/u
 const WORD_CHAR = /[\p{L}\p{N}]/u
@@ -45,7 +45,7 @@ export function normalizeText(source: string): NormalizedText {
 }
 
 const cache = new Map<string, RegExp>()
-const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')
+const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\/]/g, '\$&')
 const WORD = '[\\p{L}\\p{N}]'
 
 /** Plain-word pattern → regular expression on normalized text. A trailing `*` matches the rest of the word. */
@@ -74,7 +74,7 @@ export function findFirst(source: NormalizedText, patterns: readonly string[]): 
   return { start: source.map[best.index], end: source.map[best.index + best.length - 1] + 1 }
 }
 
-const CLOSING_PUNCT = /['""\)]/
+const CLOSING_PUNCT = /["\u201D'\u2019\)]/
 
 /** Check if position i is a sentence-ending punctuation that ends the sentence. */
 function isSentenceBoundary(source: string, i: number): boolean {
@@ -98,6 +98,8 @@ function isSentenceBoundary(source: string, i: number): boolean {
 export function sentenceSpan(source: string, span: Span): Span {
   let start = span.start
   while (start > 0 && !isSentenceBoundary(source, start - 1)) start--
+  // Skip any closing punctuation that belongs to the previous sentence
+  while (start < source.length && CLOSING_PUNCT.test(source[start])) start++
   let end = span.end
   while (end < source.length && !isSentenceBoundary(source, end)) end++
   // Move past the sentence-ending punctuation and any following closing quotes
