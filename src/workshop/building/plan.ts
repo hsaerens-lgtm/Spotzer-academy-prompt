@@ -30,7 +30,7 @@ export interface PlannedBody {
   restitution: number
   appearStep: number
   link: Link
-  /** Sideways speed (m/s) given at impact. */
+  /** Sideways speed (m/s) the body is held at for VAGUE_SHOVE_STEPS steps from the impact (0: not pushed). */
   push: number
 }
 
@@ -140,8 +140,9 @@ export function planBuilding(input: BuildingInput): BuildingPlan {
   })
 
   if (loose) {
-    const highest = [...bodies].sort((a, b) => b.position[1] - a.position[1]).slice(0, 2)
-    for (const body of highest) body.push = VAGUE_PUSH
+    // The two highest floors are pushed: both halves of a cracked floor, so a cracked roof cannot shield the floor below it.
+    const highest = [...new Set(bodies.map((b) => b.block))].slice(-2)
+    for (const body of bodies) if (highest.includes(body.block)) body.push = VAGUE_PUSH
   }
 
   const top = bottom

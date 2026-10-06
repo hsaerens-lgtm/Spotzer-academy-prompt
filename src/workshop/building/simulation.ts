@@ -49,7 +49,36 @@ function anchors(upper: PlannedBody, lower: Pick<PlannedBody, 'position' | 'size
   }
 }
 
+/**
+ * How far each hinge turns at the impact, relative to the floor below it. A hinge turns by its lean, the way
+ * that lifts the side away from its pivot, so hinged floors zig-zag; the turn is cut short so that no hinged
+ * floor ends up tilted more than HINGE.maxAngle in the world (it then never dips into the floor below).
+ * Welded floors keep the angle of the floor below; unlinked floors are taken as upright.
+ */
+function hingeTurns(bodies: readonly PlannedBody[]): Map<string, number> {
+  const turns = new Map<string, number>()
+  const worldAngle = new Map<string, number>()
+  for (const { id, link } of bodies) {
+    const lower = link.to === null ? 0 : (worldAngle.get(link.to) ?? 0)
+    if (link.kind === 'hinge') {
+      const leaned = lower - link.pivotSide * link.lean
+      const turn = Math.min(HINGE.maxAngle, Math.max(-HINGE.maxAngle, leaned)) - lower
+      turns.set(id, turn)
+      worldAngle.set(id, lower + turn)
+    } else {
+      worldAngle.set(id, link.kind === 'weld' ? lower : 0)
+    }
+  }
+  return turns
+}
+
 export function createSimulation(plan: BuildingPlan, R: Rapier): Simulation {
+  const ids = new Set(plan.bodies.map((b) => b.id))
+  for (const { id, link } of plan.bodies) {
+    if (link.to !== null && !ids.has(link.to)) throw new Error(`Body "${id}" is linked to "${link.to}", which is not in the plan`)
+  }
+  const turns = hingeTurns(plan.bodies)
+
   const world = new R.World({ x: 0, y: -9.81, z: 0 })
   world.timestep = 1 / STEP_HZ
   world.numSolverIterations = SOLVER_ITERATIONS
@@ -71,38 +100,35 @@ export function createSimulation(plan: BuildingPlan, R: Rapier): Simulation {
   })
 
   let step = 0
+  let disposed = false
 
   const enable = (sim: SimBody) => {
     sim.body.setEnabled(true)
     sim.enabled = true
     const { link } = sim.plan
     if (link.kind === 'none') return
-    // `to: null` is the ground under the foundation.
-    const below = link.to === null ? null : byId.get(link.to)
-    if (below === undefined) return
+    // `to: null` is the ground under the foundation; any other id was checked above.
+    const below = link.to === null ? null : byId.get(link.to)!
     const at = anchors(sim.plan, below?.plan ?? GROUND_FLOOR, link.kind === 'hinge')
     const data = link.kind === 'weld' ? R.JointData.fixed(at.lower, IDENTITY, at.upper, IDENTITY) : R.JointData.revolute(at.lower, at.upper, Z_AXIS)
     const joint = world.createImpulseJoint(data, below?.body ?? ground, sim.body, true)
-    if (link.kind === 'hinge') {
-      const hinge = joint as RevoluteImpulseJoint
-      const limit = Math.abs(link.lean) + HINGE.margin
-      hinge.setLimits(-limit, limit)
-      hinge.configureMotorPosition(0, HINGE.stiffness, HINGE.damping)
-    }
+    // A hinge stands straight until the impact.
+    if (link.kind === 'hinge') (joint as RevoluteImpulseJoint).setLimits(0, 0)
     sim.joint = joint
   }
 
   /**
-   * From the impact on, `since` steps later: hinged floors lean progressively (a stiff motor whose target
-   * ramps up, so the load above cannot hold them straight and nothing is flung), and pushed floors are
-   * shoved sideways at their push speed for a few steps, whatever rests on them.
+   * From the impact on, `since` steps later: each hinge's limits turn it a little further, up to its full
+   * turn after HINGE.rampSteps (limits, unlike a motor, hold whatever load rests above), and pushed bodies
+   * are held at their push speed sideways for VAGUE_SHOVE_STEPS, whatever rests on them.
    */
   const afterImpact = (since: number) => {
     const ramp = Math.min(1, (since + 1) / HINGE.rampSteps)
     for (const sim of bodies) {
-      const { link, push } = sim.plan
+      const { id, link, push } = sim.plan
       if (since < HINGE.rampSteps && sim.joint && link.kind === 'hinge') {
-        ;(sim.joint as RevoluteImpulseJoint).configureMotorPosition(-link.pivotSide * link.lean * ramp, HINGE.stiffness, HINGE.damping)
+        const angle = (turns.get(id) ?? 0) * ramp
+        ;(sim.joint as RevoluteImpulseJoint).setLimits(angle, angle)
       }
       if (since < VAGUE_SHOVE_STEPS && push !== 0 && sim.enabled) {
         const velocity = sim.body.linvel()
@@ -112,7 +138,7 @@ export function createSimulation(plan: BuildingPlan, R: Rapier): Simulation {
   }
 
   const advance = (): SimEvent[] => {
-    if (step >= plan.steps.end) return []
+    if (disposed || step >= plan.steps.end) return []
     const events: SimEvent[] = []
     for (const sim of bodies) {
       if (!sim.enabled && sim.plan.appearStep === step) {
@@ -138,9 +164,13 @@ export function createSimulation(plan: BuildingPlan, R: Rapier): Simulation {
     },
     advance,
     runToEnd: () => {
-      while (step < plan.steps.end) advance()
+      while (!disposed && step < plan.steps.end) advance()
     },
-    dispose: () => world.free(),
+    dispose: () => {
+      if (disposed) return
+      disposed = true
+      world.free()
+    },
   }
 }
 

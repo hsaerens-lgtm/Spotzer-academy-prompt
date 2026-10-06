@@ -3,7 +3,7 @@ import RAPIER from '@dimforge/rapier3d-compat'
 import { getWorkshopContent } from '../content'
 import { evaluate } from '../engine/evaluate'
 import { tierFor } from '../engine/rules'
-import { OUTCOME_FOR_TIER, type BlockType, type Quality, type Tier } from '../model'
+import { CORE_BLOCKS, OUTCOME_FOR_TIER, type BlockType, type Quality, type Tier } from '../model'
 import { inputFromEvaluation, planBuilding, type BuildingInput } from './plan'
 import { createSimulation, measureOutcome } from './simulation'
 
@@ -60,4 +60,39 @@ test.each(samples)('$mission.id sample $index looks the way its tier reads', ({ 
 test('the same prompt always gives the same fall', () => {
   const input = make([2, 1, 1, 1])
   expect(simulate(input).positions).toEqual(simulate(input).positions)
+})
+
+// Regression sweep: every building without a hole, with no crack, one crack or two, and no bonus, one or both.
+const SOLID: Quality[] = [1, 2, 3]
+const solid = SOLID.flatMap((a) => SOLID.flatMap((b) => SOLID.flatMap((c) => SOLID.map((d) => [a, b, c, d]))))
+const CRACKS: BlockType[][] = [[], ...CORE_BLOCKS.map((a) => [a]), ...CORE_BLOCKS.flatMap((a, i) => CORE_BLOCKS.slice(i + 1).map((b) => [a, b]))]
+const BONUSES: [Quality, Quality][] = [[0, 0], [3, 0], [3, 3]]
+
+describe('every crack and bonus pattern on a building without holes ends as its tier says', () => {
+  for (const core of solid) {
+    for (const cracked of CRACKS) {
+      for (const bonus of BONUSES) {
+        test(`${core.join('')} cracked ${cracked.join('+') || 'none'} bonus ${bonus.join('')}`, () => {
+          const input = make(core, { cracked, bonus })
+          expect(simulate(input).outcome).toBe(OUTCOME_FOR_TIER[input.tier])
+        })
+      }
+    }
+  }
+})
+
+test('a disposed simulation can be disposed again and no longer moves', () => {
+  const simulation = createSimulation(planBuilding(make([3, 3, 3, 3])), RAPIER)
+  simulation.advance()
+  simulation.dispose()
+  expect(() => simulation.dispose()).not.toThrow()
+  expect(simulation.advance()).toEqual([])
+  simulation.runToEnd()
+  expect(simulation.step).toBe(1)
+})
+
+test('a link to a body missing from the plan is an error', () => {
+  const plan = planBuilding(make([3, 3, 3, 3]))
+  const broken = { ...plan, bodies: plan.bodies.map((b) => (b.id === 'task' ? { ...b, link: { ...b.link, to: 'nowhere' } } : b)) }
+  expect(() => createSimulation(broken, RAPIER)).toThrow('Body "task" is linked to "nowhere", which is not in the plan')
 })

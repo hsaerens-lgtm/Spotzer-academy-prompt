@@ -61,6 +61,11 @@ test('a vague building has no joints and pushes its two highest bodies', () => {
   expect(plan.bodies.filter((b) => b.push > 0).map((b) => b.id)).toEqual(['context', 'format'])
 })
 
+test('a cracked roof on a vague building is pushed with the floor under it', () => {
+  const plan = planBuilding(input([1, 1, 2, 1], 'vague', { cracked: ['format'] }))
+  expect(plan.bodies.filter((b) => b.push > 0).map((b) => b.id)).toEqual(['context', 'format-left', 'format-right'])
+})
+
 test('a cracked floor becomes two halves that open outwards', () => {
   const plan = planBuilding(input([3, 3, 3, 3], 'passable', { cracked: ['format'] }))
   const left = body(plan, 'format-left')
