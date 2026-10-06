@@ -15,7 +15,7 @@ const MARKS = /\p{M}/gu
 const SPACE = /\s/u
 const WORD_CHAR = /[\p{L}\p{N}]/u
 
-/** Lowercase, accents removed, apostrophes unified, whitespace runs collapsed — with a map back to the original. */
+/** Lowercase, accents removed, apostrophes unified, whitespace runs collapsed, with a map back to the original. */
 export function normalizeText(source: string): NormalizedText {
   let text = ''
   const map: number[] = []
@@ -45,10 +45,10 @@ export function normalizeText(source: string): NormalizedText {
 }
 
 const cache = new Map<string, RegExp>()
-const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\/]/g, '\$&')
+const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')
 const WORD = '[\\p{L}\\p{N}]'
 
-/** Plain-word pattern → regular expression on normalized text. A trailing `*` matches the rest of the word. */
+/** Plain-word pattern to regular expression on normalized text. A trailing `*` matches the rest of the word. */
 export function compilePattern(pattern: string): RegExp {
   const cached = cache.get(pattern)
   if (cached) return cached
@@ -74,42 +74,40 @@ export function findFirst(source: NormalizedText, patterns: readonly string[]): 
   return { start: source.map[best.index], end: source.map[best.index + best.length - 1] + 1 }
 }
 
+const TERMINATOR = /[.!?]/
+/** Closing characters that stay with the sentence they close: " (U+0022), U+201D, ' (U+0027), U+2019 and ). */
 const CLOSING_PUNCT = /["\u201D'\u2019\)]/
 
-/** Check if position i is a sentence-ending punctuation that ends the sentence. */
+/**
+ * True when the character at `i` ends a sentence: a line break, or `.`, `!`, `?` followed
+ * (after any closing quotes or parentheses) by whitespace or the end of the text.
+ */
 function isSentenceBoundary(source: string, i: number): boolean {
   if (i >= source.length) return true
   const char = source[i]
   if (char === '\n') return true
-  if (char === '.' || char === '!' || char === '?') {
-    // Sentence-ending punctuation: check what follows
-    let j = i + 1
-    // Skip closing quotes/parens
-    while (j < source.length && CLOSING_PUNCT.test(source[j])) {
-      j++
-    }
-    // Must be followed by whitespace or end of text
-    return j >= source.length || SPACE.test(source[j])
-  }
-  return false
+  if (!TERMINATOR.test(char)) return false
+  let j = i + 1
+  while (j < source.length && CLOSING_PUNCT.test(source[j])) j++
+  return j >= source.length || SPACE.test(source[j])
 }
 
 /** Grows a span to the sentence (or line) that contains it, without the surrounding spaces. */
 export function sentenceSpan(source: string, span: Span): Span {
   let start = span.start
   while (start > 0 && !isSentenceBoundary(source, start - 1)) start--
-  // Skip any closing punctuation that belongs to the previous sentence
-  while (start < source.length && CLOSING_PUNCT.test(source[start])) start++
+  // Closing quotes or parentheses right after a `.`, `!` or `?` close the previous sentence. After a
+  // line break, or inside the span, a quote is an opening one and stays.
+  if (start > 0 && TERMINATOR.test(source[start - 1])) {
+    while (start < span.start && CLOSING_PUNCT.test(source[start])) start++
+  }
   let end = span.end
   while (end < source.length && !isSentenceBoundary(source, end)) end++
-  // Move past the sentence-ending punctuation and any following closing quotes
-  if (end < source.length && (source[end] === '.' || source[end] === '!' || source[end] === '?')) {
+  if (end < source.length && TERMINATOR.test(source[end])) {
     end++
-    while (end < source.length && CLOSING_PUNCT.test(source[end])) {
-      end++
-    }
-  } else if (end < source.length && source[end] === '\n') {
-    end++
+    while (end < source.length && CLOSING_PUNCT.test(source[end])) end++
+  } else if (end < source.length) {
+    end++ // the line break
   }
   while (start < end && SPACE.test(source[start])) start++
   while (end > start && SPACE.test(source[end - 1])) end--
