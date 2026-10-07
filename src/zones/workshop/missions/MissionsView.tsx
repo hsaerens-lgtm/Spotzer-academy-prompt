@@ -178,7 +178,16 @@ export function MissionsView({ missionId, onNextMission, renderBuilder, focusOnO
         revealed={revealed}
         reading={reading}
       />
-      {renderBuilder({ input: buildingInput, runKey: attempt?.id ?? 0, seen: revealed, onDone, onUnavailable, onBlockClick, onReading: setReading })}
+      {/* A fix mission's starter (attempt 0) is not the learner's test: its building is already standing, collapsed (spec 3.6). */}
+      {renderBuilder({
+        input: buildingInput,
+        runKey: attempt?.id ?? 0,
+        seen: revealed || attempt?.id === 0,
+        onDone,
+        onUnavailable,
+        onBlockClick,
+        onReading: setReading,
+      })}
       <AiOutput
         className="ws-area-output"
         mission={mission}

@@ -185,8 +185,11 @@ test('the browser history: one entry into the workshop, none inside it, Back lan
 
 test('a fix mission starts collapsed and holds once fixed', async ({ page }) => {
   await openWorkshop(page, '?mission=plumber-services')
-  await page.getByRole('button', { name: 'Skip' }).click({ timeout: 15_000 }).catch(() => {})
-  await expect(page.getByRole('region', { name: 'AI_OUTPUT.TXT' }).getByText('COLLAPSED \u00B7 VAGUE')).toBeVisible({ timeout: 30_000 })
+  // Spec 3.6: the building already stands collapsed as the mission opens; it is not built up first, so nothing to skip.
+  const builder = page.getByRole('region', { name: 'BUILDER.EXE' })
+  expect(await builder.getByRole('button', { name: 'Skip' }).count()).toBe(0)
+  await expect(builder.getByRole('meter', { name: 'Stability' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'AI_OUTPUT.TXT' }).getByText('COLLAPSED \u00B7 VAGUE')).toBeVisible()
   await adaDone(page)
   await page.screenshot({ path: `${EVIDENCE}/03-fix-collapsed.png` })
   await fill(
@@ -372,7 +375,6 @@ async function passLastMission(page: Page) {
     window.localStorage.setItem('athena-prompt-academy:v1', JSON.stringify(progress))
   }, lastMission.others)
   await openWorkshop(page, '?mission=plumber-services')
-  await page.getByRole('button', { name: 'Skip' }).click({ timeout: 15_000 }).catch(() => {})
   await fill(page, 'Your prompt', lastMission.text)
   await buildAndWait(page, 'HOLDS \u00B7 EXCELLENT')
   expect((await state(page)).progress.workshopDone).toBe(true)

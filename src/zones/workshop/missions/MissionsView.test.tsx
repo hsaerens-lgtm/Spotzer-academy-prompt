@@ -213,6 +213,21 @@ test('a fix mission starts from its collapsed prompt and Reset restores it', asy
   expect(editor).toHaveValue('Write a services page.')
 })
 
+// Spec 3.6, level 3: the builder already shows the starter's collapsed building, without building it up first.
+test("a fix mission's starter building is shown already collapsed, with no replay", async () => {
+  const user = userEvent.setup()
+  const slot = renderManual('plumber-services')
+  expect(slot()).toMatchObject({ runKey: 0, seen: true })
+  expect(slot().input?.tier).toBe('vague')
+  act(() => slot().onDone(0))
+  expect(screen.getByText('COLLAPSED · VAGUE')).toBeInTheDocument()
+  // The learner's own attempts are built as usual.
+  await user.type(screen.getByRole('textbox', { name: 'Your prompt' }), ' For Bram.')
+  await user.click(screen.getByRole('button', { name: 'Build & test' }))
+  expect(slot().runKey).toBeGreaterThan(0)
+  expect(slot().seen).toBe(false)
+})
+
 test('Copy my prompt copies the assembled prompt, or selects it when the clipboard is refused', async () => {
   // userEvent.setup() puts its own clipboard stub on navigator: spy on that stub, after the setup.
   const user = userEvent.setup()

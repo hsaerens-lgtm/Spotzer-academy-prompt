@@ -120,7 +120,8 @@ export function BuilderWindow({
       tools={
         use3D && run ? (
           <>
-            {!done && (
+            {/* Nothing to skip for a building already seen: it is shown at its end from the first frame. */}
+            {!done && !seen && (
               <BevelButton
                 ref={skipButton}
                 size="sm"
