@@ -38,6 +38,16 @@ test('mergeParts bakes one colour per part when asked', () => {
   expect(mergeParts([{ geometry: new BoxGeometry(), colour: red }]).hasAttribute('color')).toBe(false)
 })
 
+test('mergeParts refuses an empty list', () => {
+  expect(() => mergeParts([])).toThrow('mergeParts needs at least one part')
+})
+
+test('mergeParts drops groups: the result is for one material', () => {
+  const box = new BoxGeometry(1, 1, 1)
+  expect(box.groups.length).toBeGreaterThan(0)
+  expect(mergeParts([{ geometry: box }, { geometry: new BoxGeometry(1, 1, 1) }]).groups).toEqual([])
+})
+
 test('mergeParts leaves its inputs untouched', () => {
   const box = new BoxGeometry(1, 1, 1)
   const before = Array.from(box.getAttribute('position').array)

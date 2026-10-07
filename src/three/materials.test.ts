@@ -1,8 +1,20 @@
-import { Color, DoubleSide, MeshPhysicalMaterial, MeshStandardMaterial, Texture } from 'three'
+import {
+  BoxGeometry,
+  Color,
+  DoubleSide,
+  Group,
+  Mesh,
+  MeshBasicMaterial,
+  MeshLambertMaterial,
+  MeshPhysicalMaterial,
+  MeshStandardMaterial,
+  ShaderMaterial,
+  Texture,
+} from 'three'
 import { brand } from '../core/brand'
 import { TEXTURE_SET_IDS } from './assets'
-import { isTextured } from './audit'
-import { ENV_MAP_INTENSITY, buildMaterials, pbrMaterial, type MaterialKey } from './materials'
+import { isTextured, untexturedMeshes } from './audit'
+import { ENV_MAP_INTENSITY, applyEnvironment, buildMaterials, pbrMaterial, type MaterialKey } from './materials'
 import type { TextureSets } from './textures'
 import { tints } from './tints'
 
@@ -36,6 +48,8 @@ test('every shared material is textured or exempt', () => {
   expect(m.floor.normalMap).toBe(sets.floor.normal)
   expect(m.floor.roughnessMap).toBe(sets.floor.arm)
   expect(m.floor.aoMap).toBe(sets.floor.arm)
+  // These check what the materials hold. three 0.186 renders envMapIntensity only once a material has its own envMap:
+  // the rendered effect of the ratios comes through applyEnvironment() (tests at the end of this file).
   expect(m.floor.envMapIntensity).toBe(ENV_MAP_INTENSITY.surface)
   expect(m.ceiling.map).toBe(sets.wall.color)
   expect(m.rug.map).toBe(sets.carpet.color)
@@ -90,4 +104,99 @@ test('tints come from tints.ts and brand.ts', () => {
   expect(m.signBack.emissive.getHexString()).toBe(new Color(brand.onDark).getHexString())
   expect(m.lampShade.emissive.getHexString()).toBe(new Color(tints.warmLight).getHexString())
   expect([tints.sofaFabric, tints.cushion, tints.porcelain, tints.visor]).toEqual([brand.blueGrey, brand.lime, brand.onDark, brand.nearBlack])
+})
+
+test('the shared materials pass the audit, and the emissive ones really have an emissive colour', () => {
+  const m = buildMaterials(fakeSets())
+  const box = new BoxGeometry()
+  const room = new Group()
+  for (const key of KEYS) room.add(Object.assign(new Mesh(box, m[key]), { name: key }))
+  expect(untexturedMeshes(room)).toEqual([])
+  for (const key of KEYS) {
+    if (m[key].userData.auditExempt !== 'emissive') continue
+    const { r, g, b } = m[key].emissive
+    expect(r + g + b, key).toBeGreaterThan(0)
+  }
+  // The audit is not vacuous: a flat material among them is reported.
+  room.add(Object.assign(new Mesh(box, new MeshStandardMaterial({ name: 'flat' })), { name: 'plate' }))
+  expect(untexturedMeshes(room)).toEqual(['plate#flat'])
+})
+
+test('every material records its environment ratio', () => {
+  const sets = fakeSets()
+  const m = buildMaterials(sets)
+  for (const key of ['floor', 'oak', 'blackMetal', 'consoleShell', 'porcelain'] as const) {
+    expect(m[key].userData.envBase, key).toBe(ENV_MAP_INTENSITY.surface)
+  }
+  expect(m.glass.userData.envBase).toBe(1.5)
+  const leaf = pbrMaterial(sets.oak, { name: 'leaf', tint: tints.oak, metal: false, envMapIntensity: ENV_MAP_INTENSITY.plant })
+  expect(leaf.userData.envBase).toBe(0.45)
+  expect(leaf.envMapIntensity).toBe(0.45)
+})
+
+test('applyEnvironment scales each ratio by the phase intensity', () => {
+  const sets = fakeSets()
+  const m = buildMaterials(sets)
+  const leaf = pbrMaterial(sets.oak, { name: 'leaf', tint: tints.oak, metal: false, envMapIntensity: ENV_MAP_INTENSITY.plant })
+  const env = new Texture()
+  applyEnvironment([leaf, m.floor, m.glass, m.porcelain], env, 0.32)
+  for (const material of [leaf, m.floor, m.glass, m.porcelain]) expect(material.envMap, material.name).toBe(env)
+  expect(leaf.envMapIntensity).toBeCloseTo(0.45 * 0.32)
+  expect(m.floor.envMapIntensity).toBeCloseTo(0.32)
+  expect(m.porcelain.envMapIntensity).toBeCloseTo(0.32)
+  // Physical materials too, and any iterable: the ratio of the glass is 1.5.
+  applyEnvironment(new Set([m.glass, leaf]), env, 0.05)
+  expect(m.glass.envMapIntensity).toBeCloseTo(1.5 * 0.05)
+  expect(leaf.envMapIntensity).toBeCloseTo(0.45 * 0.05)
+  expect(m.floor.envMapIntensity).toBeCloseTo(0.32)
+})
+
+test('a material built elsewhere is captured once and never compounded', () => {
+  // As a GLB model arrives: no envBase, an envMapIntensity set directly.
+  const model = new MeshStandardMaterial({ envMapIntensity: ENV_MAP_INTENSITY.model })
+  const untouched = new MeshStandardMaterial()
+  expect(model.userData.envBase).toBeUndefined()
+  const env = new Texture()
+  applyEnvironment([model, untouched], env, 0.32)
+  expect(model.userData.envBase).toBe(0.8)
+  expect(model.envMapIntensity).toBeCloseTo(0.8 * 0.32)
+  expect(untouched.envMapIntensity).toBeCloseTo(0.32)
+  applyEnvironment([model, untouched], env, 0.32)
+  expect(model.envMapIntensity).toBeCloseTo(0.8 * 0.32)
+  applyEnvironment([model, untouched], env, 0.18)
+  expect(model.userData.envBase).toBe(0.8)
+  expect(model.envMapIntensity).toBeCloseTo(0.8 * 0.18)
+  expect(untouched.envMapIntensity).toBeCloseTo(0.18)
+})
+
+test('applyEnvironment leaves other material types alone', () => {
+  const basic = new MeshBasicMaterial()
+  const lambert = new MeshLambertMaterial()
+  const shader = new ShaderMaterial()
+  applyEnvironment([basic, lambert, shader], new Texture(), 0.32)
+  for (const material of [basic, lambert, shader]) {
+    expect(material.userData.envBase, material.type).toBeUndefined()
+    expect((material as { envMap?: unknown }).envMap ?? null, material.type).toBeNull()
+    expect(material.version, material.type).toBe(0)
+  }
+  expect(lambert.envMapIntensity).toBe(1)
+})
+
+test('needsUpdate is set only when the environment texture changes', () => {
+  const material = new MeshStandardMaterial()
+  const a = new Texture()
+  const b = new Texture()
+  applyEnvironment([material], null, 0.32)
+  expect(material.version).toBe(0)
+  applyEnvironment([material], a, 0.32)
+  expect(material.version).toBe(1)
+  applyEnvironment([material], a, 0.18)
+  applyEnvironment([material], a, 0.05)
+  expect(material.version).toBe(1)
+  expect(material.envMapIntensity).toBeCloseTo(0.05)
+  applyEnvironment([material], b, 0.05)
+  expect(material.version).toBe(2)
+  applyEnvironment([material], null, 0.05)
+  expect(material.version).toBe(3)
+  expect(material.envMap).toBeNull()
 })

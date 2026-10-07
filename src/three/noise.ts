@@ -14,6 +14,8 @@ import {
 /*
  * Small procedural textures computed in memory (no canvas, so they also work in the unit tests): a grey value noise
  * that breaks up flat colours and roughness, and Horn.os' glaze speckle for pots. Both are cached and never disposed.
+ * A cached texture is shared by every caller that asks for the same options: never change its `repeat` or `offset`
+ * (or anything else), clone() it first instead.
  */
 
 export interface NoiseOptions {

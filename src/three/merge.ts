@@ -20,8 +20,11 @@ export interface Part {
  * Bakes parts into one non-indexed BufferGeometry with position, normal and uv (zero UVs where a part has none),
  * each part moved by its matrix; with `colours`, a 'color' attribute holds each part's colour (white by default).
  * Inputs are cloned, never touched: several of them come from shared caches.
+ * The result is for one material: groups and material indices are dropped. It is meant for geometry built in code;
+ * parts from a GLB with interleaved or quantized attributes are not supported.
  */
 export function mergeParts(parts: readonly Part[], options: { colours?: boolean } = {}): BufferGeometry {
+  if (parts.length === 0) throw new Error('mergeParts needs at least one part')
   const white = new Color(1, 1, 1)
   const prepared = parts.map(({ geometry, matrix, colour }) => {
     // mergeGeometries refuses a mix of indexed and non-indexed inputs: going non-indexed everywhere always works.

@@ -6,7 +6,9 @@ import {
   MeshPhysicalMaterial,
   MeshStandardMaterial,
   SRGBColorSpace,
+  type Material,
   type MeshStandardMaterialParameters,
+  type Texture,
 } from 'three'
 import { brand } from '../core/brand'
 import { TEXTURE_SETS, type TextureSetId } from './assets'
@@ -19,29 +21,43 @@ import { tints } from './tints'
  *  PBR materials of the redesigned office (spec 2026-10-06, section 5)
  * ------------------------------------------------------------------ */
 
-/** How strongly each kind of surface reflects the scene environment (Lightformers, scaled per phase). */
+/**
+ * How strongly each kind of surface reflects the scene environment (Lightformers), as a ratio of the phase's
+ * environment intensity. These are ratios, not final values: three 0.186 ignores `material.envMapIntensity` unless
+ * the material has its own `envMap`, so a ratio only takes effect through applyEnvironment() (below).
+ */
 export const ENV_MAP_INTENSITY = { surface: 1, model: 0.8, plant: 0.45 } as const
+
+/** Records a material's environment ratio where applyEnvironment() reads it, and as its envMapIntensity. Returns it. */
+function withEnvRatio<T extends MeshStandardMaterial>(material: T, ratio: number): T {
+  material.envMapIntensity = ratio
+  material.userData.envBase = ratio
+  return material
+}
 
 /**
  * A textured PBR material from one texture set: colour map tinted by `tint`, normal map, and the ARM map read three
  * ways (R ambient occlusion, G roughness, B metalness; metalness only for metal sets).
+ * `envMapIntensity` is the material's environment ratio (default ENV_MAP_INTENSITY.surface), see applyEnvironment().
  */
 export function pbrMaterial(
   textures: PbrTextures,
   options: { name: string; tint: string; metal: boolean; roughness?: number; envMapIntensity?: number },
 ): MeshStandardMaterial {
-  return new MeshStandardMaterial({
-    name: options.name,
-    color: options.tint,
-    map: textures.color,
-    normalMap: textures.normal,
-    roughnessMap: textures.arm,
-    aoMap: textures.arm,
-    metalnessMap: options.metal ? textures.arm : null,
-    metalness: options.metal ? 1 : 0,
-    roughness: options.roughness ?? 1,
-    envMapIntensity: options.envMapIntensity ?? ENV_MAP_INTENSITY.surface,
-  })
+  return withEnvRatio(
+    new MeshStandardMaterial({
+      name: options.name,
+      color: options.tint,
+      map: textures.color,
+      normalMap: textures.normal,
+      roughnessMap: textures.arm,
+      aoMap: textures.arm,
+      metalnessMap: options.metal ? textures.arm : null,
+      metalness: options.metal ? 1 : 0,
+      roughness: options.roughness ?? 1,
+    }),
+    options.envMapIntensity ?? ENV_MAP_INTENSITY.surface,
+  )
 }
 
 /** Every shared material of the office. Pure: works on plain Texture objects (unit tests) as on loaded ones. */
@@ -67,28 +83,33 @@ export function buildMaterials(sets: TextureSets) {
     consoleShell: pbr('consoleShell', 'wall', tints.consoleShell, 0.7),
     consoleDark: pbr('consoleDark', 'wall', tints.consoleDark, 0.7),
     // Lacquered porcelain: a slight colour and roughness variation under a clear coat, so it reflects the phase.
-    porcelain: new MeshPhysicalMaterial({
-      name: 'porcelain',
-      color: tints.porcelain,
-      map: noiseTexture({ size: 128, min: 0.93, max: 1, seed: 3, srgb: true }),
-      roughness: 0.22,
-      roughnessMap: noiseTexture({ size: 128, min: 0.8, max: 1, seed: 5 }),
-      clearcoat: 1,
-      clearcoatRoughness: 0.08,
-    }),
+    porcelain: withEnvRatio(
+      new MeshPhysicalMaterial({
+        name: 'porcelain',
+        color: tints.porcelain,
+        map: noiseTexture({ size: 128, min: 0.93, max: 1, seed: 3, srgb: true }),
+        roughness: 0.22,
+        roughnessMap: noiseTexture({ size: 128, min: 0.8, max: 1, seed: 5 }),
+        clearcoat: 1,
+        clearcoatRoughness: 0.08,
+      }),
+      ENV_MAP_INTENSITY.surface,
+    ),
     // A thin pane: faint, reflective, no physical transmission (that would cost a second render of the scene).
     glass: markExempt(
-      new MeshPhysicalMaterial({
-        name: 'glass',
-        color: tints.glass,
-        transparent: true,
-        opacity: 0.08,
-        roughness: 0.05,
-        metalness: 0,
-        envMapIntensity: 1.5,
-        depthWrite: false,
-        side: DoubleSide,
-      }),
+      withEnvRatio(
+        new MeshPhysicalMaterial({
+          name: 'glass',
+          color: tints.glass,
+          transparent: true,
+          opacity: 0.08,
+          roughness: 0.05,
+          metalness: 0,
+          depthWrite: false,
+          side: DoubleSide,
+        }),
+        1.5,
+      ),
       'glass',
     ),
     screenOff: markExempt(new MeshStandardMaterial({ name: 'screenOff', color: brand.ink, roughness: 0.3, metalness: 0.1 }), 'screen'),
@@ -122,6 +143,31 @@ export function useMaterials(): Materials {
     built.set(sets, materials)
   }
   return materials
+}
+
+/**
+ * Makes the environment ratios real. In three 0.186 a material reads its own `envMapIntensity` only when it has its
+ * own `envMap`; with `scene.environment` alone the renderer overwrites that uniform with `scene.environmentIntensity`
+ * (WebGLRenderer.js, WebGLMaterials.js). So the lighting hands every scene material the environment texture itself,
+ * with the phase's intensity, and the material's ratio (`userData.envBase`) scales it: surfaces 1, models 0.8, plants 0.45.
+ *
+ * Standard and physical materials only; other types are left alone. `envBase` is captured on first sight from the
+ * material's current `envMapIntensity` (so materials built elsewhere, such as GLB models, are picked up as they are)
+ * and never recaptured, so a second call with another phase does not compound the first. `needsUpdate` is set only
+ * when the `envMap` changes (a shader recompile): intensity alone is a uniform, cheap enough to set on every frame
+ * of a phase transition.
+ */
+export function applyEnvironment(materials: Iterable<Material>, envMap: Texture | null, phaseIntensity: number): void {
+  for (const material of materials) {
+    if (!(material as Partial<MeshStandardMaterial>).isMeshStandardMaterial) continue // physical materials extend it
+    const standard = material as MeshStandardMaterial
+    standard.userData.envBase ??= standard.envMapIntensity
+    if (standard.envMap !== envMap) {
+      standard.envMap = envMap
+      standard.needsUpdate = true
+    }
+    standard.envMapIntensity = (standard.userData.envBase as number) * phaseIntensity
+  }
 }
 
 /* ------------------------------------------------------------------ *

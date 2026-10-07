@@ -37,6 +37,11 @@ export function configureTexture(texture: Texture, map: TextureMap, tileMetres: 
   return texture
 }
 
+/*
+ * Lifetime: the texture sets live as long as the page and are never disposed, like the shared materials built on them
+ * (the office is mounted once). Nothing here releases a texture, and nothing should.
+ */
+
 /** TextureSets per loaded texture array: every component gets the same object (the material cache relies on it). */
 const sets = new WeakMap<Texture[], TextureSets>()
 
@@ -50,7 +55,9 @@ export function useTextureSets(): TextureSets {
   const built = {} as TextureSets
   TEXTURE_SET_IDS.forEach((id, index) => {
     const { tileMetres } = TEXTURE_SETS[id]
-    const [color, normal, arm] = TEXTURE_MAPS.map((map, k) => configureTexture(textures[index * 3 + k], map, tileMetres, anisotropy))
+    const [color, normal, arm] = TEXTURE_MAPS.map((map, k) =>
+      configureTexture(textures[index * TEXTURE_MAPS.length + k], map, tileMetres, anisotropy),
+    )
     built[id] = { color, normal, arm }
   })
   sets.set(textures, built)

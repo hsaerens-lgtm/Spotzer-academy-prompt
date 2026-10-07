@@ -1,9 +1,21 @@
-import { BoxGeometry, Group, InstancedMesh, Mesh, MeshBasicMaterial, MeshStandardMaterial, Texture } from 'three'
+import {
+  BoxGeometry,
+  Color,
+  Group,
+  InstancedMesh,
+  Mesh,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  ShaderMaterial,
+  Texture,
+} from 'three'
 import { isTextured, markExempt, untexturedMeshes } from './audit'
 
 const box = new BoxGeometry()
 const textured = (name: string) => new MeshStandardMaterial({ name, map: new Texture(), roughnessMap: new Texture() })
 const plain = (name = '') => new MeshStandardMaterial({ name })
+/** An emissive material, as the 'emissive' exemption requires: the colour counts, the intensity (a light at rest) does not. */
+const glowing = (name: string) => markExempt(new MeshStandardMaterial({ name, emissive: new Color(1, 1, 1), emissiveIntensity: 0 }), 'emissive')
 function named<T extends { name: string }>(object: T, name: string): T {
   object.name = name
   return object
@@ -64,6 +76,43 @@ test('hidden meshes and hidden ancestors are skipped', () => {
 
 test('multi-material meshes are checked material by material', () => {
   const root = named(new Group(), 'base')
-  root.add(named(new Mesh(box, [textured('wood'), plain('paint'), markExempt(plain('bulb'), 'emissive')]), 'lamp'))
+  root.add(named(new Mesh(box, [textured('wood'), plain('paint'), glowing('bulb')]), 'lamp'))
   expect(untexturedMeshes(root)).toEqual(['base/lamp#paint'])
+})
+
+test('a material that draws nothing is not reported', () => {
+  const root = named(new Group(), 'base')
+  const switchedOff = plain('off')
+  switchedOff.visible = false
+  const depthOnly = plain('occluder')
+  depthOnly.colorWrite = false
+  root.add(named(new Mesh(box, switchedOff), 'a'))
+  root.add(named(new Mesh(box, depthOnly), 'b'))
+  root.add(named(new Mesh(box, [depthOnly, plain('paint')]), 'c'))
+  expect(untexturedMeshes(root)).toEqual(['base/c#paint'])
+})
+
+test('the emissive exemption needs an emissive colour', () => {
+  const root = named(new Group(), 'base')
+  root.add(named(new Mesh(box, glowing('lit')), 'bulb'))
+  // Marked, but flat: a plate cannot hide behind the exemption. Same for a material type that has no emissive colour.
+  root.add(named(new Mesh(box, markExempt(plain('flat'), 'emissive')), 'plate'))
+  root.add(named(new Mesh(box, markExempt(new MeshBasicMaterial({ name: 'unlit' }), 'emissive')), 'sticker'))
+  // The same goes for an ancestor marked emissive: only its emissive materials are exempt.
+  const strip = markExempt(named(new Group(), 'strip'), 'emissive')
+  strip.add(named(new Mesh(box, plain('bar')), 'bar'))
+  strip.add(named(new Mesh(box, glowing('tube')), 'tube'))
+  root.add(strip)
+  // The other exemptions need no colour.
+  root.add(named(new Mesh(box, markExempt(plain('pane'), 'glass')), 'pane'))
+  root.add(markExempt(named(new Group(), 'backdrop'), 'sky').add(named(new Mesh(box, plain('cloud')), 'cloud')))
+  expect(untexturedMeshes(root)).toEqual(['base/plate#flat', 'base/sticker#unlit', 'base/strip/bar#bar'])
+})
+
+test('a shader material is reported unless it is marked exempt', () => {
+  const root = named(new Group(), 'base')
+  root.add(named(new Mesh(box, new ShaderMaterial()), 'dome'))
+  root.add(named(new Mesh(box, markExempt(new ShaderMaterial({ name: 'gradient' }), 'sky')), 'sky'))
+  root.add(named(new Mesh(box, markExempt(new ShaderMaterial({ name: 'fake' }), 'emissive')), 'fake'))
+  expect(untexturedMeshes(root)).toEqual(['base/dome#ShaderMaterial', 'base/fake#fake'])
 })
