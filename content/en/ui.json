@@ -48,9 +48,6 @@
   "zones": {
     "soonLabel": "Coming soon",
     "back": "Back to the office",
-    "workshop": {
-      "title": "Prompt Workshop"
-    },
     "dungeon": {
       "title": "The Dungeon",
       "soon": "The dungeon gates are still locked. Come back soon to test what you've learned."

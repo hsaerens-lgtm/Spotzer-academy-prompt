@@ -49,6 +49,23 @@ test('a new line types from nothing: the old line never reveals its first charac
   expect(typed()).toBe('Then a second line.')
 })
 
+// Ada has her own row in the desktop grid: a bubble growing line by line would push the windows above it mid-sentence.
+test('while the line types, the rest of it already holds its place, hidden', () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+  const text = 'Who should the AI be?'
+  render(<AdaBubble text={text} />)
+  const typed = () => document.querySelector('.ws-bubble__text [aria-hidden="true"]')!.textContent
+  const rest = () => document.querySelector('.ws-bubble__untyped')
+  expect(rest()).toHaveTextContent(text)
+  act(() => vi.advanceTimersByTime(200))
+  expect(typed()!.length).toBeGreaterThan(0)
+  expect(`${typed()}${rest()!.textContent}`).toBe(text)
+  expect(rest()).toHaveAttribute('aria-hidden', 'true')
+  act(() => vi.advanceTimersByTime(2000))
+  expect(typed()).toBe(text)
+  expect(rest()).toBeNull()
+})
+
 test('with reduced motion the whole text shows at once', () => {
   resetAppStore({ reducedMotion: true })
   render(<AdaBubble text="Hello there." />)

@@ -1,6 +1,6 @@
 import '@fontsource/vt323/400.css'
 import './workshop.css'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { appStore, useApp } from '../../core/store'
 import { suggestedMission } from '../../workshop/content'
 import { BuilderWindow, type BuilderWindowProps } from './builder/BuilderWindow'
@@ -31,8 +31,19 @@ function Desktop() {
     if (route.mission !== missionId) appStore.getState().setWorkshopRoute({ mission: missionId, app: route.app })
   }, [route.mission, route.app, missionId])
 
-  const setView = (next: WorkshopView) => appStore.getState().setWorkshopRoute({ mission: missionId, app: next === 'missions' ? null : next })
-  const selectMission = (id: string) => appStore.getState().setWorkshopRoute({ mission: id, app: null })
+  // The mission opened by Ada's "Next mission": that button goes away with the old mission, so the new one's first
+  // editor takes the focus. Anything else that opens a mission or a program keeps the focus where it is.
+  const [focusOnOpen, setFocusOnOpen] = useState<string | null>(null)
+  const openMission = (id: string, takeFocus: boolean) => {
+    setFocusOnOpen(takeFocus ? id : null)
+    appStore.getState().setWorkshopRoute({ mission: id, app: null })
+  }
+  const setView = (next: WorkshopView) => {
+    setFocusOnOpen(null)
+    appStore.getState().setWorkshopRoute({ mission: missionId, app: next === 'missions' ? null : next })
+  }
+  const selectMission = (id: string) => openMission(id, false)
+  const nextMission = (id: string) => openMission(id, true)
   const passedCount = passed.filter((id) => content.missionById.has(id)).length
   const renderBuilder = (props: Omit<BuilderWindowProps, 'className' | 'labels'>) => (
     <BuilderWindow className="ws-area-builder" labels={content.labels} {...props} />
@@ -51,7 +62,15 @@ function Desktop() {
         onSelect={selectMission}
       />
       {/* Keyed: a mission's tip, closed bubble, comparison and revealed result never carry over to another mission. */}
-      {view === 'missions' && <MissionsView key={missionId} missionId={missionId} onSelectMission={selectMission} renderBuilder={renderBuilder} />}
+      {view === 'missions' && (
+        <MissionsView
+          key={missionId}
+          missionId={missionId}
+          onSelectMission={nextMission}
+          renderBuilder={renderBuilder}
+          focusOnOpen={focusOnOpen === missionId}
+        />
+      )}
       {view === 'prompts' && <MyPromptsWindow className="ws-area-main" />}
       {view === 'corrector' && <CorrectorView renderBuilder={renderBuilder} />}
       <Taskbar

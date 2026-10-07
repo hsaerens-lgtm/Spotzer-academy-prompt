@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useEffect } from 'react'
 import { appStore } from '../../../core/store'
@@ -25,11 +25,14 @@ function renderView(missionId: string) {
   return { store, onSelect }
 }
 
-/** A builder slot the test drives by hand: nothing is revealed until the test calls onDone. Returns the latest slot props. */
-function renderManual(missionId: string) {
+/**
+ * A builder slot the test drives by hand: nothing is revealed until the test calls onDone. Returns the latest slot props.
+ * Pass the store of an earlier render to open the view again on the same workshop.
+ */
+function renderManual(missionId: string, store = makeWorkshopStore()) {
   let slot: BuilderSlotProps | null = null
   render(
-    <WorkshopStoreProvider value={makeWorkshopStore()}>
+    <WorkshopStoreProvider value={store}>
       <MissionsView
         missionId={missionId}
         onSelectMission={() => {}}
@@ -215,18 +218,22 @@ test('Copy my prompt copies the assembled prompt, or selects it when the clipboa
   expect([fallback.selectionStart, fallback.selectionEnd]).toEqual([0, 'Role: A writer'.length])
 })
 
-test('a double click on Build & test reveals the latest run only', async () => {
+// Review focus 2, and spec 3.5 / 3.8: the pass is recorded when the latest building is seen to hold, once.
+test('a double click on Build & test reveals the latest run only, and passes the mission only then', async () => {
   const user = userEvent.setup()
   const slot = renderManual('delayed-website')
+  const passed = () => appStore.getState().progress.workshop?.passed ?? []
   await fillLetter(user)
   await user.dblClick(screen.getByRole('button', { name: 'Build & test' }))
-  expect(appStore.getState().progress.workshop?.passed).toEqual(['delayed-website'])
+  expect(passed()).toEqual([])
   const latest = slot().runKey
   act(() => slot().onDone(latest - 1))
+  expect(passed()).toEqual([])
   expect(screen.getByText('The AI is reading your building\u2026', { selector: '.ws-output__note' })).toBeInTheDocument()
   expect(screen.queryByText('HOLDS \u00B7 EXCELLENT')).toBeNull()
   expect(adaSays('The AI is reading your building\u2026')).toBeInTheDocument()
   act(() => slot().onDone(latest))
+  expect(passed()).toEqual(['delayed-website'])
   expect(await screen.findByText('HOLDS \u00B7 EXCELLENT')).toBeInTheDocument()
   expect(await adaWillSay(/^It holds!/)).toBeInTheDocument()
   // Both runs tested the same prompt: Before / After would show two identical columns.
@@ -327,6 +334,66 @@ test('in free text the sentence being read is shown highlighted', async () => {
   await fill(user, 'Your prompt', "You are a social media manager. Write a post for Rosa's Flowers.")
   await user.click(screen.getByRole('button', { name: 'Build & test' }))
   expect(await screen.findByText("Write a post for Rosa's Flowers.", { selector: 'mark' })).toBeInTheDocument()
+})
+
+// The workshop unmounts the view while another mission or program is open: coming back must not replay the last result.
+test('a revealed result shows again at once when the view opens again: no replay, no second announcement', async () => {
+  const user = userEvent.setup()
+  const store = makeWorkshopStore()
+  const slot = renderManual('delayed-website', store)
+  await fillLetter(user, { 'Context block': 'The website is late', 'Format block': 'Friendly' })
+  await user.click(screen.getByRole('button', { name: 'Build & test' }))
+  expect(slot().seen).toBe(false)
+  const runKey = slot().runKey
+  act(() => slot().onDone(runKey))
+  await waitFor(() => expect(store.getState().announcement).toMatch(/^LEANING \u00B7 PASSABLE\. The Context block is only cardboard/))
+  const said = store.getState().announcements
+
+  cleanup()
+  const again = renderManual('delayed-website', store)
+  // Shown without waiting for the builder, which is told the building was already seen to its end.
+  expect(again()).toMatchObject({ runKey, seen: true })
+  expect(screen.getByText('LEANING \u00B7 PASSABLE')).toBeInTheDocument()
+  expect(screen.getByText('CARDBOARD')).toBeInTheDocument()
+  expect(adaSays(/^The Context block is only cardboard\./)).toBeInTheDocument()
+  act(() => again().onDone(runKey))
+  expect(store.getState().announcements).toBe(said)
+})
+
+test('a result whose building was still going up when the view closed is built and announced when it opens again', async () => {
+  const user = userEvent.setup()
+  const store = makeWorkshopStore()
+  const slot = renderManual('delayed-website', store)
+  await fillLetter(user)
+  await user.click(screen.getByRole('button', { name: 'Build & test' }))
+  const runKey = slot().runKey
+
+  cleanup()
+  const again = renderManual('delayed-website', store)
+  expect(again()).toMatchObject({ runKey, seen: false })
+  expect(screen.queryByText('HOLDS \u00B7 EXCELLENT')).toBeNull()
+  expect(appStore.getState().progress.workshop?.passed ?? []).toEqual([])
+  act(() => again().onDone(runKey))
+  expect(screen.getByText('HOLDS \u00B7 EXCELLENT')).toBeInTheDocument()
+  expect(appStore.getState().progress.workshop?.passed).toEqual(['delayed-website'])
+  await waitFor(() => expect(store.getState().announcement).toMatch(/^HOLDS \u00B7 EXCELLENT\. It holds!/))
+})
+
+// The "Next mission" button goes away with the mission it was in: the new mission's first editor takes the focus.
+test('a view opened by "Next mission" puts the cursor in its first editor', () => {
+  const open = (missionId: string) =>
+    render(
+      <WorkshopStoreProvider value={makeWorkshopStore()}>
+        <MissionsView missionId={missionId} focusOnOpen onSelectMission={() => {}} renderBuilder={() => null} />
+      </WorkshopStoreProvider>,
+    )
+  open('meeting-notes')
+  expect(screen.getByRole('textbox', { name: 'Role block' })).toHaveFocus()
+  cleanup()
+  open('plumber-services')
+  const fix = screen.getByRole('textbox', { name: 'Your prompt' }) as HTMLTextAreaElement
+  expect(fix).toHaveFocus()
+  expect(fix.selectionStart).toBe(fix.value.length)
 })
 
 // The mission list belongs to the workshop desktop (WorkshopApp.test covers it): the view starts at the studio.

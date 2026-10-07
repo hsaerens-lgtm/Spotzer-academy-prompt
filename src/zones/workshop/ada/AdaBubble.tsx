@@ -16,12 +16,21 @@ export interface AdaBubbleProps {
 
 const noop = () => {}
 
-/** Types its line with blips; screen readers get the whole line at once. Keyed on the text, so every line starts from nothing. */
+/**
+ * Types its line with blips; screen readers get the whole line at once. Keyed on the text, so every line starts from
+ * nothing. The rest of the line already holds its place, hidden: the bubble has its final size from the first
+ * character, so Ada's row in the desktop grid never grows (and never moves the windows above it) mid-line.
+ */
 function TypedText({ text, reduced }: { text: string; reduced: boolean }) {
   const shown = useTypewriter(text, { active: !reduced, onDone: noop, onReveal: (char, index) => sound.blip(char, index) })
   return (
     <>
       <span aria-hidden="true">{text.slice(0, shown)}</span>
+      {shown < text.length && (
+        <span aria-hidden="true" className="ws-bubble__untyped">
+          {text.slice(shown)}
+        </span>
+      )}
       <span className="sr-only">{text}</span>
     </>
   )

@@ -60,12 +60,14 @@
 .ws-icon--corrector .ws-icon__art { border-color: var(--oe-lime); }
 .ws-icon__label { font-family: var(--ws-chrome); font-size: 17px; }
 
-.ws-ada-dock { position: absolute; right: 18px; bottom: 50px; z-index: 4; display: flex; align-items: flex-end; gap: 10px; pointer-events: none; }
+/* Ada has her own place in the desktop grid (under the output, bottom right): her bubble never covers a window. */
+.ws-ada-dock { grid-area: ada; display: flex; align-items: flex-end; justify-content: flex-end; gap: 10px; min-width: 0; }
 .ws-bubble {
-  position: relative; max-width: 340px; padding: 10px 30px 10px 12px; pointer-events: auto;
+  position: relative; flex: 0 1 auto; min-width: 0; max-width: 460px; padding: 10px 30px 10px 12px;
   background: var(--at-surface-1); border: 2px solid var(--oe-lime); font-size: 14px; line-height: 1.5;
 }
 .ws-bubble__text { margin: 0; }
+.ws-bubble__untyped { visibility: hidden; }
 .ws-bubble__actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .ws-bubble__close { position: absolute; top: 2px; right: 4px; border: 0; background: none; color: var(--at-on-dark-2); font-size: 18px; cursor: pointer; }
 .ws-ada { flex: none; animation: ws-float 3s ease-in-out infinite; }
@@ -196,35 +198,38 @@
 .ws-improved ins { text-decoration: none; color: var(--at-ink); background: var(--oe-lime); }
 .ws-changes { margin: 0 0 10px; padding-left: 18px; font-size: 14px; }
 
-/* Desktop grid: icons | missions | studio | builder (top) and output (bottom), taskbar across. */
+/* Desktop grid: icons | missions | studio | builder (top), output (middle) and Ada (bottom), taskbar across.
+   Ada's row takes the height of her bubble: the builder and the output share what is left, so nothing is covered. */
 .ws-desktop {
   display: grid; gap: 12px; padding: 12px 12px 0;
   grid-template-columns: 76px minmax(220px, 19%) minmax(0, 1fr) minmax(0, 1.05fr);
-  grid-template-rows: minmax(0, 1.2fr) minmax(0, 0.8fr) 42px;
+  grid-template-rows: minmax(0, 1.2fr) minmax(0, 0.8fr) auto 42px;
   grid-template-areas:
     'icons missions studio builder'
     'icons missions studio output'
+    'icons missions studio ada'
     'task task task task';
 }
 .ws-area-missions { grid-area: missions; }
 .ws-area-studio { grid-area: studio; }
 .ws-area-builder { grid-area: builder; }
 .ws-area-output { grid-area: output; }
-.ws-area-output > .ws-window__body { padding-right: 100px; }
 /* My prompts and the corrector open in place of the centre and right windows; the mission list stays on the left.
-   The corrector brings its own builder and output windows, so its main window takes the centre column only. */
-.ws-desktop--prompts .ws-area-main { grid-row: 1 / 3; grid-column: 3 / 5; }
+   The corrector brings its own builder and output windows (and Ada), so its main window takes the centre column only. */
+.ws-desktop--prompts .ws-area-main { grid-row: 1 / 4; grid-column: 3 / 5; }
 .ws-desktop--corrector .ws-area-main { grid-area: studio; }
 .ws-taskbar { margin: 0 -12px; }
 
 /* Short screens (down to 1280 x 600): tighter spacing, smaller Ada; content text never below 14 px. */
 @media (max-height: 700px) {
-  .ws-desktop { gap: 8px; padding: 8px 8px 0; grid-template-rows: minmax(0, 1.15fr) minmax(0, 0.85fr) 38px; }
+  .ws-desktop { gap: 8px; padding: 8px 8px 0; grid-template-rows: minmax(0, 1.15fr) minmax(0, 0.85fr) auto 38px; }
   .ws-taskbar { margin: 0 -8px; }
   .ws-window__body { padding: 8px 10px; }
   .ws-brief { margin-bottom: 8px; padding: 6px 8px; }
   .ws-blocks { gap: 6px; }
-  .ws-ada-dock { bottom: 44px; right: 12px; }
   .ws-ada { width: 54px; height: 80px; }
-  .ws-bubble { max-width: 300px; padding: 8px 28px 8px 10px; }
+  .ws-bubble { padding: 8px 28px 8px 10px; }
+  /* The building fills whatever height its window gets: no scroll bar inside the builder. */
+  .ws-builder { min-height: 0; }
+  .ws-builder__canvas { min-height: 100px; }
 }

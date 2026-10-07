@@ -41,15 +41,42 @@ test('testing records the first and the latest attempt', () => {
   expect(second.evaluation.passed).toBe(true)
 })
 
-test('a pass reports the assembled prompt', () => {
+// Spec 3.5 / 3.8: the mission is ticked when the building is seen to hold, not while the AI is still reading it.
+test('a pass reports the assembled prompt once its result is revealed', () => {
   const passMission = vi.fn()
   const store = makeWorkshopStore({ passMission })
   fill(store, fullLetter)
-  store.getState().test('delayed-website')
+  const attempt = store.getState().test('delayed-website')!
+  expect(attempt.evaluation.passed).toBe(true)
+  expect(store.getState().sessions['delayed-website'].revealedAttempt).toBeNull()
+  expect(passMission).not.toHaveBeenCalled()
+  store.getState().revealAttempt('delayed-website', attempt.id)
+  expect(store.getState().sessions['delayed-website'].revealedAttempt).toBe(attempt.id)
   expect(passMission).toHaveBeenCalledWith(
     'delayed-website',
     `Role: ${fullLetter.role}\nTask: ${fullLetter.task}\nContext: ${fullLetter.context}\nFormat: ${fullLetter.format}`,
   )
+})
+
+test('only the latest attempt is revealed, once: an older building finishing late records nothing', () => {
+  const passMission = vi.fn()
+  const store = makeWorkshopStore({ passMission })
+  fill(store, fullLetter)
+  const first = store.getState().test('delayed-website')!
+  const second = store.getState().test('delayed-website')!
+  store.getState().revealAttempt('delayed-website', first.id)
+  expect(store.getState().sessions['delayed-website'].revealedAttempt).toBeNull()
+  expect(passMission).not.toHaveBeenCalled()
+  store.getState().revealAttempt('delayed-website', second.id)
+  store.getState().revealAttempt('delayed-website', second.id)
+  expect(store.getState().sessions['delayed-website'].revealedAttempt).toBe(second.id)
+  expect(passMission).toHaveBeenCalledTimes(1)
+  // A failing attempt is revealed too, and passes nothing.
+  fill(store, { context: '' })
+  const third = store.getState().test('delayed-website')!
+  store.getState().revealAttempt('delayed-website', third.id)
+  expect(store.getState().sessions['delayed-website'].revealedAttempt).toBe(third.id)
+  expect(passMission).toHaveBeenCalledTimes(1)
 })
 
 // Review focus 2: pressing Build & test twice on a passing prompt writes the progress once.
@@ -59,8 +86,13 @@ test('passing twice records once', () => {
   const setItem = vi.spyOn(storage, 'setItem')
   const store = makeWorkshopStore({ passMission: (id, prompt) => app.getState().passWorkshopMission(id, prompt, 6) })
   fill(store, fullLetter)
-  store.getState().test('delayed-website')
-  store.getState().test('delayed-website')
+  const first = store.getState().test('delayed-website')!
+  const second = store.getState().test('delayed-website')!
+  store.getState().revealAttempt('delayed-website', first.id)
+  store.getState().revealAttempt('delayed-website', second.id)
+  store.getState().revealAttempt('delayed-website', second.id)
+  const third = store.getState().test('delayed-website')!
+  store.getState().revealAttempt('delayed-website', third.id)
   expect(setItem.mock.calls.filter(([key]) => key === PROGRESS_KEY)).toHaveLength(1)
 })
 
@@ -73,6 +105,8 @@ test('"It\'s already there" re-evaluates the latest attempt and can pass it', ()
   const session = store.getState().sessions['delayed-website']
   expect(session.overrides).toEqual(['new-date'])
   expect(session.last!.evaluation.passed).toBe(true)
+  expect(passMission).not.toHaveBeenCalled()
+  store.getState().revealAttempt('delayed-website', session.last!.id)
   expect(passMission).toHaveBeenCalledTimes(1)
 })
 

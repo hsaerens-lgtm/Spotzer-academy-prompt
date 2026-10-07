@@ -19,6 +19,11 @@ export interface MissionSession {
   overrides: string[]
   first: Attempt | null
   last: Attempt | null
+  /**
+   * The attempt whose result is shown: its building was seen to its end. Kept here rather than in the view, which is
+   * unmounted while another mission or program is open: coming back shows the result without building it again.
+   */
+  revealedAttempt: number | null
   /** Tips Ada has given since the last test: each tip appears at most once per attempt, so a test clears them. */
   tipsShown: string[]
   tipsMuted: boolean
@@ -72,6 +77,11 @@ export interface WorkshopState {
   setText: (missionId: string, value: string) => void
   resetDraft: (missionId: string) => void
   test: (missionId: string) => Attempt | null
+  /**
+   * The building of this attempt was seen to its end: show its result and, if it passed, record the pass now (never at
+   * the test, so the tick and the counters do not give the result away while the AI reads). Latest attempt only, once.
+   */
+  revealAttempt: (missionId: string, attemptId: number) => void
   alreadyThere: (missionId: string, detailId: string) => void
   markTipShown: (missionId: string, detailId: string) => void
   muteTips: (missionId: string) => void
@@ -117,7 +127,7 @@ async function settle<T>(call: () => Promise<ApiResult<T>>): Promise<ApiResult<T
 function initialSession(mission: Mission): MissionSession {
   const draft = initialDraft(mission)
   const starter: Attempt | null = mission.mode === 'fix' ? { id: 0, input: draft, evaluation: evaluate(mission, draft) } : null
-  return { draft, overrides: [], first: starter, last: starter, tipsShown: [], tipsMuted: false, addedBlocks: [] }
+  return { draft, overrides: [], first: starter, last: starter, revealedAttempt: null, tipsShown: [], tipsMuted: false, addedBlocks: [] }
 }
 
 export function createWorkshopStore({ content, passMission, api }: WorkshopDeps): StoreApi<WorkshopState> {
@@ -138,7 +148,6 @@ export function createWorkshopStore({ content, passMission, api }: WorkshopDeps)
         attempts: attempt.id,
         sessions: { ...get().sessions, [missionId]: { ...session, overrides, tipsShown, last: attempt, first: session.first ?? attempt } },
       })
-      if (attempt.evaluation.passed) passMission(missionId, assemblePrompt(input, content.labels))
       return attempt
     }
     const patchCorrector = (change: Partial<CorrectorState>) => set({ corrector: { ...get().corrector, ...change } })
@@ -176,6 +185,14 @@ export function createWorkshopStore({ content, passMission, api }: WorkshopDeps)
         const session = get().sessions[missionId]
         // A test ends the attempt Ada was advising on: the next one may hear the same tips again.
         return session ? record(missionId, session.draft, session.overrides, []) : null
+      },
+      revealAttempt: (missionId, attemptId) => {
+        const session = get().sessions[missionId]
+        const last = session?.last
+        // A building still finishing for an older attempt reveals nothing; the latest one is revealed (and passed) once.
+        if (!session || !last || last.id !== attemptId || session.revealedAttempt === attemptId) return
+        set({ sessions: { ...get().sessions, [missionId]: { ...session, revealedAttempt: attemptId } } })
+        if (last.evaluation.passed) passMission(missionId, assemblePrompt(last.input, content.labels))
       },
       alreadyThere: (missionId, detailId) => {
         const session = get().sessions[missionId]

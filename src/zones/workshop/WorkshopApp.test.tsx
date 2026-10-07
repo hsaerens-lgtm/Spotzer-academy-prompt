@@ -123,8 +123,24 @@ test('a mission opened from the list starts with its own Ada', async () => {
   expect(ada().queryByText(/Sorry, I missed it!/, { selector: '.sr-only' })).not.toBeInTheDocument()
 })
 
-// Task 10 note: coming back to a passed mission shows its result again, but never reports the pass a second time.
-test('switching missions and coming back does not report the pass again', async () => {
+/** Passes the first mission with a complete letter (plan view and reduced motion: the result shows at once). */
+async function passFirstMission(user: ReturnType<typeof userEvent.setup>) {
+  const letter = {
+    'Role block': 'An account manager at a web agency',
+    'Task block': 'Write an email to the client',
+    'Context block': "The client is Martin's Bakery. The launch moves to next Friday because the photos arrived late.",
+    'Format block': 'Friendly and apologetic, under 120 words',
+  }
+  for (const [name, value] of Object.entries(letter)) {
+    await user.click(screen.getByRole('textbox', { name }))
+    await user.paste(value)
+  }
+  await user.click(screen.getByRole('button', { name: 'Build & test' }))
+  expect(screen.getByText('HOLDS \u00B7 EXCELLENT')).toBeInTheDocument()
+}
+
+// Task 10 note: coming back to a passed mission shows its result at once, without replaying, announcing or passing it again.
+test('switching missions or programs and coming back neither replays nor reports the result again', async () => {
   const user = userEvent.setup()
   const writes = vi.fn()
   const unsubscribe = appStore.subscribe((state, previous) => {
@@ -132,27 +148,42 @@ test('switching missions and coming back does not report the pass again', async 
   })
   try {
     await renderApp()
-    const letter = {
-      'Role block': 'An account manager at a web agency',
-      'Task block': 'Write an email to the client',
-      'Context block': "The client is Martin's Bakery. The launch moves to next Friday because the photos arrived late.",
-      'Format block': 'Friendly and apologetic, under 120 words',
-    }
-    for (const [name, value] of Object.entries(letter)) {
-      await user.click(screen.getByRole('textbox', { name }))
-      await user.paste(value)
-    }
-    await user.click(screen.getByRole('button', { name: 'Build & test' }))
-    expect(screen.getByText('HOLDS \u00B7 EXCELLENT')).toBeInTheDocument()
+    await passFirstMission(user)
     expect(appStore.getState().progress.workshop?.passed).toEqual(['delayed-website'])
     expect(writes).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(getWorkshopStore().getState().announcement).toMatch(/^HOLDS \u00B7 EXCELLENT\./))
+    const said = getWorkshopStore().getState().announcements
+
     await user.click(missionList().getByRole('button', { name: /Meeting notes for your manager/ }))
     await user.click(missionList().getByRole('button', { name: /The delayed website/ }))
     expect(screen.getByText('HOLDS \u00B7 EXCELLENT')).toBeInTheDocument()
+    const bar = within(screen.getByRole('navigation', { name: 'Taskbar' }))
+    await user.click(bar.getByRole('button', { name: 'My prompts' }))
+    await user.click(bar.getByRole('button', { name: 'Missions' }))
+    expect(screen.getByText('HOLDS \u00B7 EXCELLENT')).toBeInTheDocument()
     expect(writes).toHaveBeenCalledTimes(1)
+    expect(getWorkshopStore().getState().announcements).toBe(said)
   } finally {
     unsubscribe()
   }
+})
+
+// The "Next mission" button goes away with its mission: the next mission's first editor takes the focus. A program
+// opened from the taskbar keeps the focus on the taskbar.
+test('"Next mission" hands the focus to the next mission\'s first editor', async () => {
+  const user = userEvent.setup()
+  await renderApp()
+  await passFirstMission(user)
+  await user.click(ada().getByRole('button', { name: 'Next mission' }))
+  expect(screen.getByRole('region', { name: 'PROMPT_STUDIO.EXE \u2014 MISSION 2' })).toBeInTheDocument()
+  expect(screen.getByRole('textbox', { name: 'Role block' })).toHaveFocus()
+
+  const bar = within(screen.getByRole('navigation', { name: 'Taskbar' }))
+  await user.click(bar.getByRole('button', { name: 'My prompts' }))
+  const missions = bar.getByRole('button', { name: 'Missions' })
+  await user.click(missions)
+  expect(screen.getByRole('region', { name: 'PROMPT_STUDIO.EXE \u2014 MISSION 2' })).toBeInTheDocument()
+  expect(missions).toHaveFocus()
 })
 
 // Escape never leaves the workshop: it closes the Athena menu first, then Ada's bubble.

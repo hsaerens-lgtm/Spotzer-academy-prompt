@@ -5,7 +5,7 @@ import { inputFromEvaluation, type BuildingInput } from '../../../workshop/build
 import { suggestedMission } from '../../../workshop/content'
 import { adviceFor, assemblePrompt, blockResult, evaluate, nextTip, wordCount } from '../../../workshop/engine/evaluate'
 import type { Span } from '../../../workshop/engine/text'
-import type { BlockType, CoreBlock, Detail } from '../../../workshop/model'
+import { CORE_BLOCKS, type BlockType, type CoreBlock, type Detail } from '../../../workshop/model'
 import { AdaBubble } from '../ada/AdaBubble'
 import { useWorkshop, useWorkshopStore } from '../store'
 import { BevelButton } from '../ui/BevelButton'
@@ -20,6 +20,11 @@ const NO_PASSES: readonly string[] = []
 export interface BuilderSlotProps {
   input: BuildingInput | null
   runKey: number
+  /**
+   * The result is revealed: its building was seen to its end, perhaps before this view was last opened. The builder
+   * then shows the final state without a replay.
+   */
+  seen: boolean
   onDone: (runKey: number) => void
   onBlockClick: (block: CoreBlock) => void
   onReading: (block: CoreBlock | null) => void
@@ -29,9 +34,11 @@ export interface MissionsViewProps {
   missionId: string
   onSelectMission: (id: string) => void
   renderBuilder: (props: BuilderSlotProps) => ReactNode
+  /** Opened by "Next mission": the button that had the focus went away, so the first editor takes it. */
+  focusOnOpen?: boolean
 }
 
-export function MissionsView({ missionId, onSelectMission, renderBuilder }: MissionsViewProps) {
+export function MissionsView({ missionId, onSelectMission, renderBuilder, focusOnOpen = false }: MissionsViewProps) {
   const { t } = useTranslation()
   const store = useWorkshopStore()
   const content = useWorkshop((s) => s.content)
@@ -39,7 +46,6 @@ export function MissionsView({ missionId, onSelectMission, renderBuilder }: Miss
   const passed = useApp((s) => s.progress.workshop?.passed) ?? NO_PASSES
   const mission = content.missionById.get(missionId)!
   const studio = useRef<StudioHandle>(null)
-  const [revealedId, setRevealedId] = useState<number | null>(null)
   const [tip, setTip] = useState<Tip | null>(null)
   const [sorry, setSorry] = useState<Detail | null>(null)
   const [compare, setCompare] = useState(false)
@@ -48,7 +54,8 @@ export function MissionsView({ missionId, onSelectMission, renderBuilder }: Miss
 
   const draft = session.draft
   const attempt = session.last
-  const revealed = attempt !== null && revealedId === attempt.id
+  // In the store, not in this view: the view is unmounted while another mission or program is open.
+  const revealed = attempt !== null && session.revealedAttempt === attempt.id
   const buildingInput = useMemo(() => (attempt ? inputFromEvaluation(attempt.evaluation) : null), [attempt])
   const allDone = content.missions.every((m) => passed.includes(m.id))
   const message = adaMessage({ mission, attempt, revealed, tip, sorry, allDone, labels: content.labels, t })
@@ -73,14 +80,27 @@ export function MissionsView({ missionId, onSelectMission, renderBuilder }: Miss
     return () => window.clearTimeout(timer)
   }, [draft, mission, missionId, session.tipsMuted, store])
 
-  // One announcement per revealed result (and per tip), with Ada's words.
+  // Opened by "Next mission": the first editor (Role, or the prompt field in free text) takes the focus. On opening
+  // only: the view is keyed by mission, so it opens again for every mission.
   useEffect(() => {
+    if (focusOnOpen) studio.current?.focusBlock(CORE_BLOCKS[0])
+  }, [])
+
+  // One announcement per revealed result (and per tip), with Ada's words. A result already revealed when the view
+  // opens was announced at the time: the first run skips it.
+  const opening = useRef(true)
+  useEffect(() => {
+    const first = opening.current
+    opening.current = false
     if (tip) store.getState().announce(message.text)
-    else if (attempt && revealed && attempt.id > 0) store.getState().announce(`${t(`workshop.output.tier.${attempt.evaluation.tier}`)}. ${message.text}`)
+    else if (attempt && revealed && attempt.id > 0 && !first) {
+      store.getState().announce(`${t(`workshop.output.tier.${attempt.evaluation.tier}`)}. ${message.text}`)
+    }
     // Deliberately keyed on a new result or tip only: message.text, store and t follow from them.
   }, [attempt, revealed, tip])
 
-  const onDone = useCallback((key: number) => setRevealedId(key), [])
+  // Only the latest attempt's building may reveal it (the store ignores one finishing for an older attempt).
+  const onDone = useCallback((key: number) => store.getState().revealAttempt(missionId, key), [store, missionId])
   /**
    * The passage of the last tested prompt that built `block`, only while the editor still holds that prompt:
    * after an edit its offsets would land on other words. Read from the store, so the callbacks stay stable while typing.
@@ -148,7 +168,7 @@ export function MissionsView({ missionId, onSelectMission, renderBuilder }: Miss
         revealed={revealed}
         reading={reading}
       />
-      {renderBuilder({ input: buildingInput, runKey: attempt?.id ?? 0, onDone, onBlockClick, onReading: setReading })}
+      {renderBuilder({ input: buildingInput, runKey: attempt?.id ?? 0, seen: revealed, onDone, onBlockClick, onReading: setReading })}
       <AiOutput
         className="ws-area-output"
         mission={mission}
