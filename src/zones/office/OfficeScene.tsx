@@ -1,26 +1,33 @@
 import { ContactShadows } from '@react-three/drei'
-import { useContext } from 'react'
-import { QualityContext } from '../../app/quality'
+import { useQualitySettings } from '../../app/quality'
 import { brand } from '../../core/brand'
 import { Interactive } from '../../three/interactive'
+import { useMaterials } from '../../three/materials'
 import { SceneObject } from '../../three/objects'
 import { AdaController } from './AdaController'
 import { CameraRig } from './camera/CameraRig'
 import { CrtScreen } from './CrtScreen'
 import { objectActions } from './interactions'
 import { CONTACT_SHADOW_Y, layout } from './layout'
-import { Lights } from './Lights'
+import { useEmissiveLevels } from './lighting/emissive'
+import { Lights } from './lighting/Lights'
+import { OfficeEnvironment } from './lighting/OfficeEnvironment'
+import { PhaseDriver } from './lighting/PhaseDriver'
 import { Room } from './Room'
 import { WallScreen3D } from './WallScreen3D'
 
 export function OfficeScene() {
-  const quality = useContext(QualityContext)
+  const settings = useQualitySettings()
+  const materials = useMaterials()
+  useEmissiveLevels(materials)
   const { table, chairs, microphones, sideboard, lamp, laptop, tvStand, tv, retroConsole, sofa, logo } = layout.objects
   return (
     <>
       <color attach="background" args={[brand.ink]} />
       <CameraRig />
-      <Lights shadows={quality !== 'low'} />
+      <OfficeEnvironment />
+      <PhaseDriver />
+      <Lights settings={settings} />
       <Room />
       <SceneObject object="table" name="table" position={table.position} />
       {chairs.map((chair, index) => (

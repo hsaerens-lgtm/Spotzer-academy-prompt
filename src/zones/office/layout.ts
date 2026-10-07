@@ -146,13 +146,9 @@ export const layout = {
   screen: { position: [-1.0, 1.9, -5.93] as Vec3, size: [4.0, 2.25] as [number, number] },
   ada: { position: [-3.15, 1.1, -4.85], rotationY: 0.5 } as Placement,
   lights: {
-    hemisphere: { sky: '#FFE6C7', ground: '#1A1512', intensity: 0.5 },
-    key: { position: [3, 6, 4] as Vec3, intensity: 1.2, color: '#FFE2BF' },
-    fills: [
-      { position: [-1.0, 2.95, -2.0] as Vec3, intensity: 8, distance: 9, color: '#FFC98A' },
-      { position: [3.6, 2.9, -1.4] as Vec3, intensity: 5, distance: 7, color: '#FFC98A' },
-    ],
-    screenGlow: { position: [-1.0, 1.9, -5.3] as Vec3, intensity: 1.2, color: '#9FB8C8' },
+    screenGlow: { position: [-1.0, 1.9, -5.3] as Vec3 },
+    pendant: { position: [-1.0, 2.1, -1.8] as Vec3 },
+    lamp: { position: [1.3, 1.12, -5.5] as Vec3, target: [1.3, 0.68, -4.9] as Vec3 },
   },
 }
 
