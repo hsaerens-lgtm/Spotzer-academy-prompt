@@ -148,7 +148,14 @@ export function CorrectorView({ renderBuilder }: { renderBuilder: (props: Correc
           </>
         )}
       </Window>
-      {renderBuilder({ input, runKey: state.checks, seen: revealed, emptyText: t('workshop.corrector.builderEmpty'), onDone })}
+      {renderBuilder({
+        input,
+        runKey: state.checks,
+        seen: revealed,
+        // Offline there is no Check my prompt button to point at.
+        emptyText: t(state.health === 'offline' ? 'workshop.corrector.builderOffline' : 'workshop.corrector.builderEmpty'),
+        onDone,
+      })}
       <ImprovedPanel
         className="ws-area-output"
         offline={state.health === 'offline'}

@@ -86,6 +86,12 @@ test('the builder waits for Check my prompt, not for Build & test', async () => 
   expect(builder.props).toMatchObject({ input: null, emptyText: 'Your building will appear here after Check my prompt.' })
 })
 
+// Offline there is no Check my prompt button: the builder does not send the learner looking for one.
+test('offline, the builder says there is no building instead of waiting for a check', async () => {
+  const { builder } = await renderHeld(makeWorkshopStore({ api: { health: async () => ({ ok: true, data: { corrector: false } }) } }))
+  expect(builder.props).toMatchObject({ input: null, emptyText: 'The corrector is offline, so there is no building to inspect.' })
+})
+
 test('checks a prompt: score, materials, summary, building and the improved prompt', async () => {
   const user = userEvent.setup()
   const store = await renderView()

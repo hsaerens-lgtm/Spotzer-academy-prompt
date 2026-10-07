@@ -61,7 +61,8 @@
 .ws-icon__label { font-family: var(--ws-chrome); font-size: 17px; }
 
 /* Ada has her own place in the desktop grid (under the output, bottom right): her bubble never covers a window. Her
-   row has a fixed height (four lines and the buttons): a longer line scrolls inside the bubble, no window ever moves. */
+   row has a fixed height (four lines and the buttons, eight once every mission is passed): a longer line scrolls inside
+   the bubble, no window moves while she talks. */
 .ws-ada-dock { grid-area: ada; display: flex; align-items: flex-end; justify-content: flex-end; gap: 10px; min-width: 0; min-height: 0; }
 .ws-bubble {
   position: relative; display: flex; flex-direction: column; flex: 0 1 auto; min-width: 0; max-width: 460px; max-height: 100%;
@@ -206,13 +207,17 @@
   --ws-ada-row: 140px;
   display: grid; gap: 12px; padding: 12px 12px 0;
   grid-template-columns: 76px minmax(220px, 19%) minmax(0, 1fr) minmax(0, 1.05fr);
-  grid-template-rows: minmax(0, 1.2fr) minmax(0, 0.8fr) var(--ws-ada-row) 42px;
+  grid-template-rows: minmax(0, 1.2fr) minmax(0, 0.8fr) calc(var(--ws-ada-row) + var(--ws-ada-extra, 0px)) 42px;
   grid-template-areas:
     'icons missions studio builder'
     'icons missions studio output'
     'icons missions studio ada'
     'task task task task';
 }
+/* Every mission passed: Ada's last congratulations (success, takeaway, bonus and the pointer to the office console, up
+   to 366 characters) takes eight lines in the narrowest bubble (1280 px wide). Her row gets four more lines (4 x 21 px)
+   for the whole all-done state, so no window moves between two of her lines. */
+.ws-desktop--all-done { --ws-ada-extra: 84px; }
 .ws-area-missions { grid-area: missions; }
 .ws-area-studio { grid-area: studio; }
 .ws-area-builder { grid-area: builder; }
@@ -225,7 +230,10 @@
 
 /* Short screens (down to 1280 x 600): tighter spacing, smaller Ada; content text never below 14 px. */
 @media (max-height: 700px) {
-  .ws-desktop { --ws-ada-row: 134px; gap: 8px; padding: 8px 8px 0; grid-template-rows: minmax(0, 1.15fr) minmax(0, 0.85fr) var(--ws-ada-row) 38px; }
+  .ws-desktop {
+    --ws-ada-row: 134px; gap: 8px; padding: 8px 8px 0;
+    grid-template-rows: minmax(0, 1.15fr) minmax(0, 0.85fr) calc(var(--ws-ada-row) + var(--ws-ada-extra, 0px)) 38px;
+  }
   .ws-taskbar { margin: 0 -8px; }
   .ws-window__body { padding: 8px 10px; }
   .ws-brief { margin-bottom: 8px; padding: 6px 8px; }
@@ -235,4 +243,6 @@
   /* The building fills whatever height its window gets: no scroll bar inside the builder. */
   .ws-builder { min-height: 0; }
   .ws-builder__canvas { min-height: 100px; }
+  /* Ada's taller all-done row leaves the builder a little less. */
+  .ws-desktop--all-done .ws-builder__canvas { min-height: 80px; }
 }
