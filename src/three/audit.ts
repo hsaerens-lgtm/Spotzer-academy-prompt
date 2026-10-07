@@ -1,4 +1,4 @@
-import type { Material, Mesh, MeshStandardMaterial, Object3D } from 'three'
+import type { Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D } from 'three'
 
 /*
  * Material audit (spec criterion 1): every visible surface of the office uses a textured PBR material, except
@@ -17,15 +17,20 @@ export function markExempt<T extends { userData: Record<string, unknown> }>(targ
 const reasonOf = (target: { userData: Record<string, unknown> }): Exemption | undefined =>
   EXEMPTIONS.find((reason) => reason === target.userData.auditExempt)
 
-/** A non-black emissive colour (the colour, not the intensity: the intensity of a light follows the time of day). */
-function hasEmissiveColour(material: Material): boolean {
-  const emissive = (material as Partial<MeshStandardMaterial>).emissive
-  return emissive !== undefined && emissive.r + emissive.g + emissive.b > 0
+/**
+ * Whether a material lights itself: a lit material (standard, physical, Lambert, Phong) with a non-black `emissive`
+ * colour, or an unlit MeshBasicMaterial (light strips and bulbs, often `toneMapped: false`) with a non-black `color`.
+ * The colour counts, not the intensity: the intensity of a light follows the time of day.
+ */
+function emitsLight(material: Material): boolean {
+  const basic = material as Partial<MeshBasicMaterial>
+  const colour = basic.isMeshBasicMaterial ? basic.color : (material as Partial<MeshStandardMaterial>).emissive
+  return colour !== undefined && colour.r + colour.g + colour.b > 0
 }
 
-/** An exemption holds for a material, except 'emissive' on a material with no emissive colour: a flat plate cannot hide behind it. */
+/** An exemption holds for a material, except 'emissive' on a material that emits nothing: a flat plate cannot hide behind it. */
 const holds = (reason: Exemption | undefined, material: Material) =>
-  reason !== undefined && (reason !== 'emissive' || hasEmissiveColour(material))
+  reason !== undefined && (reason !== 'emissive' || emitsLight(material))
 
 /** A colour map and at least one surface map (normal or roughness). */
 export function isTextured(material: Material): boolean {
@@ -37,8 +42,9 @@ export function isTextured(material: Material): boolean {
  * Visible meshes (Mesh, InstancedMesh, SkinnedMesh; the object and all its ancestors visible) whose material, or one
  * of its materials, is neither textured nor exempt. A material that draws nothing (`visible` or `colorWrite` off, such
  * as a depth-only occluder) is not reported. An object is exempt when it or an ancestor is marked, and so is a material
- * marked itself; an 'emissive' mark only counts for a material with a non-black emissive colour. Any other material
- * type, a ShaderMaterial for example, is reported unless it is marked.
+ * marked itself; an 'emissive' mark only counts for a material that emits light (see emitsLight: a non-black emissive
+ * colour, or for an unlit MeshBasicMaterial a non-black colour). Any other material type, a ShaderMaterial for
+ * example, is reported unless it is marked.
  * Entries read `path#material`: path = names of the named ancestors (from `root`) and of the mesh, joined by '/';
  * material = its name, or its type when it has none.
  */

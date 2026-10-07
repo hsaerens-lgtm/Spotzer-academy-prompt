@@ -95,9 +95,8 @@ test('a material that draws nothing is not reported', () => {
 test('the emissive exemption needs an emissive colour', () => {
   const root = named(new Group(), 'base')
   root.add(named(new Mesh(box, glowing('lit')), 'bulb'))
-  // Marked, but flat: a plate cannot hide behind the exemption. Same for a material type that has no emissive colour.
+  // Marked, but flat: a plate cannot hide behind the exemption.
   root.add(named(new Mesh(box, markExempt(plain('flat'), 'emissive')), 'plate'))
-  root.add(named(new Mesh(box, markExempt(new MeshBasicMaterial({ name: 'unlit' }), 'emissive')), 'sticker'))
   // The same goes for an ancestor marked emissive: only its emissive materials are exempt.
   const strip = markExempt(named(new Group(), 'strip'), 'emissive')
   strip.add(named(new Mesh(box, plain('bar')), 'bar'))
@@ -106,7 +105,30 @@ test('the emissive exemption needs an emissive colour', () => {
   // The other exemptions need no colour.
   root.add(named(new Mesh(box, markExempt(plain('pane'), 'glass')), 'pane'))
   root.add(markExempt(named(new Group(), 'backdrop'), 'sky').add(named(new Mesh(box, plain('cloud')), 'cloud')))
-  expect(untexturedMeshes(root)).toEqual(['base/plate#flat', 'base/sticker#unlit', 'base/strip/bar#bar'])
+  expect(untexturedMeshes(root)).toEqual(['base/plate#flat', 'base/strip/bar#bar'])
+})
+
+// Light strips and bulbs are often unlit MeshBasicMaterial (toneMapped: false): their colour is their light.
+test('an unlit basic material with a non-black colour is exempt as emissive', () => {
+  const root = named(new Group(), 'base')
+  root.add(named(new Mesh(box, markExempt(new MeshBasicMaterial({ name: 'strip', color: new Color(1, 0.8, 0.5), toneMapped: false }), 'emissive')), 'strip'))
+  // Under an ancestor marked emissive, too.
+  const fittings = markExempt(named(new Group(), 'fittings'), 'emissive')
+  fittings.add(named(new Mesh(box, new MeshBasicMaterial({ name: 'bulb', color: new Color(1, 1, 1) })), 'bulb'))
+  root.add(fittings)
+  expect(untexturedMeshes(root)).toEqual([])
+  // Without a mark, an unlit material is not exempt, whatever its colour.
+  root.add(named(new Mesh(box, new MeshBasicMaterial({ name: 'plain' })), 'unmarked'))
+  expect(untexturedMeshes(root)).toEqual(['base/unmarked#plain'])
+})
+
+test('an unlit basic material with a black colour is reported even when marked emissive', () => {
+  const root = named(new Group(), 'base')
+  root.add(named(new Mesh(box, markExempt(new MeshBasicMaterial({ name: 'cold', color: new Color(0, 0, 0) }), 'emissive')), 'cold'))
+  const fittings = markExempt(named(new Group(), 'fittings'), 'emissive')
+  fittings.add(named(new Mesh(box, new MeshBasicMaterial({ name: 'dark', color: new Color(0, 0, 0) })), 'dark'))
+  root.add(fittings)
+  expect(untexturedMeshes(root)).toEqual(['base/cold#cold', 'base/fittings/dark#dark'])
 })
 
 test('a shader material is reported unless it is marked exempt', () => {
