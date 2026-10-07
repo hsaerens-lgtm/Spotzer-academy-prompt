@@ -1,12 +1,132 @@
 import {
   CanvasTexture,
   Color,
+  DoubleSide,
   MeshBasicMaterial,
   MeshPhysicalMaterial,
   MeshStandardMaterial,
   SRGBColorSpace,
+  type MeshStandardMaterialParameters,
 } from 'three'
 import { brand } from '../core/brand'
+import { TEXTURE_SETS, type TextureSetId } from './assets'
+import { markExempt } from './audit'
+import { noiseTexture } from './noise'
+import { useTextureSets, type PbrTextures, type TextureSets } from './textures'
+import { tints } from './tints'
+
+/* ------------------------------------------------------------------ *
+ *  PBR materials of the redesigned office (spec 2026-10-06, section 5)
+ * ------------------------------------------------------------------ */
+
+/** How strongly each kind of surface reflects the scene environment (Lightformers, scaled per phase). */
+export const ENV_MAP_INTENSITY = { surface: 1, model: 0.8, plant: 0.45 } as const
+
+/**
+ * A textured PBR material from one texture set: colour map tinted by `tint`, normal map, and the ARM map read three
+ * ways (R ambient occlusion, G roughness, B metalness; metalness only for metal sets).
+ */
+export function pbrMaterial(
+  textures: PbrTextures,
+  options: { name: string; tint: string; metal: boolean; roughness?: number; envMapIntensity?: number },
+): MeshStandardMaterial {
+  return new MeshStandardMaterial({
+    name: options.name,
+    color: options.tint,
+    map: textures.color,
+    normalMap: textures.normal,
+    roughnessMap: textures.arm,
+    aoMap: textures.arm,
+    metalnessMap: options.metal ? textures.arm : null,
+    metalness: options.metal ? 1 : 0,
+    roughness: options.roughness ?? 1,
+    envMapIntensity: options.envMapIntensity ?? ENV_MAP_INTENSITY.surface,
+  })
+}
+
+/** Every shared material of the office. Pure: works on plain Texture objects (unit tests) as on loaded ones. */
+export function buildMaterials(sets: TextureSets) {
+  const pbr = (name: string, set: TextureSetId, tint: string, roughness?: number) =>
+    pbrMaterial(sets[set], { name, tint, metal: TEXTURE_SETS[set].metal, roughness })
+  const glow = (name: string, colour: string, emissiveIntensity: number, extra: MeshStandardMaterialParameters = {}) =>
+    markExempt(new MeshStandardMaterial({ name, color: colour, emissive: colour, emissiveIntensity, ...extra }), 'emissive')
+  return {
+    floor: pbr('floor', 'floor', tints.floor),
+    wall: pbr('wall', 'wall', tints.wall),
+    ceiling: pbr('ceiling', 'wall', tints.ceiling),
+    skirting: pbr('skirting', 'wall', tints.skirting),
+    slats: pbr('slats', 'oak', tints.slats),
+    oak: pbr('oak', 'oak', tints.oak),
+    walnut: pbr('walnut', 'walnut', tints.walnut),
+    chairFabric: pbr('chairFabric', 'fabric', tints.chairFabric),
+    sofaFabric: pbr('sofaFabric', 'fabric', tints.sofaFabric),
+    cushion: pbr('cushion', 'fabric', tints.cushion),
+    rug: pbr('rug', 'carpet', tints.rug),
+    blackMetal: pbr('blackMetal', 'blackMetal', tints.blackMetal),
+    brushedMetal: pbr('brushedMetal', 'brushedMetal', tints.brushedMetal),
+    consoleShell: pbr('consoleShell', 'wall', tints.consoleShell, 0.7),
+    consoleDark: pbr('consoleDark', 'wall', tints.consoleDark, 0.7),
+    // Lacquered porcelain: a slight colour and roughness variation under a clear coat, so it reflects the phase.
+    porcelain: new MeshPhysicalMaterial({
+      name: 'porcelain',
+      color: tints.porcelain,
+      map: noiseTexture({ size: 128, min: 0.93, max: 1, seed: 3, srgb: true }),
+      roughness: 0.22,
+      roughnessMap: noiseTexture({ size: 128, min: 0.8, max: 1, seed: 5 }),
+      clearcoat: 1,
+      clearcoatRoughness: 0.08,
+    }),
+    // A thin pane: faint, reflective, no physical transmission (that would cost a second render of the scene).
+    glass: markExempt(
+      new MeshPhysicalMaterial({
+        name: 'glass',
+        color: tints.glass,
+        transparent: true,
+        opacity: 0.08,
+        roughness: 0.05,
+        metalness: 0,
+        envMapIntensity: 1.5,
+        depthWrite: false,
+        side: DoubleSide,
+      }),
+      'glass',
+    ),
+    screenOff: markExempt(new MeshStandardMaterial({ name: 'screenOff', color: brand.ink, roughness: 0.3, metalness: 0.1 }), 'screen'),
+    limeGlow: glow('limeGlow', brand.lime, 0.8),
+    mintGlow: glow('mintGlow', brand.mint, 0.6),
+    // Logo, sign and ceiling lights: their emissive intensity follows the time of day (lighting/emissive.ts, Task 7).
+    logoLime: glow('logoLime', brand.lime, 0.4),
+    logoMint: glow('logoMint', brand.mint, 0.4),
+    logoInk: glow('logoInk', brand.onDark, 0.2),
+    signBack: markExempt(
+      new MeshStandardMaterial({ name: 'signBack', color: brand.surface1, emissive: brand.onDark, emissiveIntensity: 0 }),
+      'emissive',
+    ),
+    ceilingStrip: glow('ceilingStrip', tints.warmLight, 0, { roughness: 0.4 }),
+    lampShade: glow('lampShade', tints.warmLight, 0, { roughness: 0.4 }),
+  }
+}
+
+export type Materials = ReturnType<typeof buildMaterials>
+export type MaterialKey = keyof Materials
+
+/** Materials per TextureSets: built once, shared by every component, never disposed (the office lives as long as the page). */
+const built = new WeakMap<TextureSets, Materials>()
+
+/** The shared PBR materials. Suspends until the texture sets are loaded; use inside the Canvas. */
+export function useMaterials(): Materials {
+  const sets = useTextureSets()
+  let materials = built.get(sets)
+  if (!materials) {
+    materials = buildMaterials(sets)
+    built.set(sets, materials)
+  }
+  return materials
+}
+
+/* ------------------------------------------------------------------ *
+ *  Flat materials of the first office, kept until no component calls materials() (removed in Task 11)
+ * ------------------------------------------------------------------ */
 
 function skyTexture() {
   const canvas = document.createElement('canvas')
@@ -57,12 +177,16 @@ function build() {
   }
 }
 
-export type Materials = ReturnType<typeof build>
+/** @deprecated Flat materials of the first office: use Materials and useMaterials(). */
+export type LegacyMaterials = ReturnType<typeof build>
 
-let cache: Materials | null = null
+let cache: LegacyMaterials | null = null
 
-/** Shared materials, created on first use (inside the Canvas). */
-export function materials(): Materials {
+/**
+ * Shared flat materials, created on first use (inside the Canvas).
+ * @deprecated Use useMaterials() (textured PBR materials). Deleted with this section in Task 11.
+ */
+export function materials(): LegacyMaterials {
   cache ??= build()
   return cache
 }
