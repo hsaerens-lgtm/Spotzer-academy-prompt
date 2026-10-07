@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { assemblePrompt, blockResult, isBlank } from '../../../workshop/engine/evaluate'
 import type { Span } from '../../../workshop/engine/text'
 import { BLOCK_TYPES, BONUS_BLOCKS, MAX_BLOCK_TEXT, MAX_FREE_TEXT, isCoreBlock, type BlockType, type CoreBlock, type Mission } from '../../../workshop/model'
+import { CopyFallbackField } from '../CopyFallbackField'
 import { useCopyWithFallback } from '../copy'
 import { isSubmitShortcut } from '../keys'
 import type { MissionSession } from '../store'
@@ -168,12 +169,7 @@ export function PromptStudio(props: PromptStudioProps) {
           {t('workshop.studio.shortcut')}
         </span>
       </div>
-      {clipboard.fallback !== null && (
-        <label className="ws-copy-fallback">
-          {t('workshop.studio.copyFallback')}
-          <textarea ref={clipboard.selectFallback} className="ws-field" readOnly rows={4} value={clipboard.fallback} />
-        </label>
-      )}
+      {clipboard.fallback !== null && <CopyFallbackField text={clipboard.fallback} selectRef={clipboard.selectFallback} rows={4} />}
     </Window>
   )
 }

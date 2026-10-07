@@ -170,3 +170,12 @@
 .ws-plan__material { font-family: var(--ws-chrome); font-size: 16px; }
 .ws-plan--collapses .ws-plan__row { transform: rotate(-3deg); }
 .ws-plan--leans .ws-plan__row { transform: rotate(-1deg); }
+
+/* My prompts */
+.ws-prompts { display: grid; gap: 14px; margin: 0 0 14px; padding: 0; list-style: none; }
+.ws-prompts__item { display: grid; gap: 6px; justify-items: start; }
+.ws-prompts__title { margin: 0; font-family: var(--ws-chrome); font-size: 19px; font-weight: 400; color: var(--oe-lime-mint); }
+.ws-prompts__text { width: 100%; margin: 0; padding: 8px 10px; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 14px; background: var(--at-ink); border: 1px dashed var(--at-hairline-2); }
+.ws-prompts .ws-copy-fallback { width: 100%; margin-top: 0; }
+.ws-prompts__confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ws-prompts__confirm p { flex-basis: 100%; margin: 0; font-size: 14px; }
