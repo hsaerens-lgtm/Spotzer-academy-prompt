@@ -1,13 +1,28 @@
 // @vitest-environment node
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { Readable, Writable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import { deflateRawSync } from 'node:zlib'
 import { expect, test } from 'vitest'
 import {
+  MAX_ASSET_FILES,
+  MAX_DOWNLOAD,
   ambientCgDownload,
+  assertAllowedUrl,
+  assertDownloadPlan,
+  assertSafeManifest,
+  auditAssetFiles,
+  byteLimit,
+  fetchAllowed,
   formatMiB,
+  glbExtensionsUsed,
   polyHavenModelDownloads,
   polyHavenTextureDownloads,
+  readBody,
   readZip,
   renderCredits,
+  safeJoin,
   sourceResolutionKey,
   sourceUrl,
 } from './lib.mjs'
@@ -184,4 +199,233 @@ test('credits list every file with its source, licence and size', () => {
   expect(text.split('\n').filter((line) => row.test(line))).toHaveLength(2)
   expect(sourceUrl('ambientcg', 'Metal046A')).toBe('https://ambientcg.com/view?id=Metal046A')
   expect(formatMiB(1288490)).toBe('1.23 MiB')
+})
+
+// ---- Fix round 1: what a hostile or broken source cannot make the scripts do ----
+
+const ROOT = resolve('assets-src', 'wall_clock')
+const HOSTILE_PATHS = ['../x', '..\\x', '/abs', '\\abs', 'C:\\x', 'C:x', 'a/../../x', '//server/share/x', '\\\\server\\share\\x', '..', '.', 'a/..', '', 'x\0y']
+
+test('safeJoin keeps every path under its root', () => {
+  expect(safeJoin(ROOT, 'textures/wall_clock_diff_1k.jpg')).toBe(resolve(ROOT, 'textures', 'wall_clock_diff_1k.jpg'))
+  expect(safeJoin(ROOT, 'model.gltf')).toBe(resolve(ROOT, 'model.gltf'))
+  expect(safeJoin(ROOT, 'a/../b.jpg')).toBe(resolve(ROOT, 'b.jpg'))
+  for (const hostile of HOSTILE_PATHS) expect(() => safeJoin(ROOT, hostile), JSON.stringify(hostile)).toThrow(/Unsafe path/)
+  expect(() => safeJoin(ROOT, 42)).toThrow(/Unsafe path/)
+})
+
+test('assertAllowedUrl accepts only https URLs on the source hosts', () => {
+  for (const url of [
+    'https://api.polyhaven.com/files/wall_clock',
+    'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/plank_flooring_04/plank_flooring_04_diff_2k.jpg',
+    'https://ambientcg.com/api/v2/full_json?id=Fabric036&include=downloadData',
+    'https://ambientcg.com/get?file=Fabric036_1K-JPG.zip',
+    'https://acg-download.struffelproductions.com/file/ambientCG-Web/download/Fabric036_conBCXhd/Fabric036_1K-JPG.zip',
+    'https://POLYHAVEN.com/x',
+  ]) {
+    expect(assertAllowedUrl(url)).toBe(url)
+  }
+  for (const url of [
+    'http://api.polyhaven.com/files/wall_clock',
+    'file:///C:/Windows/win.ini',
+    'ftp://dl.polyhaven.org/x',
+    'https://localhost/x',
+    'https://127.0.0.1/x',
+    'https://[::1]/x',
+    'https://169.254.169.254/latest/meta-data',
+    'https://polyhaven.com.evil.net/x',
+    'https://evilpolyhaven.com/x',
+    'https://evil.net/polyhaven.com',
+    'https://polyhaven.com@evil.net/x',
+    'https://user:secret@dl.polyhaven.org/x',
+    'https://dl.polyhaven.org:8443/x',
+    'https://struffelproductions.com/x',
+    'not a url',
+    '',
+  ]) {
+    expect(() => assertAllowedUrl(url), url).toThrow()
+  }
+})
+
+/** A fetch that answers from `respond(callNumber)` and records what it was asked. */
+function fakeFetch(respond) {
+  const calls = []
+  const impl = async (url, init) => {
+    calls.push({ url, init })
+    return respond(calls.length)
+  }
+  impl.calls = calls
+  return impl
+}
+const redirectTo = (location, status = 302) => new Response(null, { status, headers: { location } })
+
+test('fetchAllowed checks every redirect target before requesting it', async () => {
+  const done = new Response('zip', { status: 200 })
+  const good = fakeFetch((n) => (n === 1 ? redirectTo('https://acg-download.struffelproductions.com/file/x.zip') : done))
+  expect(await fetchAllowed('https://ambientcg.com/get?file=x.zip', { headers: { 'user-agent': 'test' } }, good)).toBe(done)
+  expect(good.calls.map((call) => call.url)).toEqual(['https://ambientcg.com/get?file=x.zip', 'https://acg-download.struffelproductions.com/file/x.zip'])
+  expect(good.calls.every((call) => call.init.redirect === 'manual' && call.init.headers['user-agent'] === 'test')).toBe(true)
+
+  const relative = fakeFetch((n) => (n === 1 ? redirectTo('/other?file=x.zip', 301) : done))
+  await fetchAllowed('https://ambientcg.com/get?file=x.zip', {}, relative)
+  expect(relative.calls[1].url).toBe('https://ambientcg.com/other?file=x.zip')
+
+  const foreign = fakeFetch((n) => (n === 1 ? redirectTo('https://evil.example.net/x.zip') : done))
+  await expect(fetchAllowed('https://ambientcg.com/get?file=x.zip', {}, foreign)).rejects.toThrow(/not an allowed host/)
+  expect(foreign.calls).toHaveLength(1)
+
+  const downgrade = fakeFetch((n) => (n === 1 ? redirectTo('http://dl.polyhaven.org/x.jpg') : done))
+  await expect(fetchAllowed('https://dl.polyhaven.org/x.jpg', {}, downgrade)).rejects.toThrow(/https/)
+  expect(downgrade.calls).toHaveLength(1)
+
+  const loop = fakeFetch(() => redirectTo('https://ambientcg.com/get?file=again'))
+  await expect(fetchAllowed('https://ambientcg.com/get?file=x.zip', {}, loop)).rejects.toThrow(/more than 5 redirects/)
+  expect(loop.calls).toHaveLength(6)
+
+  const never = fakeFetch(() => done)
+  await expect(fetchAllowed('http://ambientcg.com/get?file=x.zip', {}, never)).rejects.toThrow(/https/)
+  expect(never.calls).toHaveLength(0)
+})
+
+const planned = (path, overrides = {}) => ({ url: `https://dl.polyhaven.org/${path}`, path, size: 100, md5: 'md5', ...overrides })
+
+test('assertDownloadPlan refuses hostile paths, foreign hosts and oversized plans', () => {
+  expect(() => assertDownloadPlan(ROOT, 'wall_clock', [planned('model.gltf'), planned('textures/x_1k.jpg'), planned('x.bin')])).not.toThrow()
+  for (const hostile of HOSTILE_PATHS.filter((path) => path !== '')) {
+    const gltf = { url: 'https://dl.polyhaven.org/m.gltf', size: 10, md5: 'a', include: { [hostile]: { url: 'https://dl.polyhaven.org/payload', size: 5, md5: 'b' } } }
+    const downloads = polyHavenModelDownloads({ gltf: { '1k': { gltf } } })
+    expect(() => assertDownloadPlan(ROOT, 'wall_clock', downloads), JSON.stringify(hostile)).toThrow(/wall_clock: Unsafe path/)
+  }
+  expect(() => assertDownloadPlan(ROOT, 'wall_clock', [planned('model.gltf', { url: 'https://evil.example.net/m.gltf' })])).toThrow(/wall_clock: .*not an allowed host/)
+  expect(() => assertDownloadPlan(ROOT, 'wall_clock', [planned('model.gltf', { url: 'http://dl.polyhaven.org/m.gltf' })])).toThrow(/https/)
+  for (const size of [0, -1, NaN, undefined, 1.5]) {
+    expect(() => assertDownloadPlan(ROOT, 'wall_clock', [planned('model.gltf', { size })]), String(size)).toThrow(/announces no usable size/)
+  }
+  expect(() => assertDownloadPlan(ROOT, 'wall_clock', [planned('big.bin', { size: MAX_DOWNLOAD + 1 })])).toThrow(/over the limit of 67108864 bytes/)
+  const many = Array.from({ length: MAX_ASSET_FILES + 1 }, (_, i) => planned(`textures/t${i}.jpg`))
+  expect(() => assertDownloadPlan(ROOT, 'wall_clock', many)).toThrow(/65 files/)
+  const heavy = ['a.bin', 'b.bin', 'c.bin'].map((path) => planned(path, { size: MAX_DOWNLOAD }))
+  expect(() => assertDownloadPlan(ROOT, 'wall_clock', heavy)).toThrow(/total of 201326592 bytes/)
+})
+
+test('assertSafeManifest accepts the real manifest and refuses unsafe entries', () => {
+  const manifest = JSON.parse(readFileSync(new URL('./manifest.json', import.meta.url), 'utf8'))
+  expect(() => assertSafeManifest(manifest)).not.toThrow()
+  /** The check run on a copy of the manifest edited by `change`. */
+  const run = (change) => () => {
+    const copy = structuredClone(manifest)
+    change(copy.assets)
+    assertSafeManifest(copy)
+  }
+  expect(run((assets) => (assets[0].id = '../evil'))).toThrow(/unsafe asset id/)
+  expect(run((assets) => (assets[0].id = 'Plank_Flooring'))).toThrow(/unsafe asset id/)
+  expect(run((assets) => (assets[1].id = assets[0].id))).toThrow(/duplicate asset id plank_flooring_04/)
+  expect(run((assets) => (assets[0].source = 'elsewhere'))).toThrow(/unknown source/)
+  expect(run((assets) => (assets[0].kind = 'script'))).toThrow(/unknown kind/)
+  expect(run((assets) => (assets[0].api = 'http://api.polyhaven.com/files/plank_flooring_04'))).toThrow(/plank_flooring_04: .*https/)
+  expect(run((assets) => (assets[0].api = 'https://evil.example.net/files/plank_flooring_04'))).toThrow(/plank_flooring_04: .*not an allowed host/)
+  expect(() => assertSafeManifest({ version: 2, assets: [] })).toThrow(/version 1/)
+  expect(() => assertSafeManifest(null)).toThrow(/version 1/)
+})
+
+/** The same zip, its central directory declaring `size` uncompressed bytes for its (only) entry. */
+function declaring(zip, size) {
+  const copy = Buffer.from(zip)
+  copy.writeUInt32LE(size, copy.lastIndexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02])) + 24)
+  return copy
+}
+
+test('readZip refuses an entry that does not match the size it declares', () => {
+  const zeros = Buffer.alloc(1024 * 1024)
+  const bomb = makeZip([{ name: 'bomb.jpg', data: zeros, method: 8 }])
+  expect(bomb.length).toBeLessThan(4096)
+  expect(readZip(bomb).get('bomb.jpg').length).toBe(zeros.length)
+  // Declares 100 bytes, inflates to 1 MiB: stopped by the output limit, the rest is never produced.
+  expect(() => readZip(declaring(bomb, 100))).toThrow(/bomb\.jpg inflates past its declared size of 100 bytes/)
+  // Declares more than it holds.
+  expect(() => readZip(declaring(bomb, zeros.length + 5))).toThrow(/bomb\.jpg declares 1048581 bytes but holds 1048576/)
+  const stored = makeZip([{ name: 'a.jpg', data: Buffer.from([1, 2, 3, 4]), method: 0 }])
+  expect(() => readZip(declaring(stored, 2))).toThrow(/a\.jpg declares 2 bytes but holds 4/)
+})
+
+test('readZip refuses entries and archives larger than its limits', () => {
+  // Honest, but a huge expansion: 8 MiB of zeros fit in a few KiB.
+  const huge = makeZip([{ name: 'huge.jpg', data: Buffer.alloc(8 * 1024 * 1024), method: 8 }])
+  expect(huge.length).toBeLessThan(32 * 1024)
+  expect(() => readZip(huge, { maxEntryBytes: 1024 * 1024 })).toThrow(/huge\.jpg declares 8388608 bytes, over the limit of 1048576 bytes/)
+  // A declared size beyond the default cap is refused without inflating anything.
+  expect(() => readZip(declaring(huge, 0xffffff00))).toThrow(/over the limit of 67108864 bytes/)
+  const two = makeZip([
+    { name: 'a.jpg', data: Buffer.alloc(600 * 1024), method: 0 },
+    { name: 'b.jpg', data: Buffer.alloc(600 * 1024), method: 0 },
+  ])
+  expect(readZip(two).size).toBe(2)
+  expect(() => readZip(two, { maxTotalBytes: 1024 * 1024 })).toThrow(/more than 1048576 bytes in total/)
+})
+
+/** A writable that keeps what it receives. */
+function sink() {
+  const chunks = []
+  const stream = new Writable({
+    write(chunk, _encoding, callback) {
+      chunks.push(chunk)
+      callback()
+    },
+  })
+  return { chunks, stream }
+}
+
+test('byteLimit lets the expected size through and aborts as soon as a body exceeds it', async () => {
+  const ok = sink()
+  await pipeline(Readable.from([Buffer.alloc(4), Buffer.alloc(4)]), byteLimit(8, 'a.jpg'), ok.stream)
+  expect(Buffer.concat(ok.chunks).length).toBe(8)
+
+  const over = sink()
+  await expect(pipeline(Readable.from([Buffer.alloc(4), Buffer.alloc(4)]), byteLimit(7, 'a.jpg'), over.stream)).rejects.toThrow(/a\.jpg: more than 7 bytes/)
+
+  // A body that never ends: the pipeline fails and stops reading, it does not drain the source.
+  let produced = 0
+  const endless = Readable.from(
+    (function* () {
+      for (;;) {
+        produced += 100
+        yield Buffer.alloc(100)
+      }
+    })(),
+  )
+  await expect(pipeline(endless, byteLimit(1000, 'b.zip'), sink().stream)).rejects.toThrow(/b\.zip: more than 1000 bytes/)
+  expect(produced).toBeLessThan(10_000)
+})
+
+test('readBody collects an API answer up to its limit', async () => {
+  expect((await readBody(Readable.from([Buffer.from('{"a":'), Buffer.from('1}')]), 100, 'api')).toString()).toBe('{"a":1}')
+  await expect(readBody(Readable.from([Buffer.alloc(60), Buffer.alloc(60)]), 100, 'api')).rejects.toThrow(/api: more than 100 bytes/)
+})
+
+/** A GLB holding only a JSON chunk. */
+function makeGlb(json) {
+  let text = JSON.stringify(json)
+  while (Buffer.byteLength(text) % 4 !== 0) text += ' '
+  const body = Buffer.from(text)
+  const header = Buffer.alloc(20)
+  header.writeUInt32LE(0x46546c67, 0)
+  header.writeUInt32LE(2, 4)
+  header.writeUInt32LE(20 + body.length, 8)
+  header.writeUInt32LE(body.length, 12)
+  header.writeUInt32LE(0x4e4f534a, 16)
+  return Buffer.concat([header, body])
+}
+
+test('glbExtensionsUsed reads the extensions a GLB really declares', () => {
+  const asset = { version: '2.0' }
+  expect(glbExtensionsUsed(makeGlb({ asset, extensionsUsed: ['EXT_texture_webp', 'KHR_materials_transmission'] }))).toEqual(['EXT_texture_webp', 'KHR_materials_transmission'])
+  expect(glbExtensionsUsed(makeGlb({ asset }))).toEqual([])
+  expect(() => glbExtensionsUsed(Buffer.from('this is not a glb file at all'))).toThrow(/Not a GLB/)
+  expect(() => glbExtensionsUsed(makeGlb({ asset }).subarray(0, 24))).toThrow(/Corrupt GLB/)
+})
+
+test('auditAssetFiles compares the files on disk with the files the manifest produces', () => {
+  const expected = ['models/a.glb', 'textures/b_color.webp']
+  expect(auditAssetFiles(['models/a.glb', 'textures/b_color.webp'], expected)).toEqual({ unexpected: [], missing: [] })
+  expect(auditAssetFiles(['models/a.glb', 'hdr/sky.hdr', 'notes.txt'], expected)).toEqual({ unexpected: ['hdr/sky.hdr', 'notes.txt'], missing: ['textures/b_color.webp'] })
 })

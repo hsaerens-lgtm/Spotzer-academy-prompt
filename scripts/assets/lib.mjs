@@ -1,8 +1,155 @@
-// Pure helpers of the asset pipeline (no network, no disk): unit-tested in lib.test.mjs.
+// Helpers of the asset pipeline, unit-tested in lib.test.mjs. No disk access; the only network access is the
+// `fetch` function that fetchAllowed is given. Everything the scripts take from the outside world (API answers,
+// zip contents, redirects) goes through the checks of this file before it is trusted.
+import { isAbsolute, relative, resolve, sep } from 'node:path'
+import { Transform } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import { inflateRawSync } from 'node:zlib'
 import { LICENCE, MIB } from '../../src/assets/paths.ts'
 
 /** @typedef {{ url: string, path: string, size: number, md5?: string }} Download  path is relative to assets-src/<id>/ */
+
+/** Largest single file we accept, announced or received. */
+export const MAX_DOWNLOAD = 64 * MIB
+/** Largest API (JSON) answer we accept. */
+export const MAX_API_BYTES = 4 * MIB
+/** Most files, and most bytes in all, that one asset may download. */
+export const MAX_ASSET_FILES = 64
+export const MAX_ASSET_BYTES = 2 * MAX_DOWNLOAD
+
+/**
+ * Hosts we fetch from, over https only; a subdomain of one is allowed too. Poly Haven serves its API from
+ * api.polyhaven.com and its files directly from dl.polyhaven.org; ambientCG answers on ambientcg.com and
+ * redirects each zip to its download host (checked with HEAD requests on every URL of the manifest, 2026-10-07).
+ */
+export const ALLOWED_HOSTS = ['polyhaven.com', 'polyhaven.org', 'ambientcg.com', 'acg-download.struffelproductions.com']
+
+/** Throws unless `url` is an https URL without credentials or port, on an allowed host. Returns `url`. */
+export function assertAllowedUrl(url) {
+  let parsed
+  try {
+    parsed = new URL(url)
+  } catch {
+    throw new Error(`Not a valid URL: ${JSON.stringify(url)}`)
+  }
+  if (parsed.protocol !== 'https:') throw new Error(`${url}: only https URLs are fetched`)
+  if (parsed.username || parsed.password || parsed.port) throw new Error(`${url}: credentials and ports are not allowed`)
+  const host = parsed.hostname.toLowerCase()
+  if (!ALLOWED_HOSTS.some((allowed) => host === allowed || host.endsWith(`.${allowed}`))) throw new Error(`${url}: ${host} is not an allowed host`)
+  return url
+}
+
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308])
+
+/**
+ * fetch() that follows redirects by hand: the first URL and every redirect target are checked by assertAllowedUrl
+ * before they are requested, so a redirect to a foreign host is never contacted. `fetchImpl` is the global fetch by default.
+ */
+export async function fetchAllowed(url, init = {}, fetchImpl = fetch, maxRedirects = 5) {
+  let current = assertAllowedUrl(url)
+  for (let hop = 0; hop <= maxRedirects; hop++) {
+    const response = await fetchImpl(current, { ...init, redirect: 'manual' })
+    if (!REDIRECT_STATUSES.has(response.status)) return response
+    const location = response.headers.get('location')
+    await response.body?.cancel()
+    if (!location) throw new Error(`${current}: HTTP ${response.status} without a Location header`)
+    current = assertAllowedUrl(new URL(location, current).href)
+  }
+  throw new Error(`${url}: more than ${maxRedirects} redirects`)
+}
+
+/**
+ * root joined with a path that comes from an API answer; throws unless it is a plain relative path that stays under root.
+ * Refused: absolute and UNC paths, drive letters and other colons, backslashes, NUL, and any way out through "..".
+ */
+export function safeJoin(root, rel) {
+  if (typeof rel !== 'string' || rel === '' || rel.startsWith('/') || /[\\:\0]/.test(rel)) throw new Error(`Unsafe path ${JSON.stringify(rel)}`)
+  const target = resolve(root, rel)
+  const inside = relative(root, target)
+  if (inside === '' || inside === '..' || inside.startsWith(`..${sep}`) || isAbsolute(inside)) throw new Error(`Unsafe path ${JSON.stringify(rel)}: it leaves ${root}`)
+  return target
+}
+
+/**
+ * Checks a list of downloads before the first byte is fetched: allowed https hosts, paths that stay under `root`,
+ * a usable announced size per file (at most MAX_DOWNLOAD), and at most MAX_ASSET_FILES files and MAX_ASSET_BYTES bytes in all.
+ */
+export function assertDownloadPlan(root, id, downloads) {
+  if (downloads.length > MAX_ASSET_FILES) throw new Error(`${id}: ${downloads.length} files to download, over the limit of ${MAX_ASSET_FILES} files`)
+  let total = 0
+  for (const file of downloads) {
+    try {
+      assertAllowedUrl(file.url)
+      safeJoin(root, file.path)
+    } catch (error) {
+      throw new Error(`${id}: ${error.message}`)
+    }
+    if (!Number.isSafeInteger(file.size) || file.size <= 0) throw new Error(`${id}/${file.path}: the source API announces no usable size`)
+    if (file.size > MAX_DOWNLOAD) throw new Error(`${id}/${file.path}: announced at ${file.size} bytes, over the limit of ${MAX_DOWNLOAD} bytes`)
+    total += file.size
+  }
+  if (total > MAX_ASSET_BYTES) throw new Error(`${id}: a total of ${total} bytes to download, over the limit of ${MAX_ASSET_BYTES} bytes`)
+}
+
+/**
+ * Minimal check of scripts/assets/manifest.json at the start of the scripts: safe ids (they become folder names), known
+ * kinds and sources, and an https API URL on an allowed host. The full zod schema (src/assets/manifest.ts) cannot be
+ * imported from Node (its imports have no extension and it needs zod); src/assets/manifest.test.ts checks the file against it.
+ */
+export function assertSafeManifest(manifest) {
+  if (manifest?.version !== 1 || !Array.isArray(manifest.assets)) throw new Error('manifest.json: expected version 1 and an assets array')
+  const seen = new Set()
+  for (const entry of manifest.assets) {
+    const id = entry?.id
+    if (typeof id !== 'string' || !/^[a-z0-9_]+$/.test(id)) throw new Error(`manifest.json: unsafe asset id ${JSON.stringify(id)}`)
+    if (seen.has(id)) throw new Error(`manifest.json: duplicate asset id ${id}`)
+    seen.add(id)
+    if (entry.kind !== 'texture' && entry.kind !== 'model') throw new Error(`manifest.json: ${id} has an unknown kind ${JSON.stringify(entry.kind)}`)
+    if (!Object.hasOwn(SOURCE_LABEL, entry.source)) throw new Error(`manifest.json: ${id} has an unknown source ${JSON.stringify(entry.source)}`)
+    try {
+      assertAllowedUrl(entry.api)
+    } catch (error) {
+      throw new Error(`${id}: ${error.message}`)
+    }
+  }
+}
+
+/** A transform that passes bytes through and fails as soon as more than `maxBytes` have gone by (the body, not its announced size). */
+export function byteLimit(maxBytes, label) {
+  let seen = 0
+  return new Transform({
+    transform(chunk, _encoding, callback) {
+      seen += chunk.length
+      if (seen > maxBytes) callback(new Error(`${label}: more than ${maxBytes} bytes received`))
+      else callback(null, chunk)
+    },
+  })
+}
+
+/** A whole readable as one Buffer; fails as soon as it holds more than `maxBytes`. */
+export async function readBody(stream, maxBytes, label) {
+  const chunks = []
+  await pipeline(stream, byteLimit(maxBytes, label), async (source) => {
+    for await (const chunk of source) chunks.push(chunk)
+  })
+  return Buffer.concat(chunks)
+}
+
+/** `extensionsUsed` as written in a GLB file (read from its JSON chunk, whatever extensions a loader knows). */
+export function glbExtensionsUsed(buffer) {
+  if (buffer.length < 12 || buffer.readUInt32LE(0) !== 0x46546c67) throw new Error('Not a GLB file')
+  if (buffer.length < 20 || buffer.readUInt32LE(16) !== 0x4e4f534a) throw new Error('Corrupt GLB: the first chunk is not JSON')
+  const length = buffer.readUInt32LE(12)
+  if (20 + length > buffer.length) throw new Error('Corrupt GLB: the JSON chunk is cut short')
+  return JSON.parse(buffer.toString('utf8', 20, 20 + length)).extensionsUsed ?? []
+}
+
+/** Files found under public/assets against the files the manifest produces (both relative to it, CREDITS.md left out). */
+export function auditAssetFiles(present, expected) {
+  const wanted = new Set(expected)
+  const found = new Set(present)
+  return { unexpected: present.filter((file) => !wanted.has(file)).sort(), missing: expected.filter((file) => !found.has(file)) }
+}
 
 /** Files of an ambientCG JPG zip, by the map they hold. */
 export const AMBIENTCG_MAPS = {
@@ -62,8 +209,11 @@ export function ambientCgDownload(fullJson, entry) {
 /**
  * Entries of a zip file, read from its central directory: Map<name, Buffer>, folders skipped.
  * Only "stored" (0) and "deflate" (8) entries exist in the zips we fetch; any other method throws.
+ * A zip is untrusted input: every entry must hold exactly the number of bytes it declares, and a deflated entry is
+ * never inflated past its declared size, so a small file cannot expand into memory. An entry may declare at most
+ * maxEntryBytes, and all entries together at most maxTotalBytes.
  */
-export function readZip(buffer) {
+export function readZip(buffer, { maxEntryBytes = MAX_DOWNLOAD, maxTotalBytes = MAX_ASSET_BYTES } = {}) {
   let end = -1
   for (let i = buffer.length - 22; i >= Math.max(0, buffer.length - 22 - 0xffff); i--) {
     if (buffer.readUInt32LE(i) === 0x06054b50) {
@@ -76,10 +226,12 @@ export function readZip(buffer) {
   let offset = buffer.readUInt32LE(end + 16)
   if (offset === 0xffffffff) throw new Error('ZIP64 archives are not supported')
   const entries = new Map()
+  let declaredTotal = 0
   for (let n = 0; n < count; n++) {
     if (buffer.readUInt32LE(offset) !== 0x02014b50) throw new Error('Corrupt zip: bad central directory entry')
     const method = buffer.readUInt16LE(offset + 10)
     const compressedSize = buffer.readUInt32LE(offset + 20)
+    const declaredSize = buffer.readUInt32LE(offset + 24)
     const nameLength = buffer.readUInt16LE(offset + 28)
     const extraLength = buffer.readUInt16LE(offset + 30)
     const commentLength = buffer.readUInt16LE(offset + 32)
@@ -89,10 +241,26 @@ export function readZip(buffer) {
     if (name.endsWith('/')) continue
     if (buffer.readUInt32LE(localOffset) !== 0x04034b50) throw new Error(`Corrupt zip: bad local header for ${name}`)
     const dataStart = localOffset + 30 + buffer.readUInt16LE(localOffset + 26) + buffer.readUInt16LE(localOffset + 28)
+    if (method !== 0 && method !== 8) throw new Error(`Unsupported zip compression method ${method} for ${name}`)
+    if (declaredSize > maxEntryBytes) throw new Error(`Zip entry ${name} declares ${declaredSize} bytes, over the limit of ${maxEntryBytes} bytes`)
+    declaredTotal += declaredSize
+    if (declaredTotal > maxTotalBytes) throw new Error(`Zip declares more than ${maxTotalBytes} bytes in total`)
+    if (dataStart + compressedSize > buffer.length) throw new Error(`Corrupt zip: ${name} runs past the end of the file`)
     const data = buffer.subarray(dataStart, dataStart + compressedSize)
-    if (method === 0) entries.set(name, Buffer.from(data))
-    else if (method === 8) entries.set(name, inflateRawSync(data))
-    else throw new Error(`Unsupported zip compression method ${method} for ${name}`)
+    let content
+    if (method === 0) {
+      content = Buffer.from(data)
+    } else {
+      try {
+        // At least 1: zlib refuses a limit of 0, and an empty entry that inflates to anything is caught by the size check below.
+        content = inflateRawSync(data, { maxOutputLength: Math.max(1, declaredSize) })
+      } catch (error) {
+        if (error.code === 'ERR_BUFFER_TOO_LARGE') throw new Error(`Zip entry ${name} inflates past its declared size of ${declaredSize} bytes`)
+        throw new Error(`Corrupt zip: ${name} cannot be inflated (${error.message})`)
+      }
+    }
+    if (content.length !== declaredSize) throw new Error(`Zip entry ${name} declares ${declaredSize} bytes but holds ${content.length}`)
+    entries.set(name, content)
   }
   return entries
 }

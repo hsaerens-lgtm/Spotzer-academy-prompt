@@ -11,7 +11,7 @@ import { dedup, meshopt, prune, simplify, textureCompress, weld } from '@gltf-tr
 import { MeshoptDecoder, MeshoptEncoder, MeshoptSimplifier } from 'meshoptimizer'
 import sharp from 'sharp'
 import { ASSET_BUDGET, ASSETS_DIR, CREDITS_FILE, TEXTURE_MAPS, WEBP_QUALITY, modelFile, textureFile } from '../../src/assets/paths.ts'
-import { formatMiB, renderCredits } from './lib.mjs'
+import { assertSafeManifest, auditAssetFiles, formatMiB, glbExtensionsUsed, renderCredits } from './lib.mjs'
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url))
 const SOURCES = join(ROOT, 'assets-src')
@@ -27,6 +27,12 @@ if (values.help) {
 }
 
 const manifest = JSON.parse(readFileSync(join(ROOT, 'scripts/assets/manifest.json'), 'utf8'))
+try {
+  assertSafeManifest(manifest)
+} catch (error) {
+  console.error(`assets:build failed: ${error.message}`)
+  process.exit(1)
+}
 if (values.only && !manifest.assets.some((entry) => entry.id === values.only)) {
   console.error(`Unknown asset id: ${values.only}`)
   process.exit(1)
@@ -39,6 +45,14 @@ function source(entry, name) {
   const path = join(SOURCES, entry.id, name)
   if (!existsSync(path)) throw new Error(`${entry.id}: assets-src/${entry.id}/${name} is missing, run npm run assets:fetch first`)
   return path
+}
+
+/** Every file under `dir`, as paths relative to it with forward slashes. */
+function listFiles(dir, prefix = '') {
+  if (!existsSync(dir)) return []
+  return readdirSync(dir, { withFileTypes: true }).flatMap((item) =>
+    item.isDirectory() ? listFiles(join(dir, item.name), `${prefix}${item.name}/`) : [`${prefix}${item.name}`],
+  )
 }
 
 function output(file) {
@@ -126,7 +140,12 @@ async function buildModel(entry) {
   // Quantization moves the vertices into node transforms: the clock keeps raw positions so its hands turn about the dial centre.
   if (entry.quantize !== false) transforms.push(meshopt({ encoder: MeshoptEncoder, level: 'medium' }))
   await document.transform(...transforms)
-  writeFileSync(output(modelFile(entry.id)), await io.writeBinary(document))
+  const file = output(modelFile(entry.id))
+  writeFileSync(file, await io.writeBinary(document))
+  // Read the written file back: the physical-transmission extensions must be gone from the GLB itself, not just from the in-memory
+  // document. The clock (quantize: false) skips the meshopt step above, so its GLB is the plain re-written document; this check covers it too.
+  const left = glbExtensionsUsed(readFileSync(file)).filter((name) => DROPPED_EXTENSIONS.includes(name))
+  if (left.length > 0) throw new Error(`${modelFile(entry.id)} still declares ${left.join(', ')}`)
 }
 
 try {
@@ -149,18 +168,26 @@ try {
     }
   }
 
+  // The real folder must hold exactly the files the manifest produces, CREDITS.md aside, in any sub-folder: the credits, the
+  // budgets and the asset test all rest on that.
+  const { unexpected, missing } = auditAssetFiles(
+    listFiles(OUT).filter((file) => file !== CREDITS_FILE),
+    manifest.assets.flatMap(filesOf),
+  )
+  if (unexpected.length > 0) {
+    throw new Error(`public/assets holds files the manifest does not produce (remove them, or add them to scripts/assets/manifest.json): ${unexpected.join(', ')}`)
+  }
+  if (missing.length > 0) throw new Error(`${missing[0]} is missing: run npm run assets:build without --only`)
+
   const rows = manifest.assets.flatMap((entry) =>
-    filesOf(entry).map((file) => {
-      const path = join(OUT, file)
-      if (!existsSync(path)) throw new Error(`${file} is missing: run npm run assets:build without --only`)
-      return { file, assetId: entry.id, source: entry.source, sourceId: entry.sourceId, stage: entry.stage, bytes: statSync(path).size }
-    }),
+    filesOf(entry).map((file) => ({ file, assetId: entry.id, source: entry.source, sourceId: entry.sourceId, stage: entry.stage, bytes: statSync(join(OUT, file)).size })),
   )
   writeFileSync(join(OUT, CREDITS_FILE), renderCredits(rows))
 
   console.log('')
   for (const row of rows) console.log(`${row.file.padEnd(46)} ${row.stage.padEnd(6)} ${formatMiB(row.bytes).padStart(10)}`)
-  const total = rows.reduce((sum, row) => sum + row.bytes, statSync(join(OUT, CREDITS_FILE)).size)
+  // Measured on the real folder, CREDITS.md included.
+  const total = listFiles(OUT).reduce((sum, file) => sum + statSync(join(OUT, file)).size, 0)
   const base = rows.filter((row) => row.stage === 'base').reduce((sum, row) => sum + row.bytes, 0)
   const largest = rows.reduce((max, row) => (row.bytes > max.bytes ? row : max))
   console.log('')

@@ -63,6 +63,7 @@ test('texture resolutions follow the spec', () => {
   expect(textures.filter((entry) => entry.metal).map((entry) => entry.id)).toEqual(['metal046a', 'metal027'])
   expect(edited((assets) => ((assets[2].resolution as { normal: number }).normal = 2048))).toBe(false)
   expect(edited((assets) => ((assets[2].resolution as { normal: number }).normal = 4096))).toBe(false)
+  expect(edited((assets) => ((assets[2].resolution as { arm: number }).arm = 2048))).toBe(false)
 })
 
 test('every model is a Poly Haven asset and the clock keeps its node transforms', () => {

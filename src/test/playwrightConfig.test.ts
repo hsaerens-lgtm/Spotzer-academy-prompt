@@ -17,6 +17,12 @@ test('the e2e server stays on port 5199 when E2E_PORT is not set', async () => {
   expect(config.webServer).toMatchObject({ command: 'npm run dev -- --port 5199 --strictPort', url: 'http://localhost:5199' })
 })
 
+test('an empty E2E_PORT falls back to 5199 too', async () => {
+  const config = await loadConfig('')
+  expect(config.use?.baseURL).toBe('http://localhost:5199')
+  expect(config.webServer).toMatchObject({ command: 'npm run dev -- --port 5199 --strictPort', url: 'http://localhost:5199' })
+})
+
 test('E2E_PORT moves the base URL and the dev server together', async () => {
   const config = await loadConfig('5299')
   expect(config.use?.baseURL).toBe('http://localhost:5299')
