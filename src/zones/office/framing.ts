@@ -147,13 +147,13 @@ export function projectPoint(pose: Pose, aspect: number, point: Vec3, parallax?:
   return { u: (ndc.x + 1) / 2, v: (1 - ndc.y) / 2, inFront: ndc.z > -1 && ndc.z < 1 }
 }
 
-/** Screen extent of a box: the bounds of its 8 projected corners. */
-export function projectBox(pose: Pose, aspect: number, box: Box): { u0: number; u1: number; v0: number; v1: number } {
+/** Screen extent of a box: the bounds of its 8 projected corners; `parallax` shifts the look target as in projectPoint. */
+export function projectBox(pose: Pose, aspect: number, box: Box, parallax?: [number, number]): { u0: number; u1: number; v0: number; v1: number } {
   const extent = { u0: Infinity, u1: -Infinity, v0: Infinity, v1: -Infinity }
   for (const x of [box.min[0], box.max[0]]) {
     for (const y of [box.min[1], box.max[1]]) {
       for (const z of [box.min[2], box.max[2]]) {
-        const { u, v } = projectPoint(pose, aspect, [x, y, z])
+        const { u, v } = projectPoint(pose, aspect, [x, y, z], parallax)
         extent.u0 = Math.min(extent.u0, u)
         extent.u1 = Math.max(extent.u1, u)
         extent.v0 = Math.min(extent.v0, v)
