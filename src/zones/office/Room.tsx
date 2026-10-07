@@ -26,8 +26,9 @@ function SlatWall() {
 }
 
 /**
- * The meeting room: 20 cm slabs and walls that cast and receive shadows, the glazing on the left facade and behind
- * Ada, the slat wall behind the screen, the banquette along the glass, the ceiling lines and the rug.
+ * The meeting room: 20 cm walls and 10 cm floor and ceiling slabs that cast and receive shadows, the glazing on the
+ * left facade and behind Ada, the slat wall behind the screen, the banquette along the glass, the ceiling lines and
+ * the rug.
  */
 export function Room() {
   const m = useMaterials()

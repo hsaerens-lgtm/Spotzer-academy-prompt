@@ -13,9 +13,10 @@ import {
 } from '../layout'
 
 /*
- * The room as boxes: slabs, walls, skirting, glazing frame, slats, banquette, ceiling lines and rug. Pure data
- * (Room.tsx and Glazing.tsx turn it into meshes), so the tests can check that walls close the room, that the glazing
- * stays open and that nothing flat shares a height with something else (Horn.os rule: no coplanar surfaces).
+ * The room as boxes: floor and ceiling slabs (10 cm), walls (20 cm), skirting, glazing frame, slats, banquette,
+ * ceiling lines and rug. Pure data (Room.tsx and Glazing.tsx turn it into meshes), so the tests can check that walls
+ * close the room, that the glazing stays open and that no two visible surfaces share a plane (Horn.os rule: no
+ * coplanar surfaces).
  */
 
 export interface BoxSpec {
@@ -47,7 +48,10 @@ const box = (name: string, center: Vec3, size: Vec3, material: MaterialKey, cast
   receiveShadow,
 })
 
-/** Floor and ceiling slabs, the four walls (open where the glazing is) and the skirting. */
+/**
+ * The 10 cm floor and ceiling slabs, the four 20 cm walls (open where the glazing is) and the skirting. The skirting
+ * runs are trimmed where they meet, so no two of them share a top face at a corner.
+ */
 export function shellBoxes(): BoxSpec[] {
   const t = WALL_T
   const outerW = ROOM.width + 2 * t
@@ -64,17 +68,32 @@ export function shellBoxes(): BoxSpec[] {
     box('wall-front', [0, MID, ROOM.z1 + t / 2], [outerW, H, t], 'wall'),
     box('wall-left', [ROOM.x0 - t / 2, MID, (leftZ0 + ROOM.z1 + t) / 2], [t, H, ROOM.z1 + t - leftZ0], 'wall'),
     box('skirting-back', [(backX0 + ROOM.x1) / 2, k / 2, ROOM.z0 + s / 2], [ROOM.x1 - backX0, k, s], 'skirting', false, true),
-    box('skirting-right', [ROOM.x1 - s / 2, k / 2, 0], [s, k, ROOM.depth], 'skirting', false, true),
-    box('skirting-front', [0, k / 2, ROOM.z1 - s / 2], [ROOM.width, k, s], 'skirting', false, true),
+    // Each corner belongs to one run: the back run takes its corner with the right run, the front run takes its corner
+    // with the right run, and the left run takes its corner with the front run. The right run therefore stops short of
+    // the back and front runs, and the front run starts after the left one.
+    box('skirting-right', [ROOM.x1 - s / 2, k / 2, 0], [s, k, ROOM.depth - 2 * s], 'skirting', false, true),
+    box('skirting-front', [s / 2, k / 2, ROOM.z1 - s / 2], [ROOM.width - s, k, s], 'skirting', false, true),
     box('skirting-left', [ROOM.x0 + s / 2, k / 2, (leftZ0 + ROOM.z1) / 2], [s, k, ROOM.z1 - leftZ0], 'skirting', false, true),
   ]
 }
 
-/** Black aluminium frame of the glazing: corner post, mullions, end posts and the low transoms. */
+/** The transoms sit this far inside the faces of the posts, so none of their faces shares a plane with a post's. */
+const TRANSOM_RECESS = 0.005
+
+/**
+ * Black aluminium frame of the glazing: corner post, mullions, end posts and the low transoms. The transoms are 5 mm
+ * shallower than the posts on each side and end 5 mm inside the corner post and the end posts: they run between them
+ * without touching each other and without a face flush with a post face (Horn.os rule: no coplanar surfaces).
+ */
 export function glazingFrameBoxes(): BoxSpec[] {
   const { side, back, mullion, transomY } = GLAZING
   const w = mullion.width
   const d = mullion.depth
+  const td = d - 2 * TRANSOM_RECESS
+  const sideZ0 = back.z + d / 2 - TRANSOM_RECESS // inside the corner post
+  const sideZ1 = side.z1 - w + TRANSOM_RECESS // inside the end post of the facade
+  const backX0 = side.x + d / 2 - TRANSOM_RECESS // inside the corner post
+  const backX1 = back.x1 - w + TRANSOM_RECESS // inside the end post of the return
   const metal = (name: string, center: Vec3, size: Vec3) => box(name, center, size, 'blackMetal')
   return [
     metal('post-corner', [side.x, MID, back.z], [d, H, d]),
@@ -82,8 +101,8 @@ export function glazingFrameBoxes(): BoxSpec[] {
     metal('post-side-end', [side.x, MID, side.z1 - w / 2], [d, H, w]),
     ...GLAZING.backMullionsX.map((x, i) => metal(`post-back-${i}`, [x, MID, back.z], [w, H, d])),
     metal('post-back-end', [back.x1 - w / 2, MID, back.z], [w, H, d]),
-    metal('transom-side', [side.x, transomY, (side.z0 + side.z1) / 2], [d, w, side.z1 - side.z0]),
-    metal('transom-back', [back.x1 - (back.x1 - back.x0) / 2, transomY, back.z], [back.x1 - back.x0, w, d]),
+    metal('transom-side', [side.x, transomY, (sideZ0 + sideZ1) / 2], [td, w, sideZ1 - sideZ0]),
+    metal('transom-back', [(backX0 + backX1) / 2, transomY, back.z], [backX1 - backX0, w, td]),
   ]
 }
 

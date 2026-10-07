@@ -15,7 +15,10 @@ export interface Placement {
 
 /** The meeting room: 10 x 12 m, 3.2 m under the ceiling. The screen wall is z = -6, the glazing x = -5. */
 export const ROOM = { width: 10, depth: 12, height: 3.2, x0: -5, x1: 5, z0: -6, z1: 6 } as const
-/** Walls, floor and ceiling are 20 cm slabs: they cast shadows and show their thickness at the edge of the glazing. */
+/**
+ * Wall thickness: the walls are 20 cm, the floor and ceiling slabs 10 cm (room/plan.ts). They cast shadows and the
+ * walls show their thickness at the edge of the glazing.
+ */
 export const WALL_T = 0.2
 /** The office camera. `far` holds the 400 m sky dome and the city around it (outdoor/cityPlan.ts). */
 export const CAMERA = { fov: 45, near: 0.1, far: 1000 } as const

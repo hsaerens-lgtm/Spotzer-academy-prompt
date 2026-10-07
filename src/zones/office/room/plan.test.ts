@@ -112,6 +112,64 @@ test('nothing laid flat shares a height', () => {
   expect(top(shellBoxes().find((b) => b.name === 'floor')!)).toBe(0)
 })
 
+/** One face of a box: the axis it is perpendicular to, which way it points, and where its plane stands. */
+interface Face {
+  box: BoxSpec
+  axis: 0 | 1 | 2
+  sign: 1 | -1
+  plane: number
+}
+const facesOf = (b: BoxSpec): Face[] =>
+  ([0, 1, 2] as const).flatMap((axis) => ([1, -1] as const).map((sign) => ({ box: b, axis, sign, plane: b.center[axis] + (sign * b.size[axis]) / 2 })))
+/** How far two boxes overlap along one axis (0 when they merely touch). */
+function overlapLength(a: BoxSpec, b: BoxSpec, k: number): number {
+  const length = Math.min(a.center[k] + a.size[k] / 2, b.center[k] + b.size[k] / 2) - Math.max(a.center[k] - a.size[k] / 2, b.center[k] - b.size[k] / 2)
+  return length > 1e-6 ? length : 0
+}
+const BOUNDS = [
+  [ROOM.x0, ROOM.x1],
+  [0, ROOM.height],
+  [ROOM.z0, ROOM.z1],
+] as const
+/**
+ * The allow-list of faces that may share a plane, because nobody sees them: a face that lies on or beyond the room
+ * boundary and points away from the room is pressed against a wall, the floor slab or the ceiling slab, or is outside.
+ * That covers the outer faces at the wall corners, the wall tops under the ceiling slab, the wall bottoms on the floor
+ * slab, and the backs, tops and bottoms of slats and skirting. The glazing frame gets no such pass: all its faces count.
+ */
+const hidden = (f: Face) => !/^(post|transom)-/.test(f.box.name) && f.sign * (f.plane - BOUNDS[f.axis][f.sign > 0 ? 1 : 0]) >= -1e-3
+/** Pairs of faces with the same normal on the same plane (within 1 mm) that overlap by some area, unless both are hidden. */
+function coplanarPairs(boxes: BoxSpec[]): string[] {
+  const faces = boxes.flatMap(facesOf)
+  const pairs: string[] = []
+  for (const [i, a] of faces.entries()) {
+    for (const b of faces.slice(i + 1)) {
+      if (a.box === b.box || a.axis !== b.axis || a.sign !== b.sign || Math.abs(a.plane - b.plane) > 1e-3) continue
+      if ([0, 1, 2].some((k) => k !== a.axis && overlapLength(a.box, b.box, k) === 0)) continue
+      if (hidden(a) && hidden(b)) continue
+      pairs.push(`${a.box.name} / ${b.box.name}: ${a.sign > 0 ? '+' : '-'}${'xyz'[a.axis]} face at ${a.plane.toFixed(3)}`)
+    }
+  }
+  return pairs
+}
+
+test('no two surfaces of the room share a plane where they can be seen', () => {
+  const all = [...shellBoxes(), ...glazingFrameBoxes(), ...slatBoxes(), ...banquetteBoxes(), ...ceilingLineBoxes(), rugBox()]
+  expect(coplanarPairs(all)).toEqual([])
+})
+
+test('the coplanar check finds shared faces, ignores boxes that only touch and lets hidden faces be', () => {
+  const crate = (name: string, center: Vec3, size: Vec3): BoxSpec => ({ name, center, size, material: 'oak', castShadow: true, receiveShadow: true })
+  // Level tops and bottoms that overlap, in the middle of the room: both pairs are reported.
+  const level = [crate('a', [0, 1, 0], [1, 1, 1]), crate('b', [0.5, 1, 0.5], [1, 1, 1])]
+  expect(coplanarPairs(level)).toEqual(['a / b: +y face at 1.500', 'a / b: -y face at 0.500'])
+  // Side by side: the tops are level but the boxes only touch.
+  expect(coplanarPairs([crate('a', [0, 1, 0], [1, 1, 1]), crate('b', [1, 1, 0], [1, 1, 1])])).toEqual([])
+  // Floor to ceiling: their ends are pressed against the slabs, nobody sees them.
+  const tall = [crate('c', [0, ROOM.height / 2, 0], [1, ROOM.height, 1]), crate('d', [0.5, ROOM.height / 2, 0.5], [1, ROOM.height, 1])]
+  expect(coplanarPairs(tall)).toEqual([])
+})
+
 test('the ceiling lines sit just under the ceiling, inside the room', () => {
   const lines = ceilingLineBoxes()
   expect(lines).toHaveLength(4)
