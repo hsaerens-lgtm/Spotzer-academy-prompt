@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
+// Another worktree can run its own e2e on 5199 at the same time: set E2E_PORT to use a different port.
+const port = process.env.E2E_PORT ?? '5199'
+
 export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 90_000,
@@ -7,7 +10,7 @@ export default defineConfig({
   workers: 1,
   reporter: [['list']],
   use: {
-    baseURL: 'http://localhost:5199',
+    baseURL: `http://localhost:${port}`,
     trace: 'retain-on-failure',
   },
   projects: [
@@ -21,8 +24,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev -- --port 5199 --strictPort',
-    url: 'http://localhost:5199',
+    command: `npm run dev -- --port ${port} --strictPort`,
+    url: `http://localhost:${port}`,
     reuseExistingServer: true,
     timeout: 60_000,
   },

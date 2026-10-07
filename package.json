@@ -15,7 +15,9 @@
     "test:watch": "vitest",
     "e2e": "playwright test",
     "budget": "node scripts/check-bundle.mjs",
-    "check": "npm run typecheck && npm run test && npm run build && npm run budget"
+    "check": "npm run typecheck && npm run test && npm run build && npm run budget",
+    "assets:fetch": "node --disable-warning=ExperimentalWarning scripts/assets/fetch.mjs",
+    "assets:build": "node --disable-warning=ExperimentalWarning scripts/assets/build.mjs"
   },
   "dependencies": {
     "@fontsource/montserrat": "5.3.0",
@@ -33,6 +35,9 @@
     "zustand": "5.0.15"
   },
   "devDependencies": {
+    "@gltf-transform/core": "4.5.1",
+    "@gltf-transform/extensions": "4.5.1",
+    "@gltf-transform/functions": "4.5.1",
     "@playwright/test": "1.63.0",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
@@ -44,6 +49,8 @@
     "@vitejs/plugin-react": "6.1.1",
     "jsdom": "30.1.1",
     "leva": "0.10.1",
+    "meshoptimizer": "1.2.0",
+    "sharp": "0.35.5",
     "typescript": "7.0.2",
     "vite": "8.3.1",
     "vitest": "5.0.2"

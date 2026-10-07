@@ -11,3 +11,6 @@ Thumbs.db
 
 # Brainstorming / SDD scratch (superpowers)
 .superpowers/
+
+# CC0 asset sources fetched by `npm run assets:fetch`; the prepared files are committed under public/assets/
+assets-src/
