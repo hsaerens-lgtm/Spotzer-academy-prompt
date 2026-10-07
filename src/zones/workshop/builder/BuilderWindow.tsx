@@ -19,6 +19,8 @@ export interface BuilderWindowProps {
   labels: Record<BlockType, string>
   /** The building was already seen to its end (its program was opened again): show its final state at once. */
   seen?: boolean
+  /** What the window says before the first building; the missions' "after Build & test" by default. */
+  emptyText?: string
   onDone?: (runKey: number) => void
   onBlockClick?: (block: CoreBlock) => void
   onReading?: (block: CoreBlock | null) => void
@@ -40,7 +42,7 @@ let serials = 0
 
 const band = (percent: number) => (percent >= 80 ? 'good' : percent >= 50 ? 'mid' : 'poor')
 
-export function BuilderWindow({ className, input, runKey, labels, seen = false, onDone, onBlockClick, onReading }: BuilderWindowProps) {
+export function BuilderWindow({ className, input, runKey, labels, seen = false, emptyText, onDone, onBlockClick, onReading }: BuilderWindowProps) {
   const { t } = useTranslation()
   const threeD = useApp((s) => s.webgl === 'ok' && !s.readingMode)
   const reduced = useApp((s) => s.reducedMotion)
@@ -120,7 +122,7 @@ export function BuilderWindow({ className, input, runKey, labels, seen = false, 
     >
       <div className="ws-builder">
         {!run ? (
-          <p className="ws-output__note">{t('workshop.builder.empty')}</p>
+          <p className="ws-output__note">{emptyText ?? t('workshop.builder.empty')}</p>
         ) : use3D ? (
           <>
             {/* Not keyed by run: one canvas (one WebGL context) for every Build & test of this window. */}

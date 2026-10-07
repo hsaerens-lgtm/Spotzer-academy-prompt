@@ -10,10 +10,12 @@ let instance: StoreApi<WorkshopState> | null = null
 export function getWorkshopStore(): StoreApi<WorkshopState> {
   if (!instance) {
     const content = getWorkshopContent(appStore.getState().settings.lang)
+    // The real missions: an id saved for a mission removed since never makes the workshop "done".
+    const missionIds = content.missions.map((mission) => mission.id)
     instance = createWorkshopStore({
       content,
       api: createCorrectorApi(),
-      passMission: (id, prompt) => appStore.getState().passWorkshopMission(id, prompt, content.missions.length),
+      passMission: (id, prompt) => appStore.getState().passWorkshopMission(id, prompt, missionIds),
     })
   }
   return instance

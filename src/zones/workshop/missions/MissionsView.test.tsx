@@ -19,7 +19,7 @@ function renderView(missionId: string) {
   const onSelect = vi.fn()
   render(
     <WorkshopStoreProvider value={store}>
-      <MissionsView missionId={missionId} onSelectMission={onSelect} renderBuilder={(props) => <StubBuilder {...props} />} />
+      <MissionsView missionId={missionId} onNextMission={onSelect} renderBuilder={(props) => <StubBuilder {...props} />} />
     </WorkshopStoreProvider>,
   )
   return { store, onSelect }
@@ -35,7 +35,7 @@ function renderManual(missionId: string, store = makeWorkshopStore()) {
     <WorkshopStoreProvider value={store}>
       <MissionsView
         missionId={missionId}
-        onSelectMission={() => {}}
+        onNextMission={() => {}}
         renderBuilder={(props) => {
           slot = props
           return null
@@ -315,7 +315,7 @@ function ReadingBuilder({ input, onReading }: BuilderSlotProps) {
 function renderReading(missionId: string) {
   render(
     <WorkshopStoreProvider value={makeWorkshopStore()}>
-      <MissionsView missionId={missionId} onSelectMission={() => {}} renderBuilder={(props) => <ReadingBuilder {...props} />} />
+      <MissionsView missionId={missionId} onNextMission={() => {}} renderBuilder={(props) => <ReadingBuilder {...props} />} />
     </WorkshopStoreProvider>,
   )
 }
@@ -384,7 +384,7 @@ test('a view opened by "Next mission" puts the cursor in its first editor', () =
   const open = (missionId: string) =>
     render(
       <WorkshopStoreProvider value={makeWorkshopStore()}>
-        <MissionsView missionId={missionId} focusOnOpen onSelectMission={() => {}} renderBuilder={() => null} />
+        <MissionsView missionId={missionId} focusOnOpen onNextMission={() => {}} renderBuilder={() => null} />
       </WorkshopStoreProvider>,
     )
   open('meeting-notes')

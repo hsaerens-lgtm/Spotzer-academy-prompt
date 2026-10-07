@@ -34,6 +34,12 @@ test('before any test the builder waits', async () => {
   expect(screen.getByText('Your building will appear here after Build & test.')).toBeInTheDocument()
 })
 
+test('the waiting text can be the program\'s own', async () => {
+  await show({ input: null, runKey: 0, emptyText: 'Your building will appear here after Check my prompt.' })
+  expect(screen.getByText('Your building will appear here after Check my prompt.')).toBeInTheDocument()
+  expect(screen.queryByText('Your building will appear here after Build & test.')).not.toBeInTheDocument()
+})
+
 test('without WebGL the plan view is shown and the run is done at once', async () => {
   resetAppStore({ webgl: 'unavailable' })
   const { onDone } = await show()

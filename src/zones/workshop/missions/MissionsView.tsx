@@ -32,13 +32,14 @@ export interface BuilderSlotProps {
 
 export interface MissionsViewProps {
   missionId: string
-  onSelectMission: (id: string) => void
+  /** Ada's "Next mission": opens the suggested mission (the list of missions belongs to the desktop). */
+  onNextMission: (id: string) => void
   renderBuilder: (props: BuilderSlotProps) => ReactNode
   /** Opened by "Next mission": the button that had the focus went away, so the first editor takes it. */
   focusOnOpen?: boolean
 }
 
-export function MissionsView({ missionId, onSelectMission, renderBuilder, focusOnOpen = false }: MissionsViewProps) {
+export function MissionsView({ missionId, onNextMission, renderBuilder, focusOnOpen = false }: MissionsViewProps) {
   const { t } = useTranslation()
   const store = useWorkshopStore()
   const content = useWorkshop((s) => s.content)
@@ -138,7 +139,7 @@ export function MissionsView({ missionId, onSelectMission, renderBuilder, focusO
       setDismissed(null)
       store.getState().alreadyThere(missionId, advice.detail.id)
     } else if (action === 'next') {
-      onSelectMission(suggestedMission(content, passed).id)
+      onNextMission(suggestedMission(content, passed).id)
     } else if (action === 'compare') {
       setCompare((on) => !on)
     }

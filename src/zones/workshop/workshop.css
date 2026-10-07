@@ -60,15 +60,16 @@
 .ws-icon--corrector .ws-icon__art { border-color: var(--oe-lime); }
 .ws-icon__label { font-family: var(--ws-chrome); font-size: 17px; }
 
-/* Ada has her own place in the desktop grid (under the output, bottom right): her bubble never covers a window. */
-.ws-ada-dock { grid-area: ada; display: flex; align-items: flex-end; justify-content: flex-end; gap: 10px; min-width: 0; }
+/* Ada has her own place in the desktop grid (under the output, bottom right): her bubble never covers a window. Her
+   row has a fixed height (four lines and the buttons): a longer line scrolls inside the bubble, no window ever moves. */
+.ws-ada-dock { grid-area: ada; display: flex; align-items: flex-end; justify-content: flex-end; gap: 10px; min-width: 0; min-height: 0; }
 .ws-bubble {
-  position: relative; flex: 0 1 auto; min-width: 0; max-width: 460px; padding: 10px 30px 10px 12px;
-  background: var(--at-surface-1); border: 2px solid var(--oe-lime); font-size: 14px; line-height: 1.5;
+  position: relative; display: flex; flex-direction: column; flex: 0 1 auto; min-width: 0; max-width: 460px; max-height: 100%;
+  padding: 10px 30px 10px 12px; background: var(--at-surface-1); border: 2px solid var(--oe-lime); font-size: 14px; line-height: 1.5;
 }
-.ws-bubble__text { margin: 0; }
+.ws-bubble__text { margin: 0; min-height: 0; overflow-y: auto; }
 .ws-bubble__untyped { visibility: hidden; }
-.ws-bubble__actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ws-bubble__actions { flex: none; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .ws-bubble__close { position: absolute; top: 2px; right: 4px; border: 0; background: none; color: var(--at-on-dark-2); font-size: 18px; cursor: pointer; }
 .ws-ada { flex: none; animation: ws-float 3s ease-in-out infinite; }
 .ws-ada__shadow { fill: var(--oe-lime); opacity: 0.35; }
@@ -199,11 +200,13 @@
 .ws-changes { margin: 0 0 10px; padding-left: 18px; font-size: 14px; }
 
 /* Desktop grid: icons | missions | studio | builder (top), output (middle) and Ada (bottom), taskbar across.
-   Ada's row takes the height of her bubble: the builder and the output share what is left, so nothing is covered. */
+   Ada's row is reserved for her tallest bubble (four lines and the buttons): the builder and the output share the rest
+   and keep their size whatever she says, so nothing is covered and nothing moves. */
 .ws-desktop {
+  --ws-ada-row: 140px;
   display: grid; gap: 12px; padding: 12px 12px 0;
   grid-template-columns: 76px minmax(220px, 19%) minmax(0, 1fr) minmax(0, 1.05fr);
-  grid-template-rows: minmax(0, 1.2fr) minmax(0, 0.8fr) auto 42px;
+  grid-template-rows: minmax(0, 1.2fr) minmax(0, 0.8fr) var(--ws-ada-row) 42px;
   grid-template-areas:
     'icons missions studio builder'
     'icons missions studio output'
@@ -222,7 +225,7 @@
 
 /* Short screens (down to 1280 x 600): tighter spacing, smaller Ada; content text never below 14 px. */
 @media (max-height: 700px) {
-  .ws-desktop { gap: 8px; padding: 8px 8px 0; grid-template-rows: minmax(0, 1.15fr) minmax(0, 0.85fr) auto 38px; }
+  .ws-desktop { --ws-ada-row: 134px; gap: 8px; padding: 8px 8px 0; grid-template-rows: minmax(0, 1.15fr) minmax(0, 0.85fr) var(--ws-ada-row) 38px; }
   .ws-taskbar { margin: 0 -8px; }
   .ws-window__body { padding: 8px 10px; }
   .ws-brief { margin-bottom: 8px; padding: 6px 8px; }

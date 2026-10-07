@@ -2,7 +2,7 @@ import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { appStore } from '../../../core/store'
 import { resetAppStore } from '../../../test/resetAppStore'
-import { makeWorkshopStore } from '../../../test/workshopStore'
+import { MISSION_IDS, makeWorkshopStore } from '../../../test/workshopStore'
 import { WorkshopStoreProvider } from '../store'
 import { MyPromptsWindow } from './MyPromptsWindow'
 
@@ -29,8 +29,8 @@ test('shows a hint when nothing is saved yet', () => {
 test('lists passed prompts in mission order and copies one', async () => {
   const writeText = vi.fn().mockResolvedValue(undefined)
   Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
-  appStore.getState().passWorkshopMission('newsletter', 'Prompt N', 6)
-  appStore.getState().passWorkshopMission('delayed-website', 'Prompt D', 6)
+  appStore.getState().passWorkshopMission('newsletter', 'Prompt N', MISSION_IDS)
+  appStore.getState().passWorkshopMission('delayed-website', 'Prompt D', MISSION_IDS)
   const panel = renderWindow()
   expect(within(panel).getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['The delayed website', 'The too-long newsletter'])
   await userEvent.click(within(panel).getAllByRole('button', { name: 'Copy' })[1])
@@ -39,7 +39,7 @@ test('lists passed prompts in mission order and copies one', async () => {
 })
 
 test('clearing asks first and keeps the passed missions', async () => {
-  appStore.getState().passWorkshopMission('delayed-website', 'Prompt D', 6)
+  appStore.getState().passWorkshopMission('delayed-website', 'Prompt D', MISSION_IDS)
   const panel = renderWindow()
   await userEvent.click(within(panel).getByRole('button', { name: 'Clear my prompts' }))
   expect(within(panel).getByText('Clear every saved prompt? Your passed missions stay ticked.')).toBeInTheDocument()
@@ -52,7 +52,7 @@ test('clearing asks first and keeps the passed missions', async () => {
 })
 
 test('the focus follows the confirmation: Cancel on open, Clear after Cancel, the hint after the clear', async () => {
-  appStore.getState().passWorkshopMission('delayed-website', 'Prompt D', 6)
+  appStore.getState().passWorkshopMission('delayed-website', 'Prompt D', MISSION_IDS)
   const panel = renderWindow()
   expect(document.body).toHaveFocus()
   await userEvent.click(within(panel).getByRole('button', { name: 'Clear my prompts' }))
@@ -66,8 +66,8 @@ test('the focus follows the confirmation: Cancel on open, Clear after Cancel, th
 })
 
 test('a mission id that is not in the content is ignored', () => {
-  appStore.getState().passWorkshopMission('delayed-website', 'Prompt D', 6)
-  appStore.getState().passWorkshopMission('retired-mission', 'Prompt R', 6)
+  appStore.getState().passWorkshopMission('delayed-website', 'Prompt D', MISSION_IDS)
+  appStore.getState().passWorkshopMission('retired-mission', 'Prompt R', MISSION_IDS)
   const panel = renderWindow()
   expect(within(panel).getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['The delayed website'])
   expect(within(panel).queryByText('Prompt R')).not.toBeInTheDocument()
@@ -75,8 +75,8 @@ test('a mission id that is not in the content is ignored', () => {
 
 test('Copied goes to the prompt copied last', async () => {
   Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn().mockResolvedValue(undefined) }, configurable: true })
-  appStore.getState().passWorkshopMission('delayed-website', 'Prompt D', 6)
-  appStore.getState().passWorkshopMission('newsletter', 'Prompt N', 6)
+  appStore.getState().passWorkshopMission('delayed-website', 'Prompt D', MISSION_IDS)
+  appStore.getState().passWorkshopMission('newsletter', 'Prompt N', MISSION_IDS)
   const panel = renderWindow()
   await userEvent.click(within(panel).getAllByRole('button', { name: 'Copy' })[0])
   expect(within(panel).getAllByRole('button').map((b) => b.textContent)).toEqual(['Copied', 'Copy', 'Clear my prompts'])
@@ -86,8 +86,8 @@ test('Copied goes to the prompt copied last', async () => {
 
 test('when the clipboard refuses, the prompt is shown selected with the Ctrl+C hint', async () => {
   Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn().mockRejectedValue(new Error('denied')) }, configurable: true })
-  appStore.getState().passWorkshopMission('delayed-website', 'Prompt D', 6)
-  appStore.getState().passWorkshopMission('newsletter', 'Prompt N', 6)
+  appStore.getState().passWorkshopMission('delayed-website', 'Prompt D', MISSION_IDS)
+  appStore.getState().passWorkshopMission('newsletter', 'Prompt N', MISSION_IDS)
   const panel = renderWindow()
   await userEvent.click(within(panel).getAllByRole('button', { name: 'Copy' })[1])
   const field = (await within(panel).findByRole('textbox', { name: /press Ctrl\+C to copy it/ })) as HTMLTextAreaElement
@@ -99,22 +99,22 @@ test('when the clipboard refuses, the prompt is shown selected with the Ctrl+C h
 
 test('clearing drops Copied, so a prompt saved later is not already copied', async () => {
   Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn().mockResolvedValue(undefined) }, configurable: true })
-  appStore.getState().passWorkshopMission('delayed-website', 'Prompt D', 6)
+  appStore.getState().passWorkshopMission('delayed-website', 'Prompt D', MISSION_IDS)
   const panel = renderWindow()
   await userEvent.click(within(panel).getByRole('button', { name: 'Copy' }))
   await userEvent.click(within(panel).getByRole('button', { name: 'Clear my prompts' }))
   await userEvent.click(within(panel).getByRole('button', { name: 'Yes, clear' }))
-  act(() => appStore.getState().passWorkshopMission('delayed-website', 'Prompt D', 6))
+  act(() => appStore.getState().passWorkshopMission('delayed-website', 'Prompt D', MISSION_IDS))
   expect(within(panel).getByRole('button', { name: 'Copy' })).toBeInTheDocument()
 })
 
 test('a prompt that changes after it was copied is no longer marked Copied', async () => {
   Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn().mockResolvedValue(undefined) }, configurable: true })
-  appStore.getState().passWorkshopMission('delayed-website', 'Prompt D', 6)
+  appStore.getState().passWorkshopMission('delayed-website', 'Prompt D', MISSION_IDS)
   const panel = renderWindow()
   await userEvent.click(within(panel).getByRole('button', { name: 'Copy' }))
   expect(within(panel).getByRole('button', { name: 'Copied' })).toBeInTheDocument()
-  act(() => appStore.getState().passWorkshopMission('delayed-website', 'Prompt D, better', 6))
+  act(() => appStore.getState().passWorkshopMission('delayed-website', 'Prompt D, better', MISSION_IDS))
   expect(within(panel).getByRole('button', { name: 'Copy' })).toBeInTheDocument()
   expect(within(panel).getByText('Prompt D, better')).toBeInTheDocument()
 })

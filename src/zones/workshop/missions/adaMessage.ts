@@ -39,7 +39,8 @@ function baseMessage(c: AdaContext): AdaMessage {
       const parts = [c.mission.ada.success, c.mission.ada.takeaway]
       if (BONUS_BLOCKS.some((type) => blockResult(c.attempt!.evaluation, type).present)) parts.push(t('workshop.ada.bonus'))
       if (c.allDone) parts.push(t('workshop.ada.allDone'))
-      return { text: parts.join(' '), mood: 'happy', pointing: false, actions: ['next', 'compare'] }
+      // Every mission passed: there is no next one to offer (the suggested mission would only fall back to the first).
+      return { text: parts.join(' '), mood: 'happy', pointing: false, actions: c.allDone ? ['compare'] : ['next', 'compare'] }
     }
     case 'hole':
       return {

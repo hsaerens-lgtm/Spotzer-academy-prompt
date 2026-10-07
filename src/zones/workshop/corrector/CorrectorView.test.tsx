@@ -77,6 +77,13 @@ test('without the server the corrector says it is offline', async () => {
   await renderView({ health: async () => ({ ok: true, data: { corrector: false } }) })
   expect(corrector().getByText('The corrector is offline.')).toBeInTheDocument()
   expect(corrector().queryByRole('textbox')).not.toBeInTheDocument()
+  expect(output().getByText('The corrector is offline, so there is nothing to compare yet.')).toBeInTheDocument()
+  expect(output().queryByText("Paste any prompt and I'll ask a real AI to inspect your building.")).not.toBeInTheDocument()
+})
+
+test('the builder waits for Check my prompt, not for Build & test', async () => {
+  const { builder } = await renderHeld()
+  expect(builder.props).toMatchObject({ input: null, emptyText: 'Your building will appear here after Check my prompt.' })
 })
 
 test('checks a prompt: score, materials, summary, building and the improved prompt', async () => {

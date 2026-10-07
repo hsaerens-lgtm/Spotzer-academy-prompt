@@ -42,12 +42,14 @@ test('a crack explains the clash', () => {
   expect(message).toMatchObject({ text: 'The Format block cracked. Short or detailed? Pick one.', actions: ['edit'] })
 })
 
-test('success adds the takeaway, the bonus and the final congratulations', () => {
+// Once every mission is passed there is no next one (the suggested mission falls back to the first): no "Next mission".
+test('success adds the takeaway, the bonus and the final congratulations, with no next mission to offer', () => {
   const message = adaMessage({ ...base, attempt: attempt({ ...full, constraint: "Don't blame them" }), revealed: true, allDone: true })
   expect(message.text).toBe(
     "It holds! Context matters. Bonus points: your extra blocks reinforce the building. All six missions done! When you're ready, the old console in the office will test what you've learned.",
   )
-  expect(message.actions).toEqual(['next', 'compare'])
+  expect(message.actions).toEqual(['compare'])
+  expect(adaMessage({ ...base, attempt: attempt(full), revealed: true }).actions).toEqual(['next', 'compare'])
 })
 
 test('a live tip speaks like Clippy and can be muted', () => {

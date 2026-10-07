@@ -2,6 +2,7 @@ import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { appStore } from '../core/store'
 import { resetAppStore } from '../test/resetAppStore'
+import { MISSION_IDS } from '../test/workshopStore'
 import { WelcomeBar } from './WelcomeBar'
 
 beforeEach(() => resetAppStore())
@@ -21,7 +22,17 @@ test('workshop and dungeon buttons fly to their objects', async () => {
 test('the workshop button shows the missions passed', () => {
   render(<WelcomeBar />)
   expect(screen.getByRole('button', { name: 'Prompt workshop' })).toBeInTheDocument()
-  act(() => appStore.getState().passWorkshopMission('delayed-website', 'Prompt', 6))
+  act(() => appStore.getState().passWorkshopMission('delayed-website', 'Prompt', MISSION_IDS))
+  expect(screen.getByRole('button', { name: 'Prompt workshop · 1/6' })).toBeInTheDocument()
+})
+
+// Spec 4.6: a mission removed or renamed since leaves its id in the saved progress; it is not counted.
+test('the workshop button counts only the missions that exist', () => {
+  const progress = appStore.getState().progress
+  appStore.setState({ progress: { ...progress, workshop: { passed: ['retired-mission'], prompts: { 'retired-mission': 'Old' } } } })
+  render(<WelcomeBar />)
+  expect(screen.getByRole('button', { name: 'Prompt workshop' })).toBeInTheDocument()
+  act(() => appStore.getState().passWorkshopMission('delayed-website', 'Prompt', MISSION_IDS))
   expect(screen.getByRole('button', { name: 'Prompt workshop · 1/6' })).toBeInTheDocument()
 })
 

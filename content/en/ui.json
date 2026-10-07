@@ -163,6 +163,8 @@
       "checking": "Asking the AI to inspect your building…",
       "offline": "The corrector is offline.",
       "offlineHelp": "It needs the workshop server with an OpenAI key. The missions still work without it.",
+      "builderEmpty": "Your building will appear here after Check my prompt.",
+      "outputOffline": "The corrector is offline, so there is nothing to compare yet.",
       "score": "{{score}}/100",
       "verdict": { "holds": "Holds", "leans": "Leans", "collapses": "Collapses" },
       "good": "What holds",

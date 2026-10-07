@@ -8,6 +8,8 @@ import {
   type BlocksFile,
   type Mission,
 } from './model'
+// The indexes are shared with the office's welcome bar (it counts the passed missions that exist): one copy of each.
+import { missionIndexFiles as indexFiles } from './missionIndex'
 
 export interface WorkshopIssue {
   path: string
@@ -25,7 +27,6 @@ export interface WorkshopContent {
 }
 
 const blockFiles = import.meta.glob<unknown>('/content/*/workshop/blocks.json', { eager: true, import: 'default' })
-const indexFiles = import.meta.glob<unknown>('/content/*/workshop/missions.json', { eager: true, import: 'default' })
 const missionFiles = import.meta.glob<unknown>('/content/*/workshop/missions/*.json', { eager: true, import: 'default' })
 
 const langOf = (path: string) => path.split('/')[2]

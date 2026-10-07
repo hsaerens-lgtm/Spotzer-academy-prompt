@@ -19,6 +19,8 @@ export interface CorrectorBuilderProps {
    * then shows the final state without a replay.
    */
   seen: boolean
+  /** The builder's text before the first check. */
+  emptyText: string
   onDone: (runKey: number) => void
 }
 
@@ -146,9 +148,10 @@ export function CorrectorView({ renderBuilder }: { renderBuilder: (props: Correc
           </>
         )}
       </Window>
-      {renderBuilder({ input, runKey: state.checks, seen: revealed, onDone })}
+      {renderBuilder({ input, runKey: state.checks, seen: revealed, emptyText: t('workshop.corrector.builderEmpty'), onDone })}
       <ImprovedPanel
         className="ws-area-output"
+        offline={state.health === 'offline'}
         report={state.report}
         revealed={revealed}
         checkedPrompt={state.checkedPrompt}

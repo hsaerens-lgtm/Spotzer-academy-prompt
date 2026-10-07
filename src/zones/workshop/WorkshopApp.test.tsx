@@ -4,6 +4,7 @@ import { startRouter } from '../../core/router'
 import { appStore } from '../../core/store'
 import { resetAppStore } from '../../test/resetAppStore'
 import { makeReport } from '../../test/workshopFixtures'
+import { MISSION_IDS } from '../../test/workshopStore'
 import { getWorkshopStore, resetWorkshopStore } from './instance'
 import { WorkshopApp } from './WorkshopApp'
 
@@ -26,7 +27,7 @@ test('opens on the suggested mission and writes it into the route', async () => 
 })
 
 test('an unknown mission in the URL falls back to the suggested one', async () => {
-  appStore.getState().passWorkshopMission('delayed-website', 'Prompt', 6)
+  appStore.getState().passWorkshopMission('delayed-website', 'Prompt', MISSION_IDS)
   appStore.getState().setWorkshopRoute({ mission: 'ghost', app: null })
   await renderApp()
   expect(appStore.getState().workshopRoute.mission).toBe('meeting-notes')
@@ -57,7 +58,7 @@ test('keeps drafts when leaving and coming back', async () => {
 
 test('the taskbar counts passed missions and goes back to the office', async () => {
   const user = userEvent.setup()
-  appStore.getState().passWorkshopMission('delayed-website', 'Prompt', 6)
+  appStore.getState().passWorkshopMission('delayed-website', 'Prompt', MISSION_IDS)
   await renderApp()
   const bar = within(screen.getByRole('navigation', { name: 'Taskbar' }))
   expect(bar.getByText('1/6 missions')).toBeInTheDocument()
@@ -78,7 +79,7 @@ const missionList = () => within(screen.getByRole('navigation', { name: 'Mission
 const ada = () => within(screen.getByRole('complementary', { name: 'Ada' }))
 
 test('the list marks the current, the passed and the suggested missions', async () => {
-  appStore.getState().passWorkshopMission('delayed-website', 'Prompt', 6)
+  appStore.getState().passWorkshopMission('delayed-website', 'Prompt', MISSION_IDS)
   appStore.getState().setWorkshopRoute({ mission: 'florist-post', app: null })
   await renderApp()
   expect(missionList().getByRole('button', { name: /A post for a florist/ })).toHaveAttribute('aria-current', 'true')
@@ -186,6 +187,45 @@ test('"Next mission" hands the focus to the next mission\'s first editor', async
   expect(missions).toHaveFocus()
 })
 
+// Spec 4.6: an id left in the saved progress by a mission removed since never counts towards workshopDone (a flag saved
+// for good, which the dungeon relies on): the page's workshop passes the real mission ids along with each pass.
+test('the workshop is done when its six real missions are passed, whatever else the saved progress holds', () => {
+  const progress = appStore.getState().progress
+  const others = ['meeting-notes', 'florist-post', 'support-hours', 'newsletter']
+  appStore.setState({
+    progress: {
+      ...progress,
+      workshopDone: false,
+      workshop: { passed: ['retired-mission', ...others], prompts: Object.fromEntries(['retired-mission', ...others].map((id) => [id, 'Prompt'])) },
+    },
+  })
+  const store = getWorkshopStore()
+  const pass = (missionId: string) => {
+    const attempt = store.getState().test(missionId)!
+    expect(attempt.evaluation.passed).toBe(true)
+    store.getState().revealAttempt(missionId, attempt.id)
+  }
+  const letter = {
+    role: 'An account manager at a web agency',
+    task: 'Write an email to the client',
+    context: "The client is Martin's Bakery. The launch moves to next Friday because the photos arrived late.",
+    format: 'Friendly and apologetic, under 120 words',
+  } as const
+  for (const [type, value] of Object.entries(letter)) store.getState().setBlock('delayed-website', type as keyof typeof letter, value)
+  pass('delayed-website')
+  expect(appStore.getState().progress.workshop?.passed).toHaveLength(6)
+  expect(appStore.getState().progress.workshopDone).toBe(false)
+
+  store
+    .getState()
+    .setText(
+      'plumber-services',
+      "You are a web copywriter. Write a Services page for Bram's Plumbing, a local plumber in Utrecht. Services: emergency repairs 24/7, boiler installation and servicing, leak detection, bathroom renovations. Tone: trustworthy and clear. Shape: a short intro, then one section per service, about 150 words.",
+    )
+  pass('plumber-services')
+  expect(appStore.getState().progress.workshopDone).toBe(true)
+})
+
 // Escape never leaves the workshop: it closes the Athena menu first, then Ada's bubble.
 test("Escape closes the Athena menu first, then Ada's bubble", async () => {
   const user = userEvent.setup()
@@ -247,6 +287,18 @@ test('the corrector keeps its report across programs without announcing it again
   expect(screen.getByText('62/100 \u00B7 Leans')).toBeInTheDocument()
   expect(screen.getByRole('textbox', { name: 'Paste or write any prompt' })).toHaveValue('Write a post')
   expect(getWorkshopStore().getState().announcements).toBe(said)
+})
+
+// The corrector's builder and output windows speak about the corrector: its button, and the server being offline.
+test('the corrector side windows speak about the corrector, offline too', async () => {
+  const user = userEvent.setup()
+  await renderApp()
+  await user.click(within(screen.getByRole('group', { name: 'Workshop desktop' })).getByRole('button', { name: 'Corrector' }))
+  expect(await screen.findByText('The corrector is offline.')).toBeInTheDocument()
+  expect(within(screen.getByRole('region', { name: 'BUILDER.EXE' })).getByText('Your building will appear here after Check my prompt.')).toBeInTheDocument()
+  expect(
+    within(screen.getByRole('region', { name: 'AI_OUTPUT.TXT' })).getByText('The corrector is offline, so there is nothing to compare yet.'),
+  ).toBeInTheDocument()
 })
 
 // Development only: the end-to-end tests read the workshop state while it is open.

@@ -2,7 +2,7 @@ import { PROGRESS_KEY } from '../../core/progress'
 import { createAppStore } from '../../core/store'
 import { memoryStorage } from '../../test/memoryStorage'
 import { makeReport } from '../../test/workshopFixtures'
-import { fakeApi, makeWorkshopStore } from '../../test/workshopStore'
+import { MISSION_IDS, fakeApi, makeWorkshopStore } from '../../test/workshopStore'
 import { getWorkshopContent } from '../../workshop/content'
 import { createWorkshopStore } from './store'
 
@@ -84,7 +84,7 @@ test('passing twice records once', () => {
   const storage = memoryStorage()
   const app = createAppStore({ getTopic: () => undefined, storage })
   const setItem = vi.spyOn(storage, 'setItem')
-  const store = makeWorkshopStore({ passMission: (id, prompt) => app.getState().passWorkshopMission(id, prompt, 6) })
+  const store = makeWorkshopStore({ passMission: (id, prompt) => app.getState().passWorkshopMission(id, prompt, MISSION_IDS) })
   fill(store, fullLetter)
   const first = store.getState().test('delayed-website')!
   const second = store.getState().test('delayed-website')!

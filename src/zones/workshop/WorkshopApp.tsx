@@ -35,7 +35,8 @@ function Desktop() {
   // editor takes the focus. Anything else that opens a mission or a program keeps the focus where it is.
   const [focusOnOpen, setFocusOnOpen] = useState<string | null>(null)
   const openMission = (id: string, takeFocus: boolean) => {
-    setFocusOnOpen(takeFocus ? id : null)
+    // The same mission again opens nothing new: the view stays, and so does the focus.
+    setFocusOnOpen(takeFocus && id !== missionId ? id : null)
     appStore.getState().setWorkshopRoute({ mission: id, app: null })
   }
   const setView = (next: WorkshopView) => {
@@ -66,7 +67,7 @@ function Desktop() {
         <MissionsView
           key={missionId}
           missionId={missionId}
-          onSelectMission={nextMission}
+          onNextMission={nextMission}
           renderBuilder={renderBuilder}
           focusOnOpen={focusOnOpen === missionId}
         />

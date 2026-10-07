@@ -260,15 +260,15 @@ describe('workshop', () => {
   it('saves a passed mission once and flags the workshop done', () => {
     const { s, storage } = setup()
     const setItem = vi.spyOn(storage, 'setItem')
-    s().passWorkshopMission('a', 'Prompt A', 1)
-    s().passWorkshopMission('a', 'Prompt A', 1)
+    s().passWorkshopMission('a', 'Prompt A', ['a'])
+    s().passWorkshopMission('a', 'Prompt A', ['a'])
     expect(setItem.mock.calls.filter(([key]) => key === PROGRESS_KEY)).toHaveLength(1)
     expect(s().progress).toMatchObject({ workshopDone: true, workshop: { passed: ['a'] } })
   })
 
   it('clears saved prompts', () => {
     const { s } = setup()
-    s().passWorkshopMission('a', 'Prompt A', 6)
+    s().passWorkshopMission('a', 'Prompt A', ['a', 'b'])
     s().clearWorkshopPrompts()
     expect(s().progress.workshop).toEqual({ passed: ['a'], prompts: {} })
   })
@@ -276,7 +276,7 @@ describe('workshop', () => {
   // Review focus 5: storage unavailable.
   it('records passes in memory when storage is unavailable', () => {
     const store = createAppStore({ getTopic: () => undefined, storage: null })
-    store.getState().passWorkshopMission('a', 'Prompt A', 6)
+    store.getState().passWorkshopMission('a', 'Prompt A', ['a', 'b'])
     expect(store.getState().progress.workshop?.passed).toEqual(['a'])
   })
 })

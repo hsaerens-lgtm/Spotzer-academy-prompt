@@ -3,6 +3,9 @@ import { getWorkshopContent } from '../workshop/content'
 import { makeReport } from './workshopFixtures'
 import { createWorkshopStore, type CorrectorApi } from '../zones/workshop/store'
 
+/** The ids of the real missions, in order: what passWorkshopMission needs to know when the workshop is done. */
+export const MISSION_IDS: readonly string[] = getWorkshopContent('en').missions.map((mission) => mission.id)
+
 export function fakeApi(overrides: Partial<CorrectorApi> = {}): CorrectorApi {
   return {
     health: async () => ({ ok: true, data: { corrector: true } }),
@@ -17,6 +20,6 @@ export function makeWorkshopStore(options: { api?: Partial<CorrectorApi>; passMi
   return createWorkshopStore({
     content,
     api: fakeApi(options.api),
-    passMission: options.passMission ?? ((id, prompt) => appStore.getState().passWorkshopMission(id, prompt, content.missions.length)),
+    passMission: options.passMission ?? ((id, prompt) => appStore.getState().passWorkshopMission(id, prompt, MISSION_IDS)),
   })
 }

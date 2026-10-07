@@ -11,6 +11,8 @@ import { useFocusReturn } from './useFocusReturn'
 
 export interface ImprovedPanelProps {
   className?: string
+  /** The corrector's server is not there: until a report exists, the panel says so instead of inviting a check. */
+  offline?: boolean
   report: CorrectorReport | null
   /** The report's building is shown: until then the panel waits with it. */
   revealed: boolean
@@ -23,7 +25,7 @@ export interface ImprovedPanelProps {
   onRun: () => void
 }
 
-export function ImprovedPanel({ className, report, revealed, checkedPrompt, stale, checking, run, onRun }: ImprovedPanelProps) {
+export function ImprovedPanel({ className, offline = false, report, revealed, checkedPrompt, stale, checking, run, onRun }: ImprovedPanelProps) {
   const { t } = useTranslation()
   const clipboard = useCopyWithFallback()
   const { reset } = clipboard
@@ -41,7 +43,7 @@ export function ImprovedPanel({ className, report, revealed, checkedPrompt, stal
   return (
     <Window title={t('workshop.windows.output')} className={className}>
       {!report ? (
-        <p className="ws-output__note">{t('workshop.corrector.intro')}</p>
+        <p className="ws-output__note">{t(offline ? 'workshop.corrector.outputOffline' : 'workshop.corrector.intro')}</p>
       ) : !revealed ? (
         <p className="ws-output__note">{t('workshop.output.reading')}</p>
       ) : (

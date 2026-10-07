@@ -74,7 +74,8 @@ export interface AppState {
   pokeAda: () => void
   setExpandOpen: (open: boolean) => void
   setWorkshopRoute: (route: WorkshopRoute) => void
-  passWorkshopMission: (id: string, prompt: string, total: number) => void
+  /** `knownIds`: the workshop's real missions, so a saved id of a removed mission never makes the workshop "done". */
+  passWorkshopMission: (id: string, prompt: string, knownIds: readonly string[]) => void
   clearWorkshopPrompts: () => void
 }
 
@@ -201,7 +202,7 @@ export function createAppStore(deps: StoreDeps): StoreApi<AppState> {
         if (current.mission === route.mission && current.app === route.app) return
         set({ workshopRoute: route })
       },
-      passWorkshopMission: (id, prompt, total) => setProgress(withMissionPassed(get().progress, id, prompt, total)),
+      passWorkshopMission: (id, prompt, knownIds) => setProgress(withMissionPassed(get().progress, id, prompt, knownIds)),
       clearWorkshopPrompts: () => setProgress(withoutWorkshopPrompts(get().progress)),
     }
   })

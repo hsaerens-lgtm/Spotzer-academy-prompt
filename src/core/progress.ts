@@ -82,15 +82,19 @@ export function markSeen(progress: Progress, topicId: string, section: 'basics' 
 /** The workshop part of the progress, empty when absent. Returns a new object when absent: not for useApp selectors. */
 export const workshopProgress = (progress: Progress): WorkshopProgress => progress.workshop ?? { passed: [], prompts: {} }
 
-export function withMissionPassed(progress: Progress, id: string, prompt: string, total: number): Progress {
+/**
+ * Records a passed mission and its prompt. `knownIds` are the workshop's real missions: the saved list may still hold
+ * the id of a mission removed or renamed since (spec 4.6), which must never count towards workshopDone (saved for good).
+ */
+export function withMissionPassed(progress: Progress, id: string, prompt: string, knownIds: readonly string[]): Progress {
   const current = workshopProgress(progress)
-  const known = current.passed.includes(id)
-  if (known && current.prompts[id] === prompt) return progress
-  const passed = known ? current.passed : [...current.passed, id]
+  const already = current.passed.includes(id)
+  if (already && current.prompts[id] === prompt) return progress
+  const passed = already ? current.passed : [...current.passed, id]
   return {
     ...progress,
     workshop: { passed, prompts: { ...current.prompts, [id]: prompt } },
-    workshopDone: progress.workshopDone || passed.length >= total,
+    workshopDone: progress.workshopDone || (knownIds.length > 0 && knownIds.every((known) => passed.includes(known))),
   }
 }
 

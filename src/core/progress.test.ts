@@ -87,22 +87,41 @@ describe('workshop progress', () => {
     expect(workshopProgress(progress)).toEqual({ passed: [], prompts: {} })
   })
 
-  it('records a passed mission and its prompt, and flags the workshop done at the total', () => {
-    const one = withMissionPassed(emptyProgress(), 'a', 'Prompt A', 2)
+  it('records a passed mission and its prompt, and flags the workshop done once every known mission is passed', () => {
+    const one = withMissionPassed(emptyProgress(), 'a', 'Prompt A', ['a', 'b'])
     expect(one.workshop).toEqual({ passed: ['a'], prompts: { a: 'Prompt A' } })
     expect(one.workshopDone).toBe(false)
-    const two = withMissionPassed(one, 'b', 'Prompt B', 2)
+    const two = withMissionPassed(one, 'b', 'Prompt B', ['a', 'b'])
     expect(two.workshopDone).toBe(true)
   })
 
+  // Spec 4.6: a mission removed or renamed since leaves its id in the saved progress. It must never count towards
+  // workshopDone, a flag that is saved for good and that the dungeon (sub-project 3) relies on.
+  it('an unknown id in the saved progress never counts towards the workshop being done', () => {
+    const known = ['a', 'b', 'c', 'd', 'e', 'f']
+    const storage = memoryStorage()
+    const saved = { ...emptyProgress(), workshop: { passed: ['retired-mission'], prompts: { 'retired-mission': 'Old' } } }
+    storage.setItem(PROGRESS_KEY, JSON.stringify(saved))
+    let progress = loadProgress(storage)
+    for (const id of known.slice(0, 5)) progress = withMissionPassed(progress, id, `Prompt ${id}`, known)
+    expect(progress.workshop?.passed).toHaveLength(6)
+    expect(progress.workshopDone).toBe(false)
+    progress = withMissionPassed(progress, 'f', 'Prompt f', known)
+    expect(progress.workshopDone).toBe(true)
+  })
+
+  it('without any known mission the workshop is never done', () => {
+    expect(withMissionPassed(emptyProgress(), 'a', 'Prompt A', []).workshopDone).toBe(false)
+  })
+
   it('passing the same mission with the same prompt changes nothing; a new prompt replaces the old one', () => {
-    const one = withMissionPassed(emptyProgress(), 'a', 'Prompt A', 6)
-    expect(withMissionPassed(one, 'a', 'Prompt A', 6)).toBe(one)
-    expect(withMissionPassed(one, 'a', 'Better A', 6).workshop).toEqual({ passed: ['a'], prompts: { a: 'Better A' } })
+    const one = withMissionPassed(emptyProgress(), 'a', 'Prompt A', ['a', 'b'])
+    expect(withMissionPassed(one, 'a', 'Prompt A', ['a', 'b'])).toBe(one)
+    expect(withMissionPassed(one, 'a', 'Better A', ['a', 'b']).workshop).toEqual({ passed: ['a'], prompts: { a: 'Better A' } })
   })
 
   it('clearing prompts keeps the passed missions', () => {
-    const one = withMissionPassed(emptyProgress(), 'a', 'Prompt A', 6)
+    const one = withMissionPassed(emptyProgress(), 'a', 'Prompt A', ['a', 'b'])
     expect(withoutWorkshopPrompts(one).workshop).toEqual({ passed: ['a'], prompts: {} })
     const empty = emptyProgress()
     expect(withoutWorkshopPrompts(empty)).toBe(empty)
