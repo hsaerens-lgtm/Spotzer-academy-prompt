@@ -20,6 +20,8 @@
   background: var(--oe-blue-grey); color: var(--at-on-dark);
 }
 .ws-window--primary > .ws-window__bar { background: var(--oe-lime); color: var(--at-ink); }
+/* The lime focus ring would vanish on the lime bar: controls in it get an ink ring. */
+.ws-window--primary > .ws-window__bar :focus-visible { outline-color: var(--at-ink); }
 .ws-window__title { margin: 0; font-family: var(--ws-chrome); font-size: 20px; font-weight: 400; letter-spacing: 0.04em; }
 .ws-window__tools { display: flex; align-items: center; gap: 6px; font-family: var(--ws-chrome); font-size: 18px; }
 .ws-window__body { flex: 1; min-height: 0; overflow: auto; padding: 12px 14px; }

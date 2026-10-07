@@ -309,6 +309,38 @@ test('a whole mission works from the keyboard alone, and its results are announc
   await expect(page.getByRole('textbox', { name: 'Role block' })).toBeFocused()
 })
 
+// Spec 6.3: the focus ring shows on every control, including those in the lime title bar of the active program.
+test("the builder's title-bar buttons show a focus ring that stands out from the lime bar", async ({ page }) => {
+  await openWorkshop(page)
+  await fill(page, 'Task block', 'Write an email')
+  await page.keyboard.press('Control+Enter')
+  /** The focused control's ring and the background of the title bar it sits on. */
+  const ring = () =>
+    page.evaluate(() => {
+      const element = document.activeElement as HTMLElement
+      const style = getComputedStyle(element)
+      return { style: style.outlineStyle, color: style.outlineColor, bar: getComputedStyle(element.closest('.ws-window__bar')!).backgroundColor }
+    })
+  await tabTo(page, 'Skip')
+  const skip = await ring()
+  expect(skip.style).toBe('solid')
+  expect(skip.color).not.toBe(skip.bar)
+  await tabTo(page, 'Reset view')
+  const reset = await ring()
+  expect(reset.style).toBe('solid')
+  expect(reset.color).not.toBe(reset.bar)
+
+  // Once the building stands still (Skip gone), the ring is the only difference between the focused and the blurred bar.
+  const builder = page.getByRole('region', { name: 'BUILDER.EXE' })
+  await expect(builder.getByRole('button', { name: 'Skip' })).toHaveCount(0, { timeout: 30_000 })
+  await expect(builder.getByRole('button', { name: 'Reset view' })).toBeFocused()
+  const bar = builder.locator('.ws-window__bar')
+  const focused = await bar.screenshot()
+  await page.evaluate(() => (document.activeElement as HTMLElement).blur())
+  const blurred = await bar.screenshot()
+  expect(focused.equals(blurred)).toBe(false)
+})
+
 test.describe('smallest supported viewport (1280 x 600)', () => {
   // Set on the context, not with page.setViewportSize: that call also resets window.screen to the viewport size.
   test.use({ viewport: { width: 1280, height: 600 }, contextOptions: { screen: { width: 1280, height: 720 } } })
