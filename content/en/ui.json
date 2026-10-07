@@ -49,8 +49,7 @@
     "soonLabel": "Coming soon",
     "back": "Back to the office",
     "workshop": {
-      "title": "Prompt Workshop",
-      "soon": "Ada is still setting up the workshop. Come back soon to build your first prompt."
+      "title": "Prompt Workshop"
     },
     "dungeon": {
       "title": "The Dungeon",

@@ -190,6 +190,24 @@ describe('corrector', () => {
     })
   })
 
+  // The view that shows the report is unmounted while another program is open: the store remembers what it revealed.
+  it('remembers the revealed report, for the latest check only', async () => {
+    const store = makeWorkshopStore()
+    store.getState().setCorrectorPrompt('Write a post')
+    await store.getState().checkPrompt()
+    expect(store.getState().corrector).toMatchObject({ checks: 1, revealedCheck: 0 })
+    store.getState().revealReport(0)
+    expect(store.getState().corrector.revealedCheck).toBe(0)
+    store.getState().revealReport(1)
+    expect(store.getState().corrector.revealedCheck).toBe(1)
+    await store.getState().checkPrompt()
+    // The newer report waits for its own building: the older one finishing late reveals nothing.
+    store.getState().revealReport(1)
+    expect(store.getState().corrector).toMatchObject({ checks: 2, revealedCheck: 1 })
+    store.getState().revealReport(2)
+    expect(store.getState().corrector.revealedCheck).toBe(2)
+  })
+
   it('reports the first error when one of the two runs fails', async () => {
     const run = vi.fn().mockResolvedValueOnce({ ok: true, data: { answer: 'A' } }).mockResolvedValueOnce({ ok: false, error: 'timeout' })
     const store = makeWorkshopStore({ api: { correct: vi.fn().mockResolvedValue({ ok: true, data: makeReport() }), run } })

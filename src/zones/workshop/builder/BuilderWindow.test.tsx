@@ -195,6 +195,17 @@ test('a skipped run, or a finished one shown again, jumps straight to its final 
   expect(onDone.mock.calls).toEqual([[1]])
 })
 
+// A program opened again (the corrector) shows a building it had already seen to its end: no replay.
+test('a building already seen jumps straight to its final state and is done at once', async () => {
+  const { onDone } = await show({ seen: true })
+  expect(lastProps().instant).toBe(true)
+  expect(onDone.mock.calls).toEqual([[1]])
+  expect(screen.getByText('The building leans.')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Skip' })).not.toBeInTheDocument()
+  act(() => lastProps().onDone(lastProps().runKey))
+  expect(onDone).toHaveBeenCalledTimes(1)
+})
+
 // Review round 1 (c): focus never falls back to the page when Skip goes away.
 test('when the run ends while Skip has the focus, Reset view takes it', async () => {
   await show()

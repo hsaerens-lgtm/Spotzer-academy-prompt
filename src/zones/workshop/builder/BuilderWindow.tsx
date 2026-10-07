@@ -17,6 +17,8 @@ export interface BuilderWindowProps {
   input: BuildingInput | null
   runKey: number
   labels: Record<BlockType, string>
+  /** The building was already seen to its end (its program was opened again): show its final state at once. */
+  seen?: boolean
   onDone?: (runKey: number) => void
   onBlockClick?: (block: CoreBlock) => void
   onReading?: (block: CoreBlock | null) => void
@@ -38,7 +40,7 @@ let serials = 0
 
 const band = (percent: number) => (percent >= 80 ? 'good' : percent >= 50 ? 'mid' : 'poor')
 
-export function BuilderWindow({ className, input, runKey, labels, onDone, onBlockClick, onReading }: BuilderWindowProps) {
+export function BuilderWindow({ className, input, runKey, labels, seen = false, onDone, onBlockClick, onReading }: BuilderWindowProps) {
   const { t } = useTranslation()
   const threeD = useApp((s) => s.webgl === 'ok' && !s.readingMode)
   const reduced = useApp((s) => s.reducedMotion)
@@ -79,10 +81,11 @@ export function BuilderWindow({ className, input, runKey, labels, onDone, onBloc
   useEffect(() => {
     setPhase('placing')
   }, [run])
-  // Nothing to wait for: the plan view, or the 3D builder under reduced motion (it jumps straight to the final state).
+  // Nothing to wait for: the plan view, or the 3D builder under reduced motion or for a building already seen (it
+  // jumps straight to the final state).
   useEffect(() => {
-    if (run && (!use3D || reduced)) finish(run.serial)
-  }, [run, use3D, reduced, finish])
+    if (run && (!use3D || reduced || seen)) finish(run.serial)
+  }, [run, use3D, reduced, seen, finish])
 
   const done = run !== null && finishedRun === run
   const outcome = run ? OUTCOME_FOR_TIER[run.input.tier] : null
@@ -128,8 +131,9 @@ export function BuilderWindow({ className, input, runKey, labels, onDone, onBloc
                   runKey={run.serial}
                   skipToken={skipToken}
                   resetToken={resetToken}
-                  // No replay of a run already seen to its end (back from reading mode), nor of a skipped one.
-                  instant={reduced || done || skippedRun === run}
+                  // No replay of a run already seen to its end (back from reading mode, or in a program opened again),
+                  // nor of a skipped one.
+                  instant={reduced || seen || done || skippedRun === run}
                   aiLabel={t('workshop.builder.aiBlock')}
                   onPhase={setPhase}
                   onDone={finish}

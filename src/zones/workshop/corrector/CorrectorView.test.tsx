@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useEffect } from 'react'
 import { resetAppStore } from '../../../test/resetAppStore'
@@ -27,9 +27,11 @@ async function renderView(api: Partial<CorrectorApi> = {}) {
   return store
 }
 
-/** A builder that never finishes by itself: the test calls onDone, and every runKey it was rendered with is kept. */
-async function renderHeld() {
-  const store = makeWorkshopStore()
+/**
+ * A builder that never finishes by itself: the test calls onDone, and every runKey it was rendered with is kept.
+ * Pass the store of an earlier render to open the view again on the same workshop.
+ */
+async function renderHeld(store = makeWorkshopStore()) {
   const builder: { runKeys: number[]; props: CorrectorBuilderProps | null } = { runKeys: [], props: null }
   await act(async () => {
     render(
@@ -284,6 +286,45 @@ test('the report waits for its building; an older building finishing is ignored;
   expect(corrector().getByText(SCORE_LINE)).toBeInTheDocument()
   act(() => builder.props!.onDone(1))
   expect(corrector().getByText(SCORE_LINE)).toBeInTheDocument()
+})
+
+// The workshop unmounts the corrector while another program is open: coming back must not replay the last report.
+test('a revealed report shows again at once when the view opens again: no replay, no second announcement', async () => {
+  const user = userEvent.setup()
+  const { store, builder } = await renderHeld()
+  await user.type(promptField(), 'Write a post')
+  await user.click(corrector().getByRole('button', { name: 'Check my prompt' }))
+  await waitFor(() => expect(builder.props?.input).not.toBeNull())
+  expect(builder.props!.seen).toBe(false)
+  act(() => builder.props!.onDone(1))
+  await waitFor(() => expect(store.getState().announcement).toBe('62/100. Leans. The building leans: the context floor is thin.'))
+  const said = store.getState().announcements
+
+  cleanup()
+  const again = await renderHeld(store)
+  // Shown without waiting for the builder, which is told the building was already seen to its end.
+  expect(corrector().getByText(SCORE_LINE)).toBeInTheDocument()
+  expect(output().getByRole('heading', { name: 'Improved prompt' })).toBeInTheDocument()
+  expect(again.builder.props).toMatchObject({ runKey: 1, seen: true })
+  act(() => again.builder.props!.onDone(1))
+  expect(store.getState().announcements).toBe(said)
+})
+
+test('a report whose building was still going up when the view closed is built and announced when it opens again', async () => {
+  const user = userEvent.setup()
+  const { store, builder } = await renderHeld()
+  await user.type(promptField(), 'Write a post')
+  await user.click(corrector().getByRole('button', { name: 'Check my prompt' }))
+  await waitFor(() => expect(builder.props?.input).not.toBeNull())
+
+  cleanup()
+  const again = await renderHeld(store)
+  expect(corrector().queryByText(SCORE_LINE)).not.toBeInTheDocument()
+  expect(again.builder.props).toMatchObject({ runKey: 1, seen: false })
+  expect(store.getState().announcement).toBe('')
+  act(() => again.builder.props!.onDone(1))
+  expect(corrector().getByText(SCORE_LINE)).toBeInTheDocument()
+  await waitFor(() => expect(store.getState().announcement).toBe('62/100. Leans. The building leans: the context floor is thin.'))
 })
 
 // Review focus 3: a keyboard user who pressed a button keeps their place while it is disabled.

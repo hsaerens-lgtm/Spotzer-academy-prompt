@@ -14,6 +14,11 @@ import { useFocusReturn } from './useFocusReturn'
 export interface CorrectorBuilderProps {
   input: BuildingInput | null
   runKey: number
+  /**
+   * The report is revealed: its building was seen to its end, perhaps before this view was last opened. The builder
+   * then shows the final state without a replay.
+   */
+  seen: boolean
   onDone: (runKey: number) => void
 }
 
@@ -22,7 +27,6 @@ export function CorrectorView({ renderBuilder }: { renderBuilder: (props: Correc
   const store = useWorkshopStore()
   const content = useWorkshop((s) => s.content)
   const state = useWorkshop((s) => s.corrector)
-  const [revealedKey, setRevealedKey] = useState<number | null>(null)
   const [dismissed, setDismissed] = useState<string | null>(null)
 
   useEffect(() => {
@@ -30,16 +34,12 @@ export function CorrectorView({ renderBuilder }: { renderBuilder: (props: Correc
   }, [store])
 
   const input = useMemo(() => (state.report ? inputFromReport(state.report) : null), [state.report])
-  const revealed = state.report !== null && revealedKey === state.checks
+  // In the store, not in this view: the view is unmounted while another program is open.
+  const revealed = state.report !== null && state.revealedCheck === state.checks
   // The report is about the text that was checked: once the prompt is edited it no longer describes it.
   const stale = state.report !== null && state.checkedPrompt !== state.prompt.trim()
-  // Only the building of the latest report may reveal it: one still finishing for an older report is ignored.
-  const onDone = useCallback(
-    (key: number) => {
-      if (key === store.getState().corrector.checks) setRevealedKey(key)
-    },
-    [store],
-  )
+  // Only the building of the latest report may reveal it (the store ignores one finishing for an older report).
+  const onDone = useCallback((key: number) => store.getState().revealReport(key), [store])
   const checking = state.status === 'checking'
   const blank = state.prompt.trim() === ''
   const checkFocus = useFocusReturn(checking)
@@ -50,15 +50,18 @@ export function CorrectorView({ renderBuilder }: { renderBuilder: (props: Correc
     void store.getState().checkPrompt()
   }
 
-  // One announcement per report, when its building is shown (keyed on that only: the rest follows from it).
+  // One announcement per report, when its building is shown (keyed on that only: the rest follows from it), and one
+  // per failed check and per Run both outcome, as they happen (Ada's bubble is not a live region).
+  // The refs skip what the store already held when the view opened: that was announced at the time.
+  const lastRevealed = useRef(revealed)
   useEffect(() => {
+    if (lastRevealed.current === revealed) return
+    lastRevealed.current = revealed
     if (!revealed || !state.report || !input) return
     const { score, summary } = state.report
     store.getState().announce(`${t('workshop.corrector.score', { score })}. ${t(`workshop.corrector.verdict.${OUTCOME_FOR_TIER[input.tier]}`)}. ${summary}`)
   }, [revealed])
 
-  // And one per failed check and per Run both outcome, as they happen (Ada's bubble is not a live region).
-  // The refs skip what the store already held when the view opened: that was announced at the time.
   const lastStatus = useRef(state.status)
   useEffect(() => {
     if (lastStatus.current === state.status) return
@@ -143,7 +146,7 @@ export function CorrectorView({ renderBuilder }: { renderBuilder: (props: Correc
           </>
         )}
       </Window>
-      {renderBuilder({ input, runKey: state.checks, onDone })}
+      {renderBuilder({ input, runKey: state.checks, seen: revealed, onDone })}
       <ImprovedPanel
         className="ws-area-output"
         report={state.report}

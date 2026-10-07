@@ -329,11 +329,9 @@ test('in free text the sentence being read is shown highlighted', async () => {
   expect(await screen.findByText("Write a post for Rosa's Flowers.", { selector: 'mark' })).toBeInTheDocument()
 })
 
-test('the list marks the current, the passed and the suggested missions', async () => {
-  appStore.getState().passWorkshopMission('delayed-website', 'Prompt', 6)
+// The mission list belongs to the workshop desktop (WorkshopApp.test covers it): the view starts at the studio.
+test('the view leaves the mission list to the desktop', () => {
   renderView('florist-post')
-  const list = screen.getByRole('navigation', { name: 'Missions' })
-  expect(within(list).getByRole('button', { name: /A post for a florist/ })).toHaveAttribute('aria-current', 'true')
-  expect(within(list).getByRole('button', { name: /The delayed website \(passed\)/ })).toBeInTheDocument()
-  expect(within(list).getByRole('button', { name: /Meeting notes for your manager.*Start here/ })).toBeInTheDocument()
+  expect(screen.queryByRole('navigation', { name: 'Missions' })).not.toBeInTheDocument()
+  expect(screen.getByRole('region', { name: 'PROMPT_STUDIO.EXE \u2014 MISSION 3' })).toBeInTheDocument()
 })

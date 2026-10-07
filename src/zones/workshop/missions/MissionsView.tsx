@@ -11,7 +11,6 @@ import { useWorkshop, useWorkshopStore } from '../store'
 import { BevelButton } from '../ui/BevelButton'
 import { adaMessage, type AdaAction, type Tip } from './adaMessage'
 import { AiOutput } from './AiOutput'
-import { MissionList } from './MissionList'
 import { PromptStudio, type StudioHandle } from './PromptStudio'
 
 export const TIP_DELAY_MS = 2000
@@ -131,16 +130,9 @@ export function MissionsView({ missionId, onSelectMission, renderBuilder }: Miss
   // The compare toggle keeps one label; aria-pressed carries its state.
   const actionLabel = (action: AdaAction) => t(action === 'compare' ? 'workshop.output.compare' : `workshop.ada.${action}`)
 
+  // The mission list is the workshop's (it stays on screen in every program), so this view starts at the studio.
   return (
     <>
-      <MissionList
-        className="ws-area-missions"
-        missions={content.missions}
-        passed={passed}
-        currentId={missionId}
-        suggestedId={suggestedMission(content, passed).id}
-        onSelect={onSelectMission}
-      />
       <PromptStudio
         ref={studio}
         className="ws-area-studio"

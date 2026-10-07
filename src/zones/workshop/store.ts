@@ -51,6 +51,11 @@ export interface CorrectorState {
   checkedPrompt: string | null
   /** Increases with each successful check: the builder's run key. */
   checks: number
+  /**
+   * The check whose report is revealed (its building was seen to its end); 0 before any. Kept here rather than in the
+   * view, which is unmounted while another program is open: coming back shows the report without building it again.
+   */
+  revealedCheck: number
   run: RunState
 }
 
@@ -75,6 +80,8 @@ export interface WorkshopState {
   setCorrectorPrompt: (value: string) => void
   setCorrectorPurpose: (value: string) => void
   checkPrompt: () => Promise<void>
+  /** The building of check `check` was seen to its end: reveal its report, if it is still the latest one. */
+  revealReport: (check: number) => void
   runBoth: () => Promise<void>
 }
 
@@ -151,6 +158,7 @@ export function createWorkshopStore({ content, passMission, api }: WorkshopDeps)
         report: null,
         checkedPrompt: null,
         checks: 0,
+        revealedCheck: 0,
         run: IDLE_RUN,
       },
 
@@ -201,6 +209,11 @@ export function createWorkshopStore({ content, passMission, api }: WorkshopDeps)
         } else {
           patchCorrector({ status: 'error', error: result.error })
         }
+      },
+      revealReport: (check) => {
+        const { checks, revealedCheck } = get().corrector
+        // Only the building of the latest report may reveal it: one still finishing for an older report is ignored.
+        if (check === checks && check !== revealedCheck) patchCorrector({ revealedCheck: check })
       },
       runBoth: async () => {
         const { report, checkedPrompt, run, status, checks } = get().corrector
