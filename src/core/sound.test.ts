@@ -20,7 +20,8 @@ class FakeNode {
   disconnect() {}
 }
 class FakeOscillator extends FakeNode {
-  type = 'sine'
+  // Not the Web Audio default ('sine'), so a test can tell which waveform a sound sets.
+  type = 'triangle'
   frequency = new FakeParam()
   start = vi.fn()
   stop = vi.fn()
@@ -140,6 +141,7 @@ test('a thud is a short low sound, only once unlocked and while sound is on', ()
   engine.thud(0.5)
   expect(created[0].oscillators).toHaveLength(1)
   const [knock] = created[0].oscillators
+  expect(knock.type).toBe('sine')
   // A low knock that falls from 140 Hz to 48 Hz, over a quarter of a second at most.
   expect(knock.frequency.calls).toEqual([
     ['set', 140, 0],
@@ -167,6 +169,18 @@ test('a harder thud is louder and fades out; the intensity is clamped to 0..1', 
   expect(levelOf(1)).toBeCloseTo(0.12)
   expect(levelOf(7)).toBeCloseTo(0.12)
   expect(levelOf(-3)).toBeCloseTo(0.02)
+})
+
+test('a thud with an unusable intensity still schedules a valid, quiet envelope', () => {
+  const engine = createSound(Ctor, () => 0.5)
+  engine.unlock()
+  engine.thud(Number.NaN) // real Web Audio throws on setValueAtTime(NaN)
+  const [envelope] = created[0].gains.slice(1) // the first gain belongs to the room tone
+  expect(envelope.gain.calls).toEqual([
+    ['set', 0.02, 0],
+    ['ramp', 0.0001, 0.22],
+  ])
+  expect(created[0].oscillators).toHaveLength(1)
 })
 
 test('works without Web Audio', () => {

@@ -96,7 +96,9 @@ export function createSound(
     thud(intensity) {
       if (!ctx || !enabled) return
       const now = ctx.currentTime
-      const level = 0.02 + 0.1 * Math.min(1, Math.max(0, intensity))
+      // Web Audio throws on a NaN or infinite value, and the builder calls this from a physics callback.
+      const strength = Number.isFinite(intensity) ? Math.min(1, Math.max(0, intensity)) : 0
+      const level = 0.02 + 0.1 * strength
       const oscillator = ctx.createOscillator()
       const gain = ctx.createGain()
       oscillator.type = 'sine'

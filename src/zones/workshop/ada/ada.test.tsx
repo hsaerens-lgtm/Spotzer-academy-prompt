@@ -1,3 +1,4 @@
+import { Profiler } from 'react'
 import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { sound } from '../../../core/sound'
@@ -25,6 +26,27 @@ test('the bubble types its text with blips, and screen readers get it whole', ()
   expect(screen.getByText('Who should the AI be?', { selector: '[aria-hidden="true"]' })).toBeInTheDocument()
   expect(blip).toHaveBeenCalled()
   blip.mockRestore()
+})
+
+test('a new line types from nothing: the old line never reveals its first characters', () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+  const typed = (): string => document.querySelector('.ws-bubble__text [aria-hidden="true"]')?.textContent ?? ''
+  const commits: string[] = []
+  // onRender runs once per commit, after the DOM is updated: the first commit of the new line is the one that could flash.
+  const bubble = (text: string) => (
+    <Profiler id="bubble" onRender={() => commits.push(typed())}>
+      <AdaBubble text={text} />
+    </Profiler>
+  )
+  const { rerender } = render(bubble('The first line is long.'))
+  act(() => vi.advanceTimersByTime(2000))
+  expect(typed()).toBe('The first line is long.')
+  commits.length = 0
+  rerender(bubble('Then a second line.'))
+  expect(commits[0]).toBe('')
+  expect(screen.getByText('Then a second line.', { selector: '.sr-only' })).toBeInTheDocument()
+  act(() => vi.advanceTimersByTime(2000))
+  expect(typed()).toBe('Then a second line.')
 })
 
 test('with reduced motion the whole text shows at once', () => {

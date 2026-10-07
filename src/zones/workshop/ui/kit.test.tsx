@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { appStore } from '../../../core/store'
 import { resetAppStore } from '../../../test/resetAppStore'
@@ -76,6 +76,64 @@ test('Escape closes the open start menu first and only then dismisses Ada', asyn
   expect(onDismiss).not.toHaveBeenCalled()
   await userEvent.keyboard('{Escape}')
   expect(onDismiss).toHaveBeenCalledTimes(1)
+})
+
+test('a menu opened with the mouse still closes with Escape, gives focus to ATHENA and spares Ada', async () => {
+  resetAppStore({ reducedMotion: true })
+  const onDismiss = vi.fn()
+  render(
+    <>
+      <Taskbar view="missions" passed={0} total={6} onView={() => {}} onBack={() => {}} />
+      <AdaBubble text="Hello." onDismiss={onDismiss} />
+    </>,
+  )
+  const start = screen.getByRole('button', { name: 'ATHENA' })
+  // Safari and Firefox on macOS do not focus a button on click: nothing has focus when the menu opens.
+  fireEvent.click(start)
+  expect(screen.getByRole('list', { name: 'Athena menu' })).toBeInTheDocument()
+  expect(start).not.toHaveFocus()
+  await userEvent.keyboard('{Escape}')
+  expect(screen.queryByRole('list', { name: 'Athena menu' })).not.toBeInTheDocument()
+  expect(onDismiss).not.toHaveBeenCalled()
+  expect(start).toHaveFocus()
+  await userEvent.keyboard('{Escape}')
+  expect(onDismiss).toHaveBeenCalledTimes(1)
+})
+
+test('picking a start menu item gives focus back to the ATHENA button', async () => {
+  const onBack = vi.fn()
+  render(<Taskbar view="missions" passed={0} total={6} onView={() => {}} onBack={onBack} />)
+  const start = screen.getByRole('button', { name: 'ATHENA' })
+  await userEvent.click(start)
+  await userEvent.click(within(screen.getByRole('list', { name: 'Athena menu' })).getByRole('button', { name: 'Corrector' }))
+  expect(screen.queryByRole('list', { name: 'Athena menu' })).not.toBeInTheDocument()
+  expect(start).toHaveFocus()
+  await userEvent.click(start)
+  await userEvent.click(within(screen.getByRole('list', { name: 'Athena menu' })).getByRole('button', { name: 'Back to the office' }))
+  expect(onBack).toHaveBeenCalledTimes(1)
+  expect(start).toHaveFocus()
+})
+
+test('tabbing out of the start menu closes it, and the focus is not pulled back', async () => {
+  render(<Taskbar view="missions" passed={0} total={6} onView={() => {}} onBack={() => {}} />)
+  const start = screen.getByRole('button', { name: 'ATHENA' })
+  await userEvent.click(start)
+  const menu = screen.getByRole('list', { name: 'Athena menu' })
+  for (let i = 0; i < 4; i++) await userEvent.tab() // the four menu items stay inside the menu
+  expect(within(menu).getByRole('button', { name: 'Back to the office' })).toHaveFocus()
+  expect(screen.getByRole('list', { name: 'Athena menu' })).toBeInTheDocument()
+  await userEvent.tab()
+  expect(screen.queryByRole('list', { name: 'Athena menu' })).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Missions' })).toHaveFocus()
+})
+
+test('pressing the mouse inside the open menu keeps focus where it is, so the click still lands', async () => {
+  render(<Taskbar view="missions" passed={0} total={6} onView={() => {}} onBack={() => {}} />)
+  await userEvent.click(screen.getByRole('button', { name: 'ATHENA' }))
+  const item = within(screen.getByRole('list', { name: 'Athena menu' })).getByRole('button', { name: 'My prompts' })
+  // Prevented default: Safari would otherwise blur the trigger first and close the menu before the click.
+  expect(fireEvent.mouseDown(item)).toBe(false)
+  expect(screen.getByRole('list', { name: 'Athena menu' })).toBeInTheDocument()
 })
 
 test('desktop icons open their program', async () => {

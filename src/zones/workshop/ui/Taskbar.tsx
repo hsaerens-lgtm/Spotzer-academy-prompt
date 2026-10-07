@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appStore, useApp } from '../../../core/store'
 import type { WorkshopView } from '../store'
@@ -19,27 +19,53 @@ export function Taskbar({ view, passed, total, onView, onBack }: TaskbarProps) {
   const sound = useApp((s) => s.settings.sound)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuId = useId()
-  const pick = (action: () => void) => () => {
+  const startRef = useRef<HTMLButtonElement>(null)
+
+  // Closing from the menu (an item or Escape) unmounts the focused item: hand the focus back to the ATHENA button.
+  const closeMenu = useCallback(() => {
     setMenuOpen(false)
+    startRef.current?.focus()
+  }, [])
+  const pick = (action: () => void) => () => {
+    closeMenu()
     action()
   }
+
+  useEffect(() => {
+    if (!menuOpen) return
+    // Window level and capture phase: Escape works wherever the focus is (Safari and Firefox on macOS do not focus a
+    // clicked button), and it closes the menu before Ada's bubble, which listens on the window too, can see it.
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.stopPropagation()
+      closeMenu()
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [menuOpen, closeMenu])
+
   return (
     <nav className="ws-taskbar" aria-label={t('workshop.taskbar.label')}>
       <div
         className="ws-start"
-        onKeyDown={(event) => {
-          // Escape closes the menu first; it must not also close Ada's bubble.
-          if (event.key === 'Escape' && menuOpen) {
-            event.stopPropagation()
-            setMenuOpen(false)
-          }
+        onBlur={(event) => {
+          // Focus leaving the menu (Tab, a click elsewhere) closes it without pulling the focus back.
+          if (!event.currentTarget.contains(event.relatedTarget)) setMenuOpen(false)
         }}
       >
-        <BevelButton tone="primary" size="sm" aria-expanded={menuOpen} aria-controls={menuId} onClick={() => setMenuOpen((open) => !open)}>
+        <BevelButton
+          ref={startRef}
+          tone="primary"
+          size="sm"
+          aria-expanded={menuOpen}
+          aria-controls={menuId}
+          onClick={() => setMenuOpen((open) => !open)}
+        >
           {t('workshop.taskbar.start')}
         </BevelButton>
         {menuOpen && (
-          <ul id={menuId} className="ws-start__menu" aria-label={t('workshop.taskbar.menu')}>
+          // A press inside the menu must not move the focus: Safari would blur the trigger (relatedTarget null) and close the menu before the click lands.
+          <ul id={menuId} className="ws-start__menu" aria-label={t('workshop.taskbar.menu')} onMouseDown={(event) => event.preventDefault()}>
             {VIEWS.map((item) => (
               <li key={item}>
                 <button type="button" className="ws-start__item" onClick={pick(() => onView(item))}>

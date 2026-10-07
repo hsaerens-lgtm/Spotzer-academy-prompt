@@ -16,11 +16,21 @@ export interface AdaBubbleProps {
 
 const noop = () => {}
 
+/** Types its line with blips; screen readers get the whole line at once. Keyed on the text, so every line starts from nothing. */
+function TypedText({ text, reduced }: { text: string; reduced: boolean }) {
+  const shown = useTypewriter(text, { active: !reduced, onDone: noop, onReveal: (char, index) => sound.blip(char, index) })
+  return (
+    <>
+      <span aria-hidden="true">{text.slice(0, shown)}</span>
+      <span className="sr-only">{text}</span>
+    </>
+  )
+}
+
 /** Ada in the corner, Clippy-style. The typewriter never captures keys, so typing in the editors stays free. */
 export function AdaBubble({ text, mood = 'neutral', pointing = false, actions, onDismiss }: AdaBubbleProps) {
   const { t } = useTranslation()
   const reduced = useApp((s) => s.reducedMotion)
-  const shown = useTypewriter(text ?? '', { active: !reduced && !!text, onDone: noop, onReveal: (char, index) => sound.blip(char, index) })
 
   useEffect(() => {
     if (!text || !onDismiss) return
@@ -36,8 +46,7 @@ export function AdaBubble({ text, mood = 'neutral', pointing = false, actions, o
       {text && (
         <div className="ws-bubble">
           <p className="ws-bubble__text">
-            <span aria-hidden="true">{text.slice(0, shown)}</span>
-            <span className="sr-only">{text}</span>
+            <TypedText key={text} text={text} reduced={reduced} />
           </p>
           {actions && <div className="ws-bubble__actions">{actions}</div>}
           {onDismiss && (
