@@ -1,4 +1,4 @@
-import { tierFor } from '../src/workshop/engine/rules.ts'
+import { scoreInBand, tierFor } from '../src/workshop/engine/rules.ts'
 import {
   BLOCK_TYPES,
   CORE_BLOCKS,
@@ -62,7 +62,10 @@ export interface CorrectDeps {
   call: (options: CallOptions) => Promise<CallResult>
 }
 
-/** Validates the AI's report, puts the blocks in building order and recomputes the verdict with the workshop rules. */
+/**
+ * Validates the AI's report, puts the blocks in building order, recomputes the verdict with the workshop rules and
+ * keeps the score inside that verdict's band.
+ */
 export function parseReport(text: string): CorrectorReport | null {
   let raw: unknown
   try {
@@ -78,7 +81,7 @@ export function parseReport(text: string): CorrectorReport | null {
     CORE_BLOCKS.map((type) => blocks.find((block) => block.type === type)!.quality as Quality),
     report.conflicts.length > 0,
   )
-  return { ...report, blocks, verdict: OUTCOME_FOR_TIER[tier] }
+  return { ...report, blocks, verdict: OUTCOME_FOR_TIER[tier], score: scoreInBand(report.score, tier) }
 }
 
 export async function correctPrompt(request: CorrectRequest, deps: CorrectDeps): Promise<CorrectResult> {

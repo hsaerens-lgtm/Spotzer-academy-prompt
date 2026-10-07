@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { makeBlocksFile, makeReport } from '../src/test/workshopFixtures'
+import type { BlockType } from '../src/workshop/model'
 import { readConfig } from './config.ts'
 import { REPORT_JSON_SCHEMA, correctPrompt, parseReport } from './correct.ts'
 import { callOpenAI, type CallOptions, type CallResult, type FetchLike } from './openai.ts'
@@ -36,6 +37,24 @@ test('gives up after two invalid answers, and retries an incomplete one', async 
 test('a timeout or an unreachable AI is reported at once', async () => {
   expect(await correctPrompt(request, deps(async () => ({ ok: false, error: 'timeout' })))).toEqual({ ok: false, error: 'timeout' })
   expect(await correctPrompt(request, deps(async () => ({ ok: false, error: 'upstream' })))).toEqual({ ok: false, error: 'unavailable' })
+})
+
+test("the model's score is kept inside the band of the recomputed verdict", () => {
+  const report = makeReport()
+  const withQualities = (qualities: Partial<Record<BlockType, number>>) =>
+    report.blocks.map((block) => ({ ...block, quality: qualities[block.type] ?? block.quality }))
+  // A hole in the foundation collapses, whatever the model scored.
+  expect(parseReport(JSON.stringify({ ...report, blocks: withQualities({ role: 0 }), score: 95, verdict: 'holds' }))).toMatchObject({
+    verdict: 'collapses',
+    score: 39,
+  })
+  expect(parseReport(JSON.stringify({ ...report, score: 62 }))).toMatchObject({ verdict: 'leans', score: 62 })
+  expect(parseReport(JSON.stringify({ ...report, score: 15 }))).toMatchObject({ verdict: 'leans', score: 40 })
+  const allStone = withQualities({ role: 3, task: 3, context: 3, format: 3 })
+  expect(parseReport(JSON.stringify({ ...report, blocks: allStone, score: 70, verdict: 'leans' }))).toMatchObject({
+    verdict: 'holds',
+    score: 80,
+  })
 })
 
 test('a report with a missing block is refused', () => {

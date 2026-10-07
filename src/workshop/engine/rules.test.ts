@@ -1,4 +1,16 @@
-import { qualityFor, tierFor } from './rules'
+import { SCORE_BANDS, qualityFor, scoreInBand, tierFor } from './rules'
+
+// The corrector's score out of 100 must agree with its verdict: a 95/100 that collapses would contradict itself.
+test('a score out of 100 is kept inside the band of its tier', () => {
+  expect(SCORE_BANDS).toEqual({ vague: [0, 39], passable: [40, 79], excellent: [80, 100] })
+  expect(scoreInBand(95, 'vague')).toBe(39)
+  expect(scoreInBand(12, 'vague')).toBe(12)
+  expect(scoreInBand(20, 'passable')).toBe(40)
+  expect(scoreInBand(62, 'passable')).toBe(62)
+  expect(scoreInBand(95, 'passable')).toBe(79)
+  expect(scoreInBand(30, 'excellent')).toBe(80)
+  expect(scoreInBand(100, 'excellent')).toBe(100)
+})
 
 test('quality follows the share of expected details that are present', () => {
   expect(qualityFor(0, 3, false)).toBe(0)
