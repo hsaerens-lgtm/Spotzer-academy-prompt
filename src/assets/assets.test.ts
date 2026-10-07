@@ -123,6 +123,13 @@ test('the pendant has its bulb material and the frame its artwork material', asy
   expect((await materials('wall_clock')).filter((name) => GLASS_MATERIAL.test(name))).toEqual(['wall_clock_glass'])
 })
 
+test('the clock glass stays alpha-blended at 0.4 once the transmission extension is stripped', async () => {
+  const glass = (await readModel('wall_clock')).getRoot().listMaterials().find((material) => material.getName() === 'wall_clock_glass')
+  expect(glass).toBeDefined()
+  expect(glass!.getAlphaMode()).toBe('BLEND')
+  expect(glass!.getBaseColorFactor()[3]).toBeCloseTo(0.4, 5)
+})
+
 test('the money tree keeps only variant b', async () => {
   const names = (await readModel('pachira_aquatica_01')).getRoot().listNodes().map((node) => node.getName())
   const variants = names.filter((name) => /_[a-z]$/.test(name))

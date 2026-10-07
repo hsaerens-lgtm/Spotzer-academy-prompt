@@ -443,6 +443,8 @@ const HOSTILE_GLTF_URIS = [
   '../x.bin', 'textures/../../x.png', '..\\x.bin', '%2e%2e/x.bin', '%2E%2E%2Fx.bin', '..%2fx.bin', 'textures%2F..%2F..%2Fx.png', '..%5Cx.bin',
   // percent-encoded absolute paths, drive letters and NUL, malformed escapes, empty and non-string values
   '%5Cabs%5Cx.bin', '%2Fabs%2Fx.bin', 'C%3A%2Fx.png', 'a%00b.png', '%E0%A4%A.png', '', '.', 'textures/..', 42, null,
+  // only a lower-case data: is a data URI: the glTF loader skips just those (a case-sensitive match), and opens any other URI as a path
+  'DATA:a/../../x.bin', 'Data:x', 'DATA:image/png;base64,AA==',
 ]
 
 test('assertGltfUrisContained accepts files inside the asset folder, data: URIs and embedded GLB chunks', () => {
@@ -451,7 +453,7 @@ test('assertGltfUrisContained accepts files inside the asset folder, data: URIs 
     { uri: 'textures/wall_clock_diff_1k.jpg' },
     { uri: 'textures/with%20space.jpg' },
     { uri: 'textures/../model_nor.jpg' },
-    { uri: 'DATA:image/png;base64,iVBORw0KGgo=' },
+    { uri: 'data:image/png;base64,iVBORw0KGgo=' },
     { bufferView: 0, mimeType: 'image/png' },
   ]
   expect(() => assertGltfUrisContained({ asset: { version: '2.0' }, buffers, images }, GLTF_DIR)).not.toThrow()

@@ -72,7 +72,7 @@ export function safeJoin(root, rel) {
 
 /**
  * A downloaded .gltf names its buffers and images by URI, and the glTF loader opens whatever those URIs say. Throws unless
- * every `buffers[].uri` and `images[].uri` is a data: URI or a plain relative path that stays under `assetDir` (the folder
+ * every `buffers[].uri` and `images[].uri` is a lower-case `data:` URI or a plain relative path that stays under `assetDir` (the folder
  * holding the .gltf) once percent-decoded, as the loader decodes it. A missing uri (a GLB chunk, an image in a bufferView) is fine.
  */
 export function assertGltfUrisContained(json, assetDir) {
@@ -86,8 +86,10 @@ export function assertGltfUrisContained(json, assetDir) {
       if (uri === undefined) return
       const where = `${key}[${index}].uri ${JSON.stringify(uri)}`
       if (typeof uri !== 'string') throw new Error(`Unsafe glTF URI in ${where}: not a string`)
-      if (/^data:/i.test(uri)) return
-      // Any other scheme (http:, file:, a drive letter) is refused as it stands; an escaped colon is caught by safeJoin once decoded.
+      // Lower case only, like the loader: it skips exactly the URIs holding "data:" and opens every other one as a path, so a
+      // "DATA:a/../../x" must not pass here as a data URI.
+      if (uri.startsWith('data:')) return
+      // Any other scheme (http:, file:, DATA:, a drive letter) is refused as it stands; an escaped colon is caught by safeJoin once decoded.
       if (/^[a-z][a-z0-9+.-]*:/i.test(uri)) throw new Error(`Unsafe glTF URI in ${where}: it has a scheme`)
       let decoded
       try {
