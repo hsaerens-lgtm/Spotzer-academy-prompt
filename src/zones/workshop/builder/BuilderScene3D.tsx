@@ -2,14 +2,15 @@ import { Edges, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { use, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentRef } from 'react'
 import { CanvasTexture, SRGBColorSpace, type Group, type Mesh, type MeshStandardMaterial } from 'three'
+import { onContextLost } from '../../../app/webgl'
 import { brand } from '../../../core/brand'
 import { sound } from '../../../core/sound'
-import { STEP_HZ } from '../../../workshop/building/materials'
-import { planBuilding, type BuildingInput, type BuildingPlan, type PlannedBody } from '../../../workshop/building/plan'
+import { planBuilding, type BuildingInput, type PlannedBody } from '../../../workshop/building/plan'
 import { loadRapier } from '../../../workshop/building/rapier'
-import { createSimulation, type Rapier, type Simulation } from '../../../workshop/building/simulation'
-import { phaseAt, readingBlock, scanProgress, type Phase } from '../../../workshop/building/timeline'
-import type { CoreBlock } from '../../../workshop/model'
+import type { Rapier, SimEvent } from '../../../workshop/building/simulation'
+import type { Phase } from '../../../workshop/building/timeline'
+import type { CoreBlock, Tier } from '../../../workshop/model'
+import { createRunPlayer, type RunPlayer, type RunSpec } from './runPlayer'
 
 export interface BuilderScene3DProps {
   input: BuildingInput
@@ -53,20 +54,9 @@ function labelTexture(text: string): CanvasTexture {
   return texture
 }
 
-/** One Build & test: the building to simulate and the key its completion reports. */
-interface RunSpec {
-  key: number
-  plan: BuildingPlan
-}
-
-/** The run the frame loop is playing: its own simulation and what it has already reported. */
-interface LiveRun {
-  spec: RunSpec
-  simulation: Simulation
-  accumulator: number
-  phase: Phase | null
-  reading: CoreBlock | null
-  reported: boolean
+function thud(event: SimEvent, tier: Tier) {
+  if (event.kind === 'impact') sound.thud(tier === 'vague' ? 1 : 0.7)
+  else sound.thud(event.id === 'ai' ? 0.5 : 0.25)
 }
 
 interface SceneProps extends Omit<BuilderScene3DProps, 'input' | 'runKey'> {
@@ -82,7 +72,7 @@ function BuildingScene({ R, run, skipToken, resetToken, instant, aiLabel, onPhas
   const meshes = useRef(new Map<string, Mesh>())
   const scan = useRef<Group>(null)
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null)
-  const live = useRef<LiveRun | null>(null)
+  const live = useRef<RunPlayer | null>(null)
   const latestOnReading = useRef(onReading)
   latestOnReading.current = onReading
   const seenSkip = useRef(skipToken)
@@ -92,14 +82,13 @@ function BuildingScene({ R, run, skipToken, resetToken, instant, aiLabel, onPhas
 
   // Each Build & test gets its own simulation, in the same canvas (one WebGL context per builder window). It is
   // created and the previous one freed in the commit that swaps the building, so no frame steps a freed world.
+  // A run replaced (or unmounted) while the AI was reading it reports null: the studio stops highlighting the block.
   useLayoutEffect(() => {
-    const current: LiveRun = { spec: run, simulation: createSimulation(run.plan, R), accumulator: 0, phase: null, reading: null, reported: false }
-    live.current = current
+    const player = createRunPlayer(run, R)
+    live.current = player
     return () => {
       live.current = null
-      current.simulation.dispose()
-      // A run replaced (or unmounted) while the AI was reading it: the studio stops highlighting the block.
-      if (current.reading !== null) latestOnReading.current?.(null)
+      player.dispose((block) => latestOnReading.current?.(block))
     }
   }, [run, R])
   useEffect(() => {
@@ -119,28 +108,20 @@ function BuildingScene({ R, run, skipToken, resetToken, instant, aiLabel, onPhas
   }, [resetToken, camera, invalidate])
 
   useFrame((_, delta) => {
-    const current = live.current
-    if (!current) return
-    const { simulation } = current
-    const { plan: playing, key } = current.spec
-    if (instant) simulation.runToEnd()
-    else if (!simulation.finished) {
-      current.accumulator += Math.min(delta, 0.1)
-      const step = 1 / STEP_HZ
-      while (current.accumulator >= step && !simulation.finished) {
-        current.accumulator -= step
-        for (const event of simulation.advance()) {
-          if (event.kind === 'impact') sound.thud(playing.tier === 'vague' ? 1 : 0.7)
-          else sound.thud(event.id === 'ai' ? 0.5 : 0.25)
-        }
-      }
-    }
-    const reading = readingBlock(playing, simulation.step)
-    if (reading !== current.reading) {
-      current.reading = reading
-      onReading?.(reading)
-    }
-    for (const sim of simulation.bodies) {
+    const player = live.current
+    if (!player) return
+    const { plan: playing } = player.run
+    // The player reports the key of its own run, never the latest prop: a replaced run cannot finish its successor.
+    const { reading, scan: progress } = player.frame(delta, instant, {
+      onEvent: (event) => thud(event, playing.tier),
+      onPhase,
+      onReading: (block) => onReading?.(block),
+      onDone: (key) => {
+        onDone(key)
+        onSettled(player.run)
+      },
+    })
+    for (const sim of player.simulation.bodies) {
       const mesh = meshes.current.get(sim.plan.id)
       if (!mesh) continue
       mesh.visible = sim.enabled
@@ -151,21 +132,9 @@ function BuildingScene({ R, run, skipToken, resetToken, instant, aiLabel, onPhas
       mesh.position.set(p.x, p.y, p.z)
       mesh.quaternion.set(q.x, q.y, q.z, q.w)
     }
-    const progress = scanProgress(playing, simulation.step)
     if (scan.current) {
       scan.current.visible = progress !== null
       if (progress !== null) scan.current.position.y = progress * playing.top
-    }
-    const phase = phaseAt(playing, simulation.step)
-    if (phase !== current.phase) {
-      current.phase = phase
-      onPhase(phase)
-    }
-    // The key of the run that finished, never the latest prop: a replaced run must not report for its successor.
-    if (simulation.finished && !current.reported) {
-      current.reported = true
-      onDone(key)
-      onSettled(current.spec)
     }
   })
 
@@ -237,6 +206,10 @@ export default function BuilderScene3D({ input, runKey, ...rest }: BuilderScene3
   const run = useMemo<RunSpec>(() => ({ key: runKey, plan }), [runKey, plan])
   // The frame loop runs while the current run plays, then renders on demand (orbiting, clicks).
   const [settled, setSettled] = useState<RunSpec | null>(null)
+  // A context lost on screen (GPU reset, too many contexts) is this builder's failure only: the boundary around it
+  // hands the run to the plan view. A device-wide loss is the office canvas's to report (it switches reading mode on).
+  const [lost, setLost] = useState(false)
+  if (lost) throw new Error('The builder lost its WebGL context')
   return (
     <Canvas
       className="ws-builder__canvas"
@@ -245,6 +218,10 @@ export default function BuilderScene3D({ input, runKey, ...rest }: BuilderScene3
       frameloop={settled === run ? 'demand' : 'always'}
       camera={{ position: CAMERA, fov: 40, near: 0.1, far: 60 }}
       aria-hidden="true"
+      onCreated={({ gl }) => {
+        // onContextLost ignores a detached canvas: R3F force-loses the context of every canvas it unmounts.
+        gl.domElement.addEventListener('webglcontextlost', onContextLost(gl.domElement, () => setLost(true)), { once: true })
+      }}
     >
       <BuildingScene {...rest} R={R} run={run} onSettled={setSettled} />
     </Canvas>

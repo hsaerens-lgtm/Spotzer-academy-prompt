@@ -1,6 +1,7 @@
 import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { appStore } from '../../../core/store'
 import { resetAppStore } from '../../../test/resetAppStore'
 import type { BuildingInput } from '../../../workshop/building/plan'
 import type { BuilderScene3DProps } from './BuilderScene3D'
@@ -9,6 +10,8 @@ import { BuilderWindow } from './BuilderWindow'
 
 vi.mock('./BuilderScene3D', () => ({ default: vi.fn(() => null) }))
 const scene = vi.mocked(BuilderScene3D)
+/** The props of the scene's latest render. Its runKey is the window's serial for the run, not the parent's key. */
+const lastProps = () => scene.mock.lastCall![0] as BuilderScene3DProps
 
 const labels = { role: 'Role', task: 'Task', context: 'Context', format: 'Format', example: 'Example', constraint: 'Constraint' }
 const leaning: BuildingInput = { qualities: { role: 3, task: 3, context: 1, format: 2, example: 0, constraint: 0 }, cracked: [], tier: 'passable' }
@@ -64,7 +67,7 @@ test('with WebGL the 3D scene runs, Skip shows until it is done', async () => {
   expect(screen.getByRole('button', { name: 'Skip' })).toBeInTheDocument()
   expect(screen.getByText('Role: stone, Task: stone, Context: cardboard, Format: wood. The building leans.', { selector: '.sr-only' })).toBeInTheDocument()
   const props = scene.mock.lastCall![0] as BuilderScene3DProps
-  act(() => props.onDone(1))
+  act(() => props.onDone(props.runKey))
   expect(onDone).toHaveBeenCalledWith(1)
   expect(screen.queryByRole('button', { name: 'Skip' })).not.toBeInTheDocument()
   expect(screen.getByText('The building leans.')).toBeInTheDocument()
@@ -86,10 +89,10 @@ test('only the latest run reports', async () => {
   const stale = scene.mock.lastCall![0] as BuilderScene3DProps
   await act(async () => rerender(<BuilderWindow input={holding} runKey={2} labels={labels} onDone={onDone} />))
   const latest = scene.mock.lastCall![0] as BuilderScene3DProps
-  act(() => stale.onDone(1))
+  act(() => stale.onDone(stale.runKey))
   expect(onDone).not.toHaveBeenCalled()
   expect(screen.queryByText('The building leans.')).not.toBeInTheDocument()
-  act(() => latest.onDone(2))
+  act(() => latest.onDone(latest.runKey))
   expect(onDone).toHaveBeenCalledWith(2)
   expect(screen.getByText('The building holds.')).toBeInTheDocument()
 })
@@ -104,35 +107,110 @@ test('a second Build & test reuses the 3D scene instead of remounting it', async
     return <div data-testid="scene-3d" />
   })
   const { onDone, rerender } = await show()
+  const first = lastProps()
   await act(async () => rerender(<BuilderWindow input={holding} runKey={2} labels={labels} onDone={onDone} />))
   expect(mounts).toBe(1)
-  expect(scene.mock.lastCall![0]).toMatchObject({ input: holding, runKey: 2 })
+  expect(lastProps().input).toBe(holding)
+  expect(lastProps().runKey).not.toBe(first.runKey)
 })
 
 test("a stale run's completion never reports the new run, and a run reports once", async () => {
   const { onDone, rerender } = await show()
+  const first = lastProps()
   await act(async () => rerender(<BuilderWindow input={holding} runKey={2} labels={labels} onDone={onDone} />))
-  // The scene stays mounted: the building of run 1, still settling, reports through the current callbacks.
-  const props = scene.mock.lastCall![0] as BuilderScene3DProps
-  act(() => props.onDone(1))
+  // The scene stays mounted: the building of run 1, still settling, reports its own key through the current callbacks.
+  const props = lastProps()
+  act(() => props.onDone(first.runKey))
   expect(onDone).not.toHaveBeenCalled()
   expect(screen.getByRole('button', { name: 'Skip' })).toBeInTheDocument()
   expect(screen.queryByRole('meter', { name: 'Stability' })).not.toBeInTheDocument()
-  act(() => props.onDone(2))
-  act(() => props.onDone(2))
+  act(() => props.onDone(props.runKey))
+  act(() => props.onDone(props.runKey))
   expect(onDone.mock.calls).toEqual([[2]])
+})
+
+// Review round 1 (a, d): the scene's run key is the window's own serial, so a parent key reused for a new building
+// (two fix missions both start at attempt 0) still makes a new run.
+test('the same run key with a new building is a new run, and the old building cannot finish it', async () => {
+  const { onDone, rerender } = await show()
+  const first = lastProps()
+  act(() => first.onDone(first.runKey))
+  expect(onDone.mock.calls).toEqual([[1]])
+  await act(async () => rerender(<BuilderWindow input={holding} runKey={1} labels={labels} onDone={onDone} />))
+  const second = lastProps()
+  expect(second.runKey).not.toBe(first.runKey)
+  expect(second.instant).toBe(false)
+  expect(screen.getByRole('button', { name: 'Skip' })).toBeInTheDocument()
+  expect(screen.queryByRole('meter', { name: 'Stability' })).not.toBeInTheDocument()
+  act(() => second.onDone(first.runKey))
+  expect(onDone.mock.calls).toEqual([[1]])
+  act(() => second.onDone(second.runKey))
+  expect(onDone.mock.calls).toEqual([[1], [1]])
+  expect(screen.getByText('The building holds.')).toBeInTheDocument()
+})
+
+test('a failure belongs to its building: the same run key with a new building tries the 3D builder again', async () => {
+  const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+  let broken = true
+  scene.mockImplementation(() => {
+    if (broken) throw new Error('The physics engine did not load')
+    return <div data-testid="scene-3d" />
+  })
+  const { onDone, rerender } = await show()
+  expect(screen.getByText("The 3D builder isn't available here, so here's the plan view.")).toBeInTheDocument()
+  broken = false
+  await act(async () => rerender(<BuilderWindow input={holding} runKey={1} labels={labels} onDone={onDone} />))
+  expect(screen.getByTestId('scene-3d')).toBeInTheDocument()
+  expect(screen.queryByText("The 3D builder isn't available here, so here's the plan view.")).not.toBeInTheDocument()
+  expect(screen.queryByRole('meter', { name: 'Stability' })).not.toBeInTheDocument()
+  act(() => lastProps().onDone(lastProps().runKey))
+  expect(onDone.mock.calls).toEqual([[1], [1]])
+  error.mockRestore()
 })
 
 test('with reduced motion the 3D builder is told to jump to the end and the run is done at once', async () => {
   resetAppStore({ reducedMotion: true })
   const { onDone } = await show()
-  const props = scene.mock.lastCall![0] as BuilderScene3DProps
+  const props = lastProps()
   expect(props.instant).toBe(true)
   expect(onDone).toHaveBeenCalledWith(1)
   expect(screen.getByText('The building leans.')).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Skip' })).not.toBeInTheDocument()
-  act(() => props.onDone(1))
+  act(() => props.onDone(props.runKey))
   expect(onDone).toHaveBeenCalledTimes(1)
+})
+
+// Review round 1 (b): no replay of a run already seen to its end, and a Skip is never lost (even during loading).
+test('a skipped run, or a finished one shown again, jumps straight to its final state', async () => {
+  const { onDone } = await show()
+  expect(lastProps().instant).toBe(false)
+  await userEvent.click(screen.getByRole('button', { name: 'Skip' }))
+  expect(lastProps().instant).toBe(true)
+  act(() => lastProps().onDone(lastProps().runKey))
+  act(() => appStore.getState().setReadingMode(true))
+  expect(screen.getByRole('list', { name: /Plan view/ })).toBeInTheDocument()
+  await act(async () => appStore.getState().setReadingMode(false))
+  expect(screen.getByTestId('scene-3d')).toBeInTheDocument()
+  expect(lastProps().instant).toBe(true)
+  expect(onDone.mock.calls).toEqual([[1]])
+})
+
+// Review round 1 (c): focus never falls back to the page when Skip goes away.
+test('when the run ends while Skip has the focus, Reset view takes it', async () => {
+  await show()
+  await userEvent.click(screen.getByRole('button', { name: 'Skip' }))
+  expect(screen.getByRole('button', { name: 'Skip' })).toHaveFocus()
+  act(() => lastProps().onDone(lastProps().runKey))
+  expect(screen.queryByRole('button', { name: 'Skip' })).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Reset view' })).toHaveFocus()
+})
+
+test('a run ending while the focus is elsewhere does not steal it', async () => {
+  await show()
+  expect(document.body).toHaveFocus()
+  act(() => lastProps().onDone(lastProps().runKey))
+  expect(screen.queryByRole('button', { name: 'Skip' })).not.toBeInTheDocument()
+  expect(document.body).toHaveFocus()
 })
 
 test('the block being read is passed up', async () => {
@@ -152,6 +230,27 @@ test('a 3D failure falls back to the plan view', async () => {
   expect(screen.getByText("The 3D builder isn't available here, so here's the plan view.")).toBeInTheDocument()
   expect(screen.getByRole('list', { name: /Plan view/ })).toBeInTheDocument()
   expect(onDone).toHaveBeenCalledWith(1)
+  error.mockRestore()
+})
+
+// Review round 1: the real scene throws once its canvas reports a lost context (a captured setter stands in for it).
+test('a WebGL context lost while the scene is on screen hands the run to the plan view', async () => {
+  const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+  let loseContext = () => {}
+  scene.mockImplementation(() => {
+    const [lost, setLost] = useState(false)
+    loseContext = () => setLost(true)
+    if (lost) throw new Error('The builder lost its WebGL context')
+    return <div data-testid="scene-3d" />
+  })
+  const { onDone } = await show()
+  expect(screen.getByTestId('scene-3d')).toBeInTheDocument()
+  expect(onDone).not.toHaveBeenCalled()
+  act(() => loseContext())
+  expect(screen.getByText("The 3D builder isn't available here, so here's the plan view.")).toBeInTheDocument()
+  expect(screen.getByRole('list', { name: /Plan view/ })).toBeInTheDocument()
+  expect(screen.getByText('The building leans.')).toBeInTheDocument()
+  expect(onDone.mock.calls).toEqual([[1]])
   error.mockRestore()
 })
 
