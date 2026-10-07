@@ -119,8 +119,7 @@
       "tier": { "vague": "COLLAPSED · VAGUE", "passable": "LEANING · PASSABLE", "excellent": "HOLDS · EXCELLENT" },
       "before": "Before",
       "after": "After",
-      "compare": "Before / After",
-      "latest": "Latest only"
+      "compare": "Before / After"
     },
     "builder": {
       "empty": "Your building will appear here after Build & test.",

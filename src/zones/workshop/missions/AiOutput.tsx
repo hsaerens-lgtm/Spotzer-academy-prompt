@@ -3,7 +3,7 @@ import { assemblePrompt } from '../../../workshop/engine/evaluate'
 import type { BlockType, Mission } from '../../../workshop/model'
 import type { Attempt, MissionSession } from '../store'
 import { Window } from '../ui/Window'
-import { MaterialBadge } from './MaterialBadge'
+import { MaterialBadge, showsBadge } from './MaterialBadge'
 
 function Answer({ mission, attempt }: { mission: Mission; attempt: Attempt }) {
   const { t } = useTranslation()
@@ -21,6 +21,7 @@ export interface AiOutputProps {
   mission: Mission
   session: MissionSession
   revealed: boolean
+  /** Before / After: the first attempt next to the latest one (the view only allows it when their prompts differ). */
   compare: boolean
   labels: Record<BlockType, string>
 }
@@ -34,7 +35,7 @@ export function AiOutput({ className, mission, session, revealed, compare, label
         <p className="ws-output__note">{t('workshop.output.empty')}</p>
       ) : !revealed ? (
         <p className="ws-output__note">{t('workshop.output.reading')}</p>
-      ) : compare && first && first.id !== last.id ? (
+      ) : compare && first ? (
         <div className="ws-compare">
           {(
             [
@@ -45,15 +46,13 @@ export function AiOutput({ className, mission, session, revealed, compare, label
             <section key={key} className="ws-compare__side">
               <h3 className="ws-compare__title">{t(`workshop.output.${key}`)}</h3>
               <pre className="ws-compare__prompt">{assemblePrompt(attempt.input, labels)}</pre>
-              {/* What each block was made of: every required block (a missing one is a hole), and the bonus blocks used. */}
+              {/* What each block was made of. */}
               <ul className="ws-compare__blocks">
-                {attempt.evaluation.blocks
-                  .filter((block) => block.required || block.present)
-                  .map((block) => (
-                    <li key={block.type}>
-                      {labels[block.type]} <MaterialBadge result={block} />
-                    </li>
-                  ))}
+                {attempt.evaluation.blocks.filter(showsBadge).map((block) => (
+                  <li key={block.type}>
+                    {labels[block.type]} <MaterialBadge result={block} />
+                  </li>
+                ))}
               </ul>
               <Answer mission={mission} attempt={attempt} />
             </section>

@@ -139,7 +139,7 @@
 .ws-tier--passable { background: var(--oe-warn); }
 .ws-tier--vague { background: var(--oe-danger); color: var(--at-on-dark); }
 .ws-answer__text { margin: 0; padding: 8px 10px; white-space: pre-wrap; font-size: 14px; line-height: 1.55; background: var(--at-ink); border: 1px dashed var(--at-hairline-2); }
-.ws-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ws-compare { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
 .ws-compare__title { margin: 0 0 6px; font-family: var(--ws-chrome); font-size: 18px; font-weight: 400; }
 .ws-compare__prompt { margin: 0 0 8px; padding: 6px 8px; white-space: pre-wrap; font: inherit; font-size: 13px; color: var(--at-on-dark-2); background: var(--at-surface-2); }
 .ws-compare__blocks { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 0 0 8px; padding: 0; list-style: none; font-size: 13px; color: var(--at-on-dark-2); }

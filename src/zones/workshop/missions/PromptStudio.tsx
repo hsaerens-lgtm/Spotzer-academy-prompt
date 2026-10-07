@@ -8,7 +8,7 @@ import { isSubmitShortcut } from '../keys'
 import type { MissionSession } from '../store'
 import { BevelButton } from '../ui/BevelButton'
 import { Window } from '../ui/Window'
-import { MaterialBadge } from './MaterialBadge'
+import { MaterialBadge, showsBadge } from './MaterialBadge'
 
 export interface StudioHandle {
   focusBlock(type: BlockType, span?: Span): void
@@ -26,12 +26,14 @@ export interface PromptStudioProps {
   onText: (value: string) => void
   onTest: () => void
   onReset: () => void
+  /** The builder has finished showing the last test (its onDone came for that run). */
+  revealed: boolean
   /** The structural block the AI is reading in the builder right now. */
   reading?: CoreBlock | null
 }
 
 export function PromptStudio(props: PromptStudioProps) {
-  const { ref, className, mission, number, session, labels, onBlock, onAddBlock, onText, onTest, onReset, reading = null } = props
+  const { ref, className, mission, number, session, labels, onBlock, onAddBlock, onText, onTest, onReset, revealed, reading = null } = props
   const { t } = useTranslation()
   const fields = useRef(new Map<BlockType, HTMLTextAreaElement>())
   const text = useRef<HTMLTextAreaElement>(null)
@@ -39,8 +41,9 @@ export function PromptStudio(props: PromptStudioProps) {
   const clipboard = useCopyWithFallback()
   const draft = session.draft
   const blank = isBlank(draft)
-  // Material badges describe the last test, so they only show while the prompt is unchanged since then.
-  const tested = session.last && session.last.id > 0 && session.last.input === draft ? session.last.evaluation : null
+  // Material badges describe the last test: they wait for the builder to finish (the building reveals the materials),
+  // and only show while the prompt is unchanged since then.
+  const tested = revealed && session.last && session.last.id > 0 && session.last.input === draft ? session.last.evaluation : null
   // While the AI reads the building, free text shows the sentence that built the block being read.
   const last = session.last
   const readSpan = reading && last && last.input.mode !== 'blocks' ? blockResult(last.evaluation, reading).spans[0] : undefined
@@ -82,31 +85,34 @@ export function PromptStudio(props: PromptStudioProps) {
 
       {draft.mode === 'blocks' ? (
         <div className="ws-blocks">
-          {BLOCK_TYPES.filter((type) => isCoreBlock(type) || session.addedBlocks.includes(type) || (draft.blocks[type] ?? '') !== '').map((type) => (
-            <div key={type} className={`ws-block ws-block--${type}${type === reading ? ' is-reading' : ''}`}>
-              <span className="ws-block__tag" aria-hidden="true">
-                {labels[type]}
-              </span>
-              <textarea
-                ref={(element) => {
-                  if (element) fields.current.set(type, element)
-                  else fields.current.delete(type)
-                }}
-                className="ws-field"
-                rows={2}
-                maxLength={MAX_BLOCK_TEXT}
-                aria-label={t('workshop.studio.blockLabel', { label: labels[type] })}
-                placeholder={mission.blocks[type].placeholder}
-                value={draft.blocks[type] ?? ''}
-                onChange={(event) => {
-                  clipboard.reset()
-                  onBlock(type, event.target.value)
-                }}
-                onKeyDown={onKeyDown}
-              />
-              {tested && <MaterialBadge result={blockResult(tested, type)} />}
-            </div>
-          ))}
+          {BLOCK_TYPES.filter((type) => isCoreBlock(type) || session.addedBlocks.includes(type) || (draft.blocks[type] ?? '') !== '').map((type) => {
+            const result = tested ? blockResult(tested, type) : null
+            return (
+              <div key={type} className={`ws-block ws-block--${type}${type === reading ? ' is-reading' : ''}`}>
+                <span className="ws-block__tag" aria-hidden="true">
+                  {labels[type]}
+                </span>
+                <textarea
+                  ref={(element) => {
+                    if (element) fields.current.set(type, element)
+                    else fields.current.delete(type)
+                  }}
+                  className="ws-field"
+                  rows={2}
+                  maxLength={MAX_BLOCK_TEXT}
+                  aria-label={t('workshop.studio.blockLabel', { label: labels[type] })}
+                  placeholder={mission.blocks[type].placeholder}
+                  value={draft.blocks[type] ?? ''}
+                  onChange={(event) => {
+                    clipboard.reset()
+                    onBlock(type, event.target.value)
+                  }}
+                  onKeyDown={onKeyDown}
+                />
+                {result && showsBadge(result) && <MaterialBadge result={result} />}
+              </div>
+            )
+          })}
           {BONUS_BLOCKS.some((type) => !session.addedBlocks.includes(type) && !(draft.blocks[type] ?? '')) && (
             <div className="ws-add-block">
               <span>{t('workshop.studio.addBlock')}</span>

@@ -25,6 +25,24 @@ function renderView(missionId: string) {
   return { store, onSelect }
 }
 
+/** A builder slot the test drives by hand: nothing is revealed until the test calls onDone. Returns the latest slot props. */
+function renderManual(missionId: string) {
+  let slot: BuilderSlotProps | null = null
+  render(
+    <WorkshopStoreProvider value={makeWorkshopStore()}>
+      <MissionsView
+        missionId={missionId}
+        onSelectMission={() => {}}
+        renderBuilder={(props) => {
+          slot = props
+          return null
+        }}
+      />
+    </WorkshopStoreProvider>,
+  )
+  return () => slot!
+}
+
 const ada = () => within(screen.getByRole('complementary', { name: 'Ada' }))
 const adaSays = (text: string | RegExp) => ada().getByText(text, { selector: '.sr-only' })
 /** Ada's comment on a result: it only appears once the builder slot has called onDone, so it is awaited. */
@@ -131,6 +149,8 @@ test('Before / After compares the first attempt with the latest one', async () =
   await fillLetter(user)
   await user.click(screen.getByRole('button', { name: 'Build & test' }))
   await user.click(await ada().findByRole('button', { name: 'Before / After' }))
+  // One signal for the toggle: the label stays, the pressed state changes.
+  expect(ada().getByRole('button', { name: 'Before / After' })).toHaveAttribute('aria-pressed', 'true')
   const output = screen.getByRole('region', { name: 'AI_OUTPUT.TXT' })
   expect(within(output).getByRole('heading', { name: 'Before' })).toBeInTheDocument()
   expect(within(output).getByRole('heading', { name: 'After' })).toBeInTheDocument()
@@ -190,34 +210,92 @@ test('Copy my prompt copies the assembled prompt, or selects it when the clipboa
   expect(writeText).toHaveBeenCalledWith('Role: A writer')
   expect(await screen.findByRole('button', { name: 'Copied' })).toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'Copied' }))
-  expect(await screen.findByRole('textbox', { name: /press Ctrl\+C to copy it/ })).toHaveValue('Role: A writer')
+  const fallback = (await screen.findByRole('textbox', { name: /press Ctrl\+C to copy it/ })) as HTMLTextAreaElement
+  expect(fallback).toHaveValue('Role: A writer')
+  expect([fallback.selectionStart, fallback.selectionEnd]).toEqual([0, 'Role: A writer'.length])
 })
 
 test('a double click on Build & test reveals the latest run only', async () => {
   const user = userEvent.setup()
-  let slot: BuilderSlotProps | null = null
-  render(
-    <WorkshopStoreProvider value={makeWorkshopStore()}>
-      <MissionsView
-        missionId="delayed-website"
-        onSelectMission={() => {}}
-        renderBuilder={(props) => {
-          slot = props
-          return null
-        }}
-      />
-    </WorkshopStoreProvider>,
-  )
+  const slot = renderManual('delayed-website')
   await fillLetter(user)
   await user.dblClick(screen.getByRole('button', { name: 'Build & test' }))
-  const latest = slot!.runKey
-  act(() => slot!.onDone(latest - 1))
+  expect(appStore.getState().progress.workshop?.passed).toEqual(['delayed-website'])
+  const latest = slot().runKey
+  act(() => slot().onDone(latest - 1))
   expect(screen.getByText('The AI is reading your building\u2026', { selector: '.ws-output__note' })).toBeInTheDocument()
   expect(screen.queryByText('HOLDS \u00B7 EXCELLENT')).toBeNull()
   expect(adaSays('The AI is reading your building\u2026')).toBeInTheDocument()
-  act(() => slot!.onDone(latest))
+  act(() => slot().onDone(latest))
   expect(await screen.findByText('HOLDS \u00B7 EXCELLENT')).toBeInTheDocument()
   expect(await adaWillSay(/^It holds!/)).toBeInTheDocument()
+  // Both runs tested the same prompt: Before / After would show two identical columns.
+  expect(ada().queryByRole('button', { name: 'Before / After' })).toBeNull()
+})
+
+test('the material badges wait for the builder to finish', async () => {
+  const user = userEvent.setup()
+  const slot = renderManual('delayed-website')
+  await fillLetter(user)
+  await user.click(screen.getByRole('button', { name: 'Build & test' }))
+  expect(screen.queryByText('STONE')).toBeNull()
+  act(() => slot().onDone(slot().runKey))
+  expect(await screen.findAllByText('STONE')).toHaveLength(4)
+})
+
+test('an extra block added but left empty gets no badge', async () => {
+  const user = userEvent.setup()
+  renderView('delayed-website')
+  await fillLetter(user)
+  await user.click(screen.getByRole('button', { name: 'Example' }))
+  await user.click(screen.getByRole('button', { name: 'Build & test' }))
+  expect(await screen.findAllByText('STONE')).toHaveLength(4)
+  expect(screen.queryByText('HOLE')).toBeNull()
+})
+
+test('a click on a block of the building selects its sentence, unless the prompt changed since the test', async () => {
+  const user = userEvent.setup()
+  const slot = renderManual('florist-post')
+  const text = "You are a social media manager. Write a post for Rosa's Flowers."
+  await fill(user, 'Your prompt', text)
+  await user.click(screen.getByRole('button', { name: 'Build & test' }))
+  act(() => slot().onDone(slot().runKey))
+  const editor = screen.getByRole('textbox', { name: 'Your prompt' }) as HTMLTextAreaElement
+  act(() => slot().onBlockClick('context'))
+  expect(editor).toHaveFocus()
+  expect([editor.selectionStart, editor.selectionEnd]).toEqual([text.indexOf('Write a post'), text.length])
+  await fill(user, 'Your prompt', `Hello there. ${text}`)
+  editor.setSelectionRange(0, 0)
+  act(() => slot().onBlockClick('context'))
+  // The tested offsets would now land on other words: the block is focused without them, caret at the end.
+  expect([editor.selectionStart, editor.selectionEnd]).toEqual([editor.value.length, editor.value.length])
+})
+
+test('a bubble closed with Escape comes back with the next result, even when Ada says the same thing', async () => {
+  const user = userEvent.setup()
+  renderView('delayed-website')
+  await fillLetter(user, { 'Context block': 'The website is late' })
+  await user.click(screen.getByRole('button', { name: 'Build & test' }))
+  const advice = /^The Context block is only cardboard\./
+  expect(await adaWillSay(advice)).toBeInTheDocument()
+  await user.keyboard('{Escape}')
+  expect(ada().queryByText(advice, { selector: '.sr-only' })).toBeNull()
+  expect(ada().queryByRole('button', { name: 'Edit my prompt' })).toBeNull()
+  await user.click(screen.getByRole('button', { name: 'Build & test' }))
+  expect(await adaWillSay(advice)).toBeInTheDocument()
+  expect(ada().getByRole('button', { name: 'Edit my prompt' })).toBeInTheDocument()
+})
+
+test('a new test clears the reading ring of the previous run', async () => {
+  const user = userEvent.setup()
+  const slot = renderManual('delayed-website')
+  await fill(user, 'Context block', 'The website is late')
+  await user.click(screen.getByRole('button', { name: 'Build & test' }))
+  act(() => slot().onReading('context'))
+  const block = () => screen.getByRole('textbox', { name: 'Context block' }).closest('.ws-block')
+  expect(block()).toHaveClass('is-reading')
+  await user.click(screen.getByRole('button', { name: 'Build & test' }))
+  expect(block()).not.toHaveClass('is-reading')
 })
 
 function ReadingBuilder({ input, onReading }: BuilderSlotProps) {
