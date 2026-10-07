@@ -144,3 +144,29 @@
 .ws-compare__prompt { margin: 0 0 8px; padding: 6px 8px; white-space: pre-wrap; font: inherit; font-size: 13px; color: var(--at-on-dark-2); background: var(--at-surface-2); }
 .ws-compare__blocks { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 0 0 8px; padding: 0; list-style: none; font-size: 13px; color: var(--at-on-dark-2); }
 .ws-compare__blocks li { display: flex; align-items: center; gap: 4px; }
+
+/* Builder */
+.ws-builder { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 220px; gap: 8px; }
+.ws-builder__canvas { flex: 1; min-height: 200px; background: var(--at-ink); }
+.ws-builder__status { display: flex; align-items: center; gap: 10px; min-height: 26px; }
+.ws-builder__outcome, .ws-builder__reading { font-family: var(--ws-chrome); font-size: 18px; }
+.ws-builder__reading { color: var(--oe-lime); }
+.ws-gauge { position: relative; width: 140px; height: 12px; background: var(--at-ink); border: 1px solid var(--oe-blue-grey-soft); }
+.ws-gauge__fill { position: absolute; inset: 0 auto 0 0; }
+.ws-gauge__fill--good { background: var(--at-band-good); }
+.ws-gauge__fill--mid { background: var(--at-band-mid); }
+.ws-gauge__fill--poor { background: var(--at-band-poor); }
+.ws-plan { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; margin: 0; padding: 8px; list-style: none; background: var(--at-ink); }
+.ws-plan > li { display: flex; justify-content: center; width: 100%; }
+.ws-plan__row {
+  display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; cursor: pointer; text-align: left;
+  font: inherit; font-size: 14px; color: var(--at-ink); border: 2px solid var(--at-ink);
+}
+.ws-plan__row--stone { background: var(--at-on-dark); }
+.ws-plan__row--wood { background: var(--oe-lime-mint); }
+.ws-plan__row--cardboard { background: var(--oe-warn); }
+.ws-plan__row--hole { background: transparent; color: var(--oe-danger); border: 2px dashed var(--oe-danger); }
+.ws-plan__row.is-cracked { background-image: linear-gradient(100deg, transparent 48%, var(--at-ink) 49%, var(--at-ink) 51%, transparent 52%); }
+.ws-plan__material { font-family: var(--ws-chrome); font-size: 16px; }
+.ws-plan--collapses .ws-plan__row { transform: rotate(-3deg); }
+.ws-plan--leans .ws-plan__row { transform: rotate(-1deg); }
