@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { appStore } from '../../../core/store'
 import { resetAppStore } from '../../../test/resetAppStore'
@@ -154,4 +154,19 @@ test('the announcer is the workshop live region', () => {
   const region = screen.getByTestId('workshop-announcer')
   expect(region).toHaveAttribute('aria-live', 'polite')
   expect(region).toHaveTextContent('The building holds.')
+})
+
+test('the same announcement made twice is a new message for the live region', () => {
+  const store = makeWorkshopStore()
+  render(
+    <WorkshopStoreProvider value={store}>
+      <WorkshopAnnouncer />
+    </WorkshopStoreProvider>,
+  )
+  const region = screen.getByTestId('workshop-announcer')
+  act(() => store.getState().announce('The AI took too long to answer. Try again.'))
+  const first = region.firstElementChild
+  act(() => store.getState().announce('The AI took too long to answer. Try again.'))
+  expect(region).toHaveTextContent('The AI took too long to answer. Try again.')
+  expect(region.firstElementChild).not.toBe(first)
 })

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { diffWords } from '../../../workshop/diff'
 import type { CorrectorReport } from '../../../workshop/model'
@@ -7,6 +7,7 @@ import { useCopyWithFallback } from '../copy'
 import type { RunState } from '../store'
 import { BevelButton } from '../ui/BevelButton'
 import { Window } from '../ui/Window'
+import { useFocusReturn } from './useFocusReturn'
 
 export interface ImprovedPanelProps {
   className?: string
@@ -28,6 +29,14 @@ export function ImprovedPanel({ className, report, revealed, checkedPrompt, stal
   const { reset } = clipboard
   // A new report is a new text to copy: "Copied" and the fallback field belonged to the previous one.
   useEffect(() => reset(), [report, reset])
+  // The view re-renders on every keystroke in the prompt: the diff only changes with the report.
+  const parts = useMemo(() => (report ? diffWords(checkedPrompt ?? '', report.improvedPrompt) : []), [checkedPrompt, report])
+  const running = run.status === 'running'
+  const runFocus = useFocusReturn(running || checking)
+  const runBoth = () => {
+    runFocus.remember()
+    onRun()
+  }
 
   return (
     <Window title={t('workshop.windows.output')} className={className}>
@@ -39,17 +48,17 @@ export function ImprovedPanel({ className, report, revealed, checkedPrompt, stal
         <>
           <h3 className="ws-compare__title">{t('workshop.corrector.improved')}</h3>
           <p className="ws-improved">
-            {diffWords(checkedPrompt ?? '', report.improvedPrompt).map((part, index) =>
-              part.added ? <ins key={index}>{part.text}</ins> : <span key={index}>{part.text}</span>,
-            )}
+            {parts.map((part, index) => (part.added ? <ins key={index}>{part.text}</ins> : <span key={index}>{part.text}</span>))}
           </p>
-          {clipboard.fallback !== null && <CopyFallbackField text={clipboard.fallback} selectRef={clipboard.selectFallback} rows={4} />}
+          {clipboard.fallback !== null && (
+            <CopyFallbackField text={clipboard.fallback} selectRef={clipboard.selectFallback} rows={4} hint={t('workshop.corrector.copyFallback')} />
+          )}
           <div className="ws-studio__actions">
             <BevelButton onClick={() => void clipboard.copy(report.improvedPrompt)}>
               {clipboard.copied ? t('workshop.corrector.copied') : t('workshop.corrector.copy')}
             </BevelButton>
             {!stale && (
-              <BevelButton tone="primary" disabled={run.status === 'running' || checking} onClick={onRun}>
+              <BevelButton ref={runFocus.button} tone="primary" disabled={running || checking} onClick={runBoth}>
                 {t('workshop.corrector.runBoth')}
               </BevelButton>
             )}
@@ -65,7 +74,7 @@ export function ImprovedPanel({ className, report, revealed, checkedPrompt, stal
               </ul>
             </>
           )}
-          {run.status === 'running' && <p className="ws-output__note">{t('workshop.corrector.running')}</p>}
+          {running && <p className="ws-output__note">{t('workshop.corrector.running')}</p>}
           {run.status === 'error' && run.error && <p className="ws-error">{t(`workshop.corrector.errors.${run.error}`)}</p>}
           {run.status === 'done' && (
             <div className="ws-compare">

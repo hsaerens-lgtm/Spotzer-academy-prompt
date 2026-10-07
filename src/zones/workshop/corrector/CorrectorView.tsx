@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { inputFromReport, type BuildingInput } from '../../../workshop/building/plan'
 import { MAX_CORRECT_PROMPT, MAX_PURPOSE, OUTCOME_FOR_TIER } from '../../../workshop/model'
@@ -9,6 +9,7 @@ import { BevelButton } from '../ui/BevelButton'
 import { Window } from '../ui/Window'
 import { ImprovedPanel } from './ImprovedPanel'
 import { Report } from './Report'
+import { useFocusReturn } from './useFocusReturn'
 
 export interface CorrectorBuilderProps {
   input: BuildingInput | null
@@ -32,12 +33,20 @@ export function CorrectorView({ renderBuilder }: { renderBuilder: (props: Correc
   const revealed = state.report !== null && revealedKey === state.checks
   // The report is about the text that was checked: once the prompt is edited it no longer describes it.
   const stale = state.report !== null && state.checkedPrompt !== state.prompt.trim()
-  const onDone = useCallback((key: number) => setRevealedKey(key), [])
+  // Only the building of the latest report may reveal it: one still finishing for an older report is ignored.
+  const onDone = useCallback(
+    (key: number) => {
+      if (key === store.getState().corrector.checks) setRevealedKey(key)
+    },
+    [store],
+  )
   const checking = state.status === 'checking'
   const blank = state.prompt.trim() === ''
+  const checkFocus = useFocusReturn(checking)
   const check = () => {
     // A closed bubble comes back with the next result.
     setDismissed(null)
+    checkFocus.remember()
     void store.getState().checkPrompt()
   }
 
@@ -48,10 +57,22 @@ export function CorrectorView({ renderBuilder }: { renderBuilder: (props: Correc
     store.getState().announce(`${t('workshop.corrector.score', { score })}. ${t(`workshop.corrector.verdict.${OUTCOME_FOR_TIER[input.tier]}`)}. ${summary}`)
   }, [revealed])
 
-  // And one per failed check: Ada's bubble is not a live region.
+  // And one per failed check and per Run both outcome, as they happen (Ada's bubble is not a live region).
+  // The refs skip what the store already held when the view opened: that was announced at the time.
+  const lastStatus = useRef(state.status)
   useEffect(() => {
+    if (lastStatus.current === state.status) return
+    lastStatus.current = state.status
     if (state.status === 'error' && state.error) store.getState().announce(t(`workshop.corrector.errors.${state.error}`))
-  }, [state.status, state.error])
+  }, [state.status])
+  const lastRun = useRef(state.run)
+  useEffect(() => {
+    if (lastRun.current === state.run) return
+    lastRun.current = state.run
+    const { status, error } = state.run
+    if (status === 'done') store.getState().announce(t('workshop.corrector.ran'))
+    else if (status === 'error' && error) store.getState().announce(t(`workshop.corrector.errors.${error}`))
+  }, [state.run])
 
   const adaText =
     state.health === 'offline'
@@ -106,7 +127,7 @@ export function CorrectorView({ renderBuilder }: { renderBuilder: (props: Correc
               />
             </label>
             <div className="ws-studio__actions">
-              <BevelButton tone="primary" disabled={blank || checking} aria-keyshortcuts="Control+Enter" onClick={check}>
+              <BevelButton ref={checkFocus.button} tone="primary" disabled={blank || checking} aria-keyshortcuts="Control+Enter" onClick={check}>
                 {state.status === 'error' ? t('workshop.corrector.tryAgain') : t('workshop.corrector.check')}
               </BevelButton>
             </div>

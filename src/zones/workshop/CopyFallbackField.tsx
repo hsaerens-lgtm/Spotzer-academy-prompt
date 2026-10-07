@@ -7,14 +7,16 @@ export interface CopyFallbackFieldProps {
   /** `selectFallback` of useCopyWithFallback: selects the text when the field appears and after each refused copy. */
   selectRef: CopyWithFallback['selectFallback']
   rows: number
+  /** What is selected and how to copy it (the field's label); "your prompt" by default. */
+  hint?: string
 }
 
 /** The refused copy's fallback: the text shown selected, with the hint to copy it by hand. */
-export function CopyFallbackField({ text, selectRef, rows }: CopyFallbackFieldProps) {
+export function CopyFallbackField({ text, selectRef, rows, hint }: CopyFallbackFieldProps) {
   const { t } = useTranslation()
   return (
     <label className="ws-copy-fallback">
-      {t('workshop.studio.copyFallback')}
+      {hint ?? t('workshop.studio.copyFallback')}
       <textarea ref={selectRef} className="ws-field" readOnly rows={rows} value={text} />
     </label>
   )

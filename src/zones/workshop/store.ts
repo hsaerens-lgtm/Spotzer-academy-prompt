@@ -59,6 +59,8 @@ export interface WorkshopState {
   sessions: Record<string, MissionSession>
   attempts: number
   announcement: string
+  /** Counts the announcements, so the same words said twice still reach the live region as a new message. */
+  announcements: number
   corrector: CorrectorState
   setBlock: (missionId: string, type: BlockType, value: string) => void
   addBlock: (missionId: string, type: BlockType) => void
@@ -139,6 +141,7 @@ export function createWorkshopStore({ content, passMission, api }: WorkshopDeps)
       sessions: Object.fromEntries(content.missions.map((mission) => [mission.id, initialSession(mission)])),
       attempts: 0,
       announcement: '',
+      announcements: 0,
       corrector: {
         health: 'unknown',
         prompt: '',
@@ -177,7 +180,7 @@ export function createWorkshopStore({ content, passMission, api }: WorkshopDeps)
       markTipShown: (missionId, detailId) =>
         update(missionId, (session) => (session.tipsShown.includes(detailId) ? session : { ...session, tipsShown: [...session.tipsShown, detailId] })),
       muteTips: (missionId) => update(missionId, (session) => (session.tipsMuted ? session : { ...session, tipsMuted: true })),
-      announce: (message) => set({ announcement: message }),
+      announce: (message) => set({ announcement: message, announcements: get().announcements + 1 }),
 
       checkHealth: async () => {
         const status = get().corrector.health

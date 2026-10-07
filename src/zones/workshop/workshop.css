@@ -192,6 +192,6 @@
 .ws-report__block p { margin: 2px 0; font-size: 14px; line-height: 1.5; }
 .ws-report__label { display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--ws-chrome); font-size: 18px; font-weight: 400; }
 .ws-report__quote { margin: 4px 0 0; padding: 4px 8px; font-size: 13px; color: var(--at-on-dark-2); border-left: 2px solid var(--oe-lime-mint); }
-.ws-improved { margin: 0 0 8px; padding: 8px 10px; white-space: pre-wrap; font-size: 14px; line-height: 1.55; background: var(--at-ink); }
+.ws-improved { margin: 0 0 8px; padding: 8px 10px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.55; background: var(--at-ink); }
 .ws-improved ins { text-decoration: none; color: var(--at-ink); background: var(--oe-lime); }
 .ws-changes { margin: 0 0 10px; padding-left: 18px; font-size: 14px; }

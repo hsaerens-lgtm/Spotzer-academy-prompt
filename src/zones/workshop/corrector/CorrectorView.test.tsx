@@ -6,7 +6,7 @@ import { makeReport } from '../../../test/workshopFixtures'
 import { makeWorkshopStore } from '../../../test/workshopStore'
 import type { BuildingInput } from '../../../workshop/building/plan'
 import { WorkshopStoreProvider, type CorrectorApi } from '../store'
-import { CorrectorView } from './CorrectorView'
+import { CorrectorView, type CorrectorBuilderProps } from './CorrectorView'
 
 function StubBuilder({ input, runKey, onDone }: { input: BuildingInput | null; runKey: number; onDone: (key: number) => void }) {
   useEffect(() => {
@@ -27,12 +27,47 @@ async function renderView(api: Partial<CorrectorApi> = {}) {
   return store
 }
 
+/** A builder that never finishes by itself: the test calls onDone, and every runKey it was rendered with is kept. */
+async function renderHeld() {
+  const store = makeWorkshopStore()
+  const builder: { runKeys: number[]; props: CorrectorBuilderProps | null } = { runKeys: [], props: null }
+  await act(async () => {
+    render(
+      <WorkshopStoreProvider value={store}>
+        <CorrectorView
+          renderBuilder={(props) => {
+            builder.runKeys.push(props.runKey)
+            builder.props = props
+            return <div data-testid="builder" />
+          }}
+        />
+      </WorkshopStoreProvider>,
+    )
+  })
+  return { store, builder }
+}
+
 const ada = () => within(screen.getByRole('complementary', { name: 'Ada' }))
 const corrector = () => within(screen.getByRole('region', { name: 'CORRECTOR.EXE' }))
 const output = () => within(screen.getByRole('region', { name: 'AI_OUTPUT.TXT' }))
 const promptField = () => corrector().getByRole('textbox', { name: 'Paste or write any prompt' })
 const SCORE_LINE = '62/100 \u00b7 Leans'
 const STALE = 'Edited since this check. Check your prompt again to update the report and run both.'
+/**
+ * A browser moves the focus off a button that turns disabled, to the page; jsdom leaves it there (and will not blur a
+ * disabled element), so the tests do what the browser does: the focus passes through a throwaway button to the page.
+ */
+const loseFocus = (element: HTMLElement) => {
+  expect(element).toHaveFocus()
+  const elsewhere = document.createElement('button')
+  document.body.append(elsewhere)
+  act(() => {
+    elsewhere.focus()
+    elsewhere.blur()
+  })
+  elsewhere.remove()
+  expect(document.body).toHaveFocus()
+}
 
 beforeEach(() => resetAppStore({ reducedMotion: true }))
 
@@ -197,7 +232,7 @@ test('Copy copies the improved prompt, or shows it selected with the Ctrl+C hint
   await user.click(await output().findByRole('button', { name: 'Copy' }))
   expect(writeText).toHaveBeenCalledWith(improvedPrompt)
   await user.click(await output().findByRole('button', { name: 'Copied' }))
-  const fallback = (await output().findByRole('textbox', { name: /press Ctrl\+C to copy it/ })) as HTMLTextAreaElement
+  const fallback = (await output().findByRole('textbox', { name: 'The improved prompt is selected below. Press Ctrl+C to copy it.' })) as HTMLTextAreaElement
   expect(fallback).toHaveValue(improvedPrompt)
   expect([fallback.selectionStart, fallback.selectionEnd]).toEqual([0, improvedPrompt.length])
 })
@@ -209,4 +244,117 @@ test('Ctrl+Enter checks the prompt', async () => {
   await user.type(promptField(), 'Write a post')
   await user.keyboard('{Control>}{Enter}{/Control}')
   expect(correct).toHaveBeenCalledWith({ prompt: 'Write a post', purpose: undefined, lang: 'en' })
+})
+
+test('the report waits for its building; an older building finishing is ignored; the run key only moves with a new report', async () => {
+  const user = userEvent.setup()
+  const { store, builder } = await renderHeld()
+  await user.type(promptField(), 'Write a post')
+  await user.click(corrector().getByRole('button', { name: 'Check my prompt' }))
+  await waitFor(() => expect(builder.props?.input).not.toBeNull())
+  expect(builder.props!.runKey).toBe(1)
+  // The building is still going up: no score, no badges, no improved prompt, nothing announced.
+  expect(corrector().queryByText(SCORE_LINE)).not.toBeInTheDocument()
+  expect(screen.queryByText('CARDBOARD')).not.toBeInTheDocument()
+  expect(output().getByText('The AI is reading your building\u2026')).toBeInTheDocument()
+  expect(output().queryByRole('heading', { name: 'Improved prompt' })).not.toBeInTheDocument()
+  expect(store.getState().announcement).toBe('')
+  act(() => builder.props!.onDone(0))
+  expect(corrector().queryByText(SCORE_LINE)).not.toBeInTheDocument()
+  act(() => builder.props!.onDone(1))
+  expect(corrector().getByText(SCORE_LINE)).toBeInTheDocument()
+  expect(corrector().getAllByText('CARDBOARD')).toHaveLength(1)
+  expect(output().getByRole('heading', { name: 'Improved prompt' })).toBeInTheDocument()
+
+  // Typing renders the builder again with the same key and building: it does not start over.
+  const input = builder.props!.input
+  const rendered = builder.runKeys.length
+  await user.type(promptField(), ' today')
+  expect(builder.runKeys.length).toBeGreaterThan(rendered)
+  expect(new Set(builder.runKeys.slice(rendered))).toEqual(new Set([1]))
+  expect(builder.props!.input).toBe(input)
+
+  await user.click(corrector().getByRole('button', { name: 'Check my prompt' }))
+  await waitFor(() => expect(builder.props!.runKey).toBe(2))
+  expect(corrector().queryByText(SCORE_LINE)).not.toBeInTheDocument()
+  // The first building finishing late neither reveals the new report nor, later, hides it.
+  act(() => builder.props!.onDone(1))
+  expect(corrector().queryByText(SCORE_LINE)).not.toBeInTheDocument()
+  act(() => builder.props!.onDone(2))
+  expect(corrector().getByText(SCORE_LINE)).toBeInTheDocument()
+  act(() => builder.props!.onDone(1))
+  expect(corrector().getByText(SCORE_LINE)).toBeInTheDocument()
+})
+
+// Review focus 3: a keyboard user who pressed a button keeps their place while it is disabled.
+test('a pressed Check my prompt gets the keyboard focus back, as Try again after a failure', async () => {
+  const user = userEvent.setup()
+  const pending: ((value: Awaited<ReturnType<CorrectorApi['correct']>>) => void)[] = []
+  const correct = vi.fn<CorrectorApi['correct']>(() => new Promise((resolve) => pending.push(resolve)))
+  await renderView({ correct })
+  await user.type(promptField(), 'Write a post')
+  const button = corrector().getByRole('button', { name: 'Check my prompt' })
+  act(() => button.focus())
+  await user.keyboard('{Enter}')
+  expect(button).toBeDisabled()
+  loseFocus(button)
+  await act(async () => pending[0]({ ok: false, error: 'timeout' }))
+  expect(await corrector().findByRole('button', { name: 'Try again' })).toBe(button)
+  await waitFor(() => expect(button).toHaveFocus())
+
+  await user.keyboard('{Enter}')
+  expect(button).toBeDisabled()
+  loseFocus(button)
+  await act(async () => pending[1]({ ok: true, data: makeReport() }))
+  expect(await corrector().findByText(SCORE_LINE)).toBeInTheDocument()
+  expect(button).toHaveAccessibleName('Check my prompt')
+  await waitFor(() => expect(button).toHaveFocus())
+})
+
+test('a pressed Run both gets the keyboard focus back when the answers arrive, unless the reader moved on', async () => {
+  const user = userEvent.setup()
+  const waiting: (() => void)[] = []
+  const run = vi.fn<CorrectorApi['run']>(async (prompt) => {
+    await new Promise<void>((release) => waiting.push(release))
+    return { ok: true, data: { answer: `Answer to: ${prompt}` } }
+  })
+  const answer = () => act(async () => waiting.splice(0).forEach((release) => release()))
+  await renderView({ run })
+  await user.type(promptField(), 'Write a post')
+  await user.click(corrector().getByRole('button', { name: 'Check my prompt' }))
+  const runBoth = await output().findByRole('button', { name: 'Run both' })
+  act(() => runBoth.focus())
+  await user.keyboard('{Enter}')
+  expect(runBoth).toBeDisabled()
+  loseFocus(runBoth)
+  await answer()
+  expect(await output().findByText('Answer to: Write a post')).toBeInTheDocument()
+  await waitFor(() => expect(runBoth).toHaveFocus())
+
+  // Pressed again, then the reader goes back to the prompt: the focus stays where they put it.
+  await user.keyboard('{Enter}')
+  expect(runBoth).toBeDisabled()
+  loseFocus(runBoth)
+  act(() => promptField().focus())
+  await answer()
+  await waitFor(() => expect(runBoth).toBeEnabled())
+  expect(promptField()).toHaveFocus()
+})
+
+test('Run both says when both answers are ready, or why they are not', async () => {
+  const user = userEvent.setup()
+  const run = vi
+    .fn<CorrectorApi['run']>()
+    .mockResolvedValueOnce({ ok: true, data: { answer: 'One' } })
+    .mockResolvedValueOnce({ ok: true, data: { answer: 'Two' } })
+    .mockResolvedValue({ ok: false, error: 'rate' })
+  const store = await renderView({ run })
+  await user.type(promptField(), 'Write a post')
+  await user.click(corrector().getByRole('button', { name: 'Check my prompt' }))
+  await user.click(await output().findByRole('button', { name: 'Run both' }))
+  await waitFor(() => expect(store.getState().announcement).toBe('Both answers are ready, side by side.'))
+  await user.click(output().getByRole('button', { name: 'Run both' }))
+  const message = "You've reached the corrector's limit for now. Try again in a minute."
+  expect(await output().findByText(message)).toBeInTheDocument()
+  await waitFor(() => expect(store.getState().announcement).toBe(message))
 })
