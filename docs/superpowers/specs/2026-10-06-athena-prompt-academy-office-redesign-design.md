@@ -17,7 +17,7 @@ Critères de réussite :
    - Un clic sur l'horloge murale, ou le bouton « Time of day » du HUD, passe à la phase suivante. La transition dure 2,5 s et l'on voit le soleil bouger.
    - `?phase=day|sunset|night` force une phase.
    - En mode « réduire les animations », le changement est instantané.
-3. **La ville se voit.** La baie vitrée occupe au moins un quart de l'image dans la vue d'ensemble, et la ville apparaît derrière Ada dans la vue présentation.
+3. **La ville se voit.** La vue d'ensemble garde un cadrage proche de l'actuel, où le coin rétro et le laptop restent visibles, avec la baie vitrée sur la plus grande part d'image compatible, environ 19 %. Le seuil exact est mesuré et fixé dans le plan. La ville se découvre en se déplaçant le long du rail et apparaît derrière Ada dans la vue présentation. (Amendement du 2026-10-07, choix B du propriétaire : on peut bouger la caméra, il n'est donc pas nécessaire de sacrifier le coin rétro pour viser un quart de l'image.)
 4. **Les parcours de la spec 1 passent toujours.** Tous les tests e2e existants restent verts : survol et clic du laptop, télé, défilement du rail, texte de l'écran mural, format 1280 × 600.
 5. **Performances sur le PC de référence** (Radeon 860M intégrée, 1600 × 900, échelle 1,5) :
    - au moins 60 images/s en vue d'ensemble et en vue présentation, dans chaque phase ;
@@ -65,7 +65,7 @@ Les noms des groupes de la scène sont conservés : `laptop`, `tv`, `ada`, `scre
 
 **Caméra.**
 - Le rail garde ses trois points : vue d'ensemble, intermédiaire, présentation.
-- Le point de la vue d'ensemble est recadré pour que la façade occupe au moins un quart de l'image.
+- Le point de la vue d'ensemble est ajusté pour montrer le plus de façade possible sans perdre le coin rétro (télé et console) ni le laptop (voir critère 3).
 - La vue présentation reste la même ; la ville y apparaît derrière Ada grâce au retour vitré.
 - Les vols vers le laptop et la télé sont réajustés si les modèles changent de taille.
 
