@@ -11,7 +11,7 @@ import { dedup, meshopt, prune, simplify, textureCompress, weld } from '@gltf-tr
 import { MeshoptDecoder, MeshoptEncoder, MeshoptSimplifier } from 'meshoptimizer'
 import sharp from 'sharp'
 import { ASSET_BUDGET, ASSETS_DIR, CREDITS_FILE, TEXTURE_MAPS, WEBP_QUALITY, modelFile, textureFile } from '../../src/assets/paths.ts'
-import { assertSafeManifest, auditAssetFiles, formatMiB, glbExtensionsUsed, renderCredits } from './lib.mjs'
+import { assertGltfUrisContained, assertSafeManifest, auditAssetFiles, formatMiB, glbExtensionsUsed, renderCredits } from './lib.mjs'
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url))
 const SOURCES = join(ROOT, 'assets-src')
@@ -115,7 +115,14 @@ async function modelIO() {
 
 async function buildModel(entry) {
   const io = await modelIO()
-  const document = await io.read(source(entry, 'model.gltf'))
+  const gltf = source(entry, 'model.gltf')
+  // The loader opens every buffer and image URI the downloaded .gltf names: none may point outside the asset's own folder.
+  try {
+    assertGltfUrisContained(JSON.parse(readFileSync(gltf, 'utf8')), dirname(gltf))
+  } catch (error) {
+    throw new Error(`${entry.id}: ${error.message}`)
+  }
+  const document = await io.read(gltf)
   const root = document.getRoot()
   for (const extension of [...root.listExtensionsUsed()]) {
     if (DROPPED_EXTENSIONS.includes(extension.extensionName)) extension.dispose()

@@ -71,6 +71,40 @@ export function safeJoin(root, rel) {
 }
 
 /**
+ * A downloaded .gltf names its buffers and images by URI, and the glTF loader opens whatever those URIs say. Throws unless
+ * every `buffers[].uri` and `images[].uri` is a data: URI or a plain relative path that stays under `assetDir` (the folder
+ * holding the .gltf) once percent-decoded, as the loader decodes it. A missing uri (a GLB chunk, an image in a bufferView) is fine.
+ */
+export function assertGltfUrisContained(json, assetDir) {
+  if (json === null || typeof json !== 'object') throw new Error('Not a glTF JSON document')
+  for (const key of ['buffers', 'images']) {
+    const list = json[key]
+    if (list === undefined) continue
+    if (!Array.isArray(list)) throw new Error(`glTF ${key} is not an array`)
+    list.forEach((item, index) => {
+      const uri = item?.uri
+      if (uri === undefined) return
+      const where = `${key}[${index}].uri ${JSON.stringify(uri)}`
+      if (typeof uri !== 'string') throw new Error(`Unsafe glTF URI in ${where}: not a string`)
+      if (/^data:/i.test(uri)) return
+      // Any other scheme (http:, file:, a drive letter) is refused as it stands; an escaped colon is caught by safeJoin once decoded.
+      if (/^[a-z][a-z0-9+.-]*:/i.test(uri)) throw new Error(`Unsafe glTF URI in ${where}: it has a scheme`)
+      let decoded
+      try {
+        decoded = decodeURIComponent(uri)
+      } catch {
+        throw new Error(`Unsafe glTF URI in ${where}: malformed percent-encoding`)
+      }
+      try {
+        safeJoin(assetDir, decoded)
+      } catch (error) {
+        throw new Error(`Unsafe glTF URI in ${where}: ${error.message}`)
+      }
+    })
+  }
+}
+
+/**
  * Checks a list of downloads before the first byte is fetched: allowed https hosts, paths that stay under `root`,
  * a usable announced size per file (at most MAX_DOWNLOAD), and at most MAX_ASSET_FILES files and MAX_ASSET_BYTES bytes in all.
  */

@@ -11,6 +11,7 @@ import {
   ambientCgDownload,
   assertAllowedUrl,
   assertDownloadPlan,
+  assertGltfUrisContained,
   assertSafeManifest,
   auditAssetFiles,
   byteLimit,
@@ -428,4 +429,40 @@ test('auditAssetFiles compares the files on disk with the files the manifest pro
   const expected = ['models/a.glb', 'textures/b_color.webp']
   expect(auditAssetFiles(['models/a.glb', 'textures/b_color.webp'], expected)).toEqual({ unexpected: [], missing: [] })
   expect(auditAssetFiles(['models/a.glb', 'hdr/sky.hdr', 'notes.txt'], expected)).toEqual({ unexpected: ['hdr/sky.hdr', 'notes.txt'], missing: ['textures/b_color.webp'] })
+})
+
+// ---- Task 2: a downloaded .gltf names its files by URI; none may point outside the asset's own folder ----
+
+const GLTF_DIR = resolve('assets-src', 'wall_clock')
+const HOSTILE_GLTF_URIS = [
+  // a scheme other than data:, or a drive letter
+  'http://evil.example/x.bin', 'https://evil.example/x.png', 'file:///etc/passwd', 'ftp://host/x.bin', 'FILE:///x', 'C:/x.png', 'C:\\x.png', 'c:x.png',
+  // absolute, protocol-relative and UNC paths
+  '/abs/x.bin', '//host/share/x.bin', '\\abs\\x.bin', '\\\\host\\share\\x.bin',
+  // a way out through "..", plain and percent-encoded (the loader decodes the URI before it opens the file)
+  '../x.bin', 'textures/../../x.png', '..\\x.bin', '%2e%2e/x.bin', '%2E%2E%2Fx.bin', '..%2fx.bin', 'textures%2F..%2F..%2Fx.png', '..%5Cx.bin',
+  // percent-encoded absolute paths, drive letters and NUL, malformed escapes, empty and non-string values
+  '%5Cabs%5Cx.bin', '%2Fabs%2Fx.bin', 'C%3A%2Fx.png', 'a%00b.png', '%E0%A4%A.png', '', '.', 'textures/..', 42, null,
+]
+
+test('assertGltfUrisContained accepts files inside the asset folder, data: URIs and embedded GLB chunks', () => {
+  const buffers = [{ byteLength: 4, uri: 'model.bin' }, { byteLength: 4 }, { byteLength: 4, uri: 'data:application/octet-stream;base64,AAAAAA==' }]
+  const images = [
+    { uri: 'textures/wall_clock_diff_1k.jpg' },
+    { uri: 'textures/with%20space.jpg' },
+    { uri: 'textures/../model_nor.jpg' },
+    { uri: 'DATA:image/png;base64,iVBORw0KGgo=' },
+    { bufferView: 0, mimeType: 'image/png' },
+  ]
+  expect(() => assertGltfUrisContained({ asset: { version: '2.0' }, buffers, images }, GLTF_DIR)).not.toThrow()
+  expect(() => assertGltfUrisContained({ asset: { version: '2.0' } }, GLTF_DIR)).not.toThrow()
+})
+
+test('assertGltfUrisContained refuses a buffer or image that leaves the asset folder', () => {
+  for (const uri of HOSTILE_GLTF_URIS) {
+    expect(() => assertGltfUrisContained({ buffers: [{ byteLength: 4, uri }] }, GLTF_DIR), `buffer ${JSON.stringify(uri)}`).toThrow(/buffers\[0\]/)
+    expect(() => assertGltfUrisContained({ images: [{ uri: 'ok.jpg' }, { uri }] }, GLTF_DIR), `image ${JSON.stringify(uri)}`).toThrow(/images\[1\]/)
+  }
+  expect(() => assertGltfUrisContained({ buffers: 'model.bin' }, GLTF_DIR)).toThrow(/buffers/)
+  expect(() => assertGltfUrisContained(null, GLTF_DIR)).toThrow(/glTF/)
 })
