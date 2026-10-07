@@ -1,6 +1,7 @@
 import type { StoreApi } from 'zustand/vanilla'
 import { makeTopic } from '../test/fixtures'
 import { memoryStorage } from '../test/memoryStorage'
+import type { Phase } from './phase'
 import { PROGRESS_KEY, SETTINGS_KEY } from './progress'
 import { createAppStore, type AppState } from './store'
 
@@ -8,9 +9,15 @@ const alpha = makeTopic({ id: 'alpha', next: 'beta' })
 const beta = makeTopic({ id: 'beta' })
 const topics: Record<string, typeof alpha> = { alpha, beta }
 
-function setup(options: { reducedMotion?: boolean } = {}) {
+function setup(options: { reducedMotion?: boolean; initialPhase?: Phase; now?: () => number } = {}) {
   const storage = memoryStorage()
-  const store = createAppStore({ getTopic: (_lang, id) => topics[id], storage, reducedMotion: options.reducedMotion })
+  const store = createAppStore({
+    getTopic: (_lang, id) => topics[id],
+    storage,
+    reducedMotion: options.reducedMotion,
+    initialPhase: options.initialPhase,
+    now: options.now,
+  })
   return { store, storage, s: () => store.getState() }
 }
 
@@ -243,5 +250,92 @@ describe('settings and 3D status', () => {
     s().setHovered('laptop')
     s().setExpandOpen(true)
     expect(s()).toMatchObject({ adaPokes: 2, hovered: 'laptop', expandOpen: true })
+  })
+})
+
+describe('time of day', () => {
+  /** A store whose transition clock is `time`, moved by hand. */
+  function timed(options: { reducedMotion?: boolean; initialPhase?: Phase } = {}) {
+    const clock = { time: 1000 }
+    return { ...setup({ ...options, now: () => clock.time }), clock }
+  }
+
+  it('the initial phase comes from the store deps', () => {
+    expect(setup({ initialPhase: 'sunset' }).s()).toMatchObject({ phase: 'sunset', phaseTransition: null, decorReady: false })
+    expect(setup().s().phase).toBe('day')
+  })
+
+  it('advancePhase starts a 2.5 s transition toward the next phase', () => {
+    const { s } = timed()
+    s().advancePhase()
+    expect(s().phase).toBe('sunset')
+    expect(s().phaseTransition).toEqual({ from: 'day', to: 'sunset', startedAt: 1000 })
+  })
+
+  // Review focus 1: repeated clicks on the clock or the Time of day button.
+  it('advancePhase is ignored while a transition runs', () => {
+    const { s, clock } = timed()
+    s().advancePhase()
+    clock.time = 1200
+    s().advancePhase()
+    clock.time = 3499
+    s().advancePhase()
+    expect(s().phase).toBe('sunset')
+    expect(s().phaseTransition).toEqual({ from: 'day', to: 'sunset', startedAt: 1000 })
+  })
+
+  // Review focus 2: the 3D stopped (reading mode, lost context, another zone) before it could finish the transition.
+  it('a stale transition never blocks the next one', () => {
+    const { s, clock } = timed()
+    s().advancePhase()
+    clock.time = 3500
+    s().advancePhase()
+    expect(s().phase).toBe('night')
+    expect(s().phaseTransition).toEqual({ from: 'sunset', to: 'night', startedAt: 3500 })
+  })
+
+  // Review focus 2: nothing can animate the change, so it happens at once and never stays "in transition".
+  it('advancePhase is instant whenever no 3D can animate it', () => {
+    const cases: [string, ReturnType<typeof timed>][] = [
+      ['reduced motion', timed({ reducedMotion: true })],
+      ['reading mode', timed()],
+      ['no WebGL', timed()],
+      ['another zone', timed()],
+      ['a flight', timed()],
+    ]
+    cases[1][1].s().setReadingMode(true)
+    cases[2][1].s().setWebgl('unavailable')
+    cases[3][1].store.setState({ zone: 'workshop' })
+    cases[4][1].s().requestZone('workshop', 'laptop')
+    for (const [name, { s }] of cases) {
+      s().advancePhase()
+      expect(s().phase, name).toBe('sunset')
+      expect(s().phaseTransition, name).toBeNull()
+      s().advancePhase()
+      expect(s().phase, name).toBe('night')
+    }
+  })
+
+  it('finishPhaseTransition and setPhase clear the transition', () => {
+    const { store, s } = timed()
+    s().advancePhase()
+    s().finishPhaseTransition()
+    expect(s()).toMatchObject({ phase: 'sunset', phaseTransition: null })
+    const listener = vi.fn()
+    const unsubscribe = store.subscribe(listener)
+    s().finishPhaseTransition()
+    expect(listener).not.toHaveBeenCalled()
+    unsubscribe()
+    s().advancePhase()
+    s().setPhase('day')
+    expect(s()).toMatchObject({ phase: 'day', phaseTransition: null })
+  })
+
+  it('decorReady is set by setDecorReady', () => {
+    const { s } = setup()
+    s().setDecorReady(true)
+    expect(s().decorReady).toBe(true)
+    s().setDecorReady(false)
+    expect(s().decorReady).toBe(false)
   })
 })

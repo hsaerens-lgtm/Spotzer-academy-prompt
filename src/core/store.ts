@@ -4,6 +4,7 @@ import { getContent } from '../content/load'
 import type { Topic } from '../content/schema'
 import * as engine from '../dialogue/engine'
 import type { Choice, DialogueState } from '../dialogue/engine'
+import { PHASE_SECONDS, nextPhase, parsePhaseParam, phaseForTime, type Phase, type PhaseTransition } from './phase'
 import {
   loadProgress,
   loadSettings,
@@ -44,6 +45,12 @@ export interface AppState {
   hovered: HoverTarget | null
   adaPokes: number
   expandOpen: boolean
+  /** Time of day of the office. */
+  phase: Phase
+  /** The change of phase the 3D scene is animating, or null. */
+  phaseTransition: PhaseTransition | null
+  /** The decor stage (plants, books, frames, pendants) has loaded, or given up on what failed. */
+  decorReady: boolean
 
   requestZone: (to: ZoneId, via?: Via) => void
   transitionStep: () => void
@@ -65,18 +72,29 @@ export interface AppState {
   setHovered: (target: HoverTarget | null) => void
   pokeAda: () => void
   setExpandOpen: (open: boolean) => void
+  /** Next phase: animated over PHASE_SECONDS when the 3D office can show it, instant otherwise; ignored mid-transition. */
+  advancePhase: () => void
+  /** Instant change, without a transition. */
+  setPhase: (phase: Phase) => void
+  finishPhaseTransition: () => void
+  setDecorReady: (ready: boolean) => void
 }
 
 export interface StoreDeps {
   getTopic: (lang: string, id: string) => Topic | undefined
   storage?: StorageLike | null
   reducedMotion?: boolean
+  /** Default 'day'. */
+  initialPhase?: Phase
+  /** Clock of the phase transitions, in milliseconds. Default performance.now(). */
+  now?: () => number
 }
 
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n))
 
 export function createAppStore(deps: StoreDeps): StoreApi<AppState> {
   const { getTopic, storage } = deps
+  const clock = deps.now ?? (() => performance.now())
   return createStore<AppState>()((set, get) => {
     const topicFor = (id: string) => getTopic(get().settings.lang, id)
     const setProgress = (next: Progress) => {
@@ -112,6 +130,9 @@ export function createAppStore(deps: StoreDeps): StoreApi<AppState> {
       hovered: null,
       adaPokes: 0,
       expandOpen: false,
+      phase: deps.initialPhase ?? 'day',
+      phaseTransition: null,
+      decorReady: false,
 
       requestZone: (to, via) => {
         const s = get()
@@ -184,6 +205,20 @@ export function createAppStore(deps: StoreDeps): StoreApi<AppState> {
       setHovered: (target) => set({ hovered: target }),
       pokeAda: () => set({ adaPokes: get().adaPokes + 1 }),
       setExpandOpen: (open) => set({ expandOpen: open }),
+      advancePhase: () => {
+        const s = get()
+        const now = clock()
+        // A transition older than its duration no longer blocks (3D stopped before it could finish it).
+        if (s.phaseTransition && now - s.phaseTransition.startedAt < PHASE_SECONDS * 1000) return
+        const to = nextPhase(s.phase)
+        const animate = !s.reducedMotion && !s.readingMode && s.webgl === 'ok' && s.zone === 'office' && s.transition === null
+        set({ phase: to, phaseTransition: animate ? { from: s.phase, to, startedAt: now } : null })
+      },
+      setPhase: (phase) => set({ phase, phaseTransition: null }),
+      finishPhaseTransition: () => {
+        if (get().phaseTransition) set({ phaseTransition: null })
+      },
+      setDecorReady: (ready) => set({ decorReady: ready }),
     }
   })
 }
@@ -196,9 +231,19 @@ function prefersReducedMotion(): boolean {
   }
 }
 
+/** `?phase=` wins (read once, never written back to the address); otherwise the local time chooses. */
+function initialPhase(): Phase {
+  try {
+    return parsePhaseParam(window.location.search) ?? phaseForTime(new Date())
+  } catch {
+    return 'day'
+  }
+}
+
 export const appStore = createAppStore({
   getTopic: (lang, id) => getContent(lang).topicById.get(id),
   reducedMotion: prefersReducedMotion(),
+  initialPhase: initialPhase(),
 })
 
 export function useApp<T>(selector: (state: AppState) => T): T {

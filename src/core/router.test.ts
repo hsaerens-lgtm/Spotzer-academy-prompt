@@ -65,6 +65,28 @@ describe('startRouter', () => {
     }
   })
 
+  // Review focus 4: `?phase=` is read once at start-up and must survive every hash change.
+  it('the router keeps ?phase in the address', () => {
+    window.history.replaceState(null, '', '/?phase=night#/office')
+    try {
+      const store = newStore()
+      stop = startRouter(store)
+      expect(window.location.search).toBe('?phase=night')
+      store.getState().requestZone('workshop', 'laptop')
+      store.getState().transitionStep()
+      store.getState().transitionStep()
+      expect(window.location.hash).toBe('#/workshop')
+      window.history.replaceState(null, '', '#/office')
+      window.dispatchEvent(new HashChangeEvent('hashchange'))
+      store.getState().transitionStep()
+      expect(store.getState().zone).toBe('office')
+      expect(window.location.hash).toBe('#/office')
+      expect(window.location.search).toBe('?phase=night')
+    } finally {
+      window.history.replaceState(null, '', '/')
+    }
+  })
+
   it('pushes a history entry once the zone has changed', () => {
     window.history.replaceState(null, '', '#/office')
     const store = newStore()
