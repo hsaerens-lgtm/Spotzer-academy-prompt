@@ -22,19 +22,29 @@ test('while the building is read, Ada waits', () => {
   expect(adaMessage({ ...base, attempt: attempt(full) }).text).toBe('The AI is reading your building\u2026')
 })
 
-test('a hole is named with its hint', () => {
+// In the blocks a hole is an empty field, plain to see: there is nothing Ada could have missed in it.
+test('a hole is named with its hint; in the blocks Ada does not ask whether it is already there', () => {
   const message = adaMessage({ ...base, attempt: attempt({ task: 'Write an email' }), revealed: true })
   expect(message).toEqual({
     text: "There's a hole in the building: the Role block is missing. Give the AI a job.",
     mood: 'surprised',
     pointing: true,
-    actions: ['edit', 'alreadyThere'],
+    actions: ['edit'],
   })
 })
 
-test('a weak block names its material', () => {
+test('in free text, a hole may be a detail Ada missed: she offers "It\'s already there"', () => {
+  const free = makeMission({ mode: 'free', level: 2 })
+  const input: PromptInput = { mode: 'free', text: 'Write an email to the client about the late website.' }
+  const message = adaMessage({ ...base, mission: free, attempt: { id: 1, input, evaluation: evaluate(free, input) }, revealed: true })
+  expect(message.text).toMatch(/^There's a hole in the building: the Role block is missing\./)
+  expect(message.actions).toEqual(['edit', 'alreadyThere'])
+})
+
+test('a weak block names its material, and Ada asks whether the detail is already there', () => {
   const message = adaMessage({ ...base, attempt: attempt({ ...full, context: 'Martin' }), revealed: true })
   expect(message.text).toBe('The Context block is only cardboard. Say why it is late.')
+  expect(message.actions).toEqual(['edit', 'alreadyThere'])
 })
 
 test('a crack explains the clash', () => {

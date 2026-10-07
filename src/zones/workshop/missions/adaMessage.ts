@@ -1,7 +1,7 @@
 import type { TFunction } from 'i18next'
 import type { Mood } from '../../../content/schema'
 import { materialOf } from '../../../workshop/building/plan'
-import { adviceFor, blockResult } from '../../../workshop/engine/evaluate'
+import { adviceFor, blockResult, type Advice, type Evaluation } from '../../../workshop/engine/evaluate'
 import { BONUS_BLOCKS, type BlockType, type Detail, type Mission } from '../../../workshop/model'
 import type { Attempt } from '../store'
 
@@ -26,6 +26,14 @@ export interface AdaContext {
   t: TFunction
 }
 
+/**
+ * "It's already there" is for a detail Ada may have missed: in a weak block, or a hole in free text. In the blocks a
+ * hole is an empty field, plain to see: there is nothing she could have missed.
+ */
+export function offersAlreadyThere(advice: Advice, evaluation: Evaluation): advice is Extract<Advice, { kind: 'hole' | 'weak' }> {
+  return advice.kind === 'weak' || (advice.kind === 'hole' && evaluation.source !== 'field')
+}
+
 function baseMessage(c: AdaContext): AdaMessage {
   const { t } = c
   if (c.tip) {
@@ -47,7 +55,7 @@ function baseMessage(c: AdaContext): AdaMessage {
         text: `${t('workshop.ada.hole', { label: c.labels[advice.block] })} ${advice.detail.hint}`,
         mood: 'surprised',
         pointing: true,
-        actions: ['edit', 'alreadyThere'],
+        actions: offersAlreadyThere(advice, c.attempt.evaluation) ? ['edit', 'alreadyThere'] : ['edit'],
       }
     case 'weak':
       return {

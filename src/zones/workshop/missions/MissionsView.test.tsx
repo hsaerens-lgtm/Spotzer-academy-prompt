@@ -111,6 +111,16 @@ test('"It\'s already there" counts the missing detail and rebuilds', async () =>
   expect(await screen.findByText('HOLDS \u00B7 EXCELLENT')).toBeInTheDocument()
 })
 
+test('an empty block is a hole in plain sight: Ada offers to edit it, not "It\'s already there"', async () => {
+  const user = userEvent.setup()
+  renderView('delayed-website')
+  await fill(user, 'Task block', 'Write an email to the client')
+  await user.click(screen.getByRole('button', { name: 'Build & test' }))
+  expect(await adaWillSay(/^There's a hole in the building: the Role block is missing\./)).toBeInTheDocument()
+  expect(ada().getByRole('button', { name: 'Edit my prompt' })).toBeInTheDocument()
+  expect(ada().queryByRole('button', { name: "It's already there" })).toBeNull()
+})
+
 test('Edit my prompt puts the cursor in the weak block', async () => {
   const user = userEvent.setup()
   renderView('delayed-website')

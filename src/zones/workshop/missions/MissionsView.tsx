@@ -9,7 +9,7 @@ import { CORE_BLOCKS, type BlockType, type CoreBlock, type Detail } from '../../
 import { AdaBubble } from '../ada/AdaBubble'
 import { useWorkshop, useWorkshopStore } from '../store'
 import { BevelButton } from '../ui/BevelButton'
-import { adaMessage, type AdaAction, type Tip } from './adaMessage'
+import { adaMessage, offersAlreadyThere, type AdaAction, type Tip } from './adaMessage'
 import { AiOutput } from './AiOutput'
 import { PromptStudio, type StudioHandle } from './PromptStudio'
 
@@ -134,7 +134,7 @@ export function MissionsView({ missionId, onNextMission, renderBuilder, focusOnO
       // Blocks (or a hole, or an edited text): the end of the field. A caret, not a selection, so typing never erases the sentence.
       const sentence = attempt.evaluation.source === 'text' ? testedSpan(advice.block) : undefined
       studio.current?.focusBlock(advice.block, sentence && { start: sentence.end, end: sentence.end })
-    } else if (action === 'alreadyThere' && advice && (advice.kind === 'hole' || advice.kind === 'weak')) {
+    } else if (action === 'alreadyThere' && attempt && advice && offersAlreadyThere(advice, attempt.evaluation)) {
       setSorry(advice.detail)
       setDismissed(null)
       store.getState().alreadyThere(missionId, advice.detail.id)

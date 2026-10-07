@@ -115,7 +115,17 @@ test('the mission list stays in every program, and a mission picked from it keep
 test('a mission opened from the list starts with its own Ada', async () => {
   const user = userEvent.setup()
   await renderApp()
-  await user.type(screen.getByRole('textbox', { name: 'Task block' }), 'Write an email')
+  // A wood context: Ada asks for the new date, which may be "already there".
+  const letter = {
+    'Role block': 'An account manager at a web agency',
+    'Task block': 'Write an email to the client',
+    'Context block': "The client is Martin's Bakery. The photos arrived late, new launch soon.",
+    'Format block': 'Friendly and apologetic, under 120 words',
+  }
+  for (const [name, value] of Object.entries(letter)) {
+    await user.click(screen.getByRole('textbox', { name }))
+    await user.paste(value)
+  }
   await user.click(screen.getByRole('button', { name: 'Build & test' }))
   await user.click(ada().getByRole('button', { name: "It's already there" }))
   expect(ada().getByText(/Sorry, I missed it!/, { selector: '.sr-only' })).toBeInTheDocument()
