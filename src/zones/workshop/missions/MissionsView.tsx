@@ -26,6 +26,8 @@ export interface BuilderSlotProps {
    */
   seen: boolean
   onDone: (runKey: number) => void
+  /** The 3D builder failed during this run and the plan view shows it: the result's announcement says so first. */
+  onUnavailable: (runKey: number) => void
   onBlockClick: (block: CoreBlock) => void
   onReading: (block: CoreBlock | null) => void
 }
@@ -87,6 +89,12 @@ export function MissionsView({ missionId, onNextMission, renderBuilder, focusOnO
     if (focusOnOpen) studio.current?.focusBlock(CORE_BLOCKS[0])
   }, [])
 
+  // The attempt whose building the plan view took over from a failed 3D builder (spec 6.1).
+  const planViewRun = useRef<number | null>(null)
+  const onUnavailable = useCallback((key: number) => {
+    planViewRun.current = key
+  }, [])
+
   // One announcement per revealed result (and per tip), with Ada's words. A result already revealed when the view
   // opens was announced at the time: the first run skips it.
   const opening = useRef(true)
@@ -95,7 +103,8 @@ export function MissionsView({ missionId, onNextMission, renderBuilder, focusOnO
     opening.current = false
     if (tip) store.getState().announce(message.text)
     else if (attempt && revealed && attempt.id > 0 && !first) {
-      store.getState().announce(`${t(`workshop.output.tier.${attempt.evaluation.tier}`)}. ${message.text}`)
+      const fallback = planViewRun.current === attempt.id ? `${t('workshop.builder.unavailable')} ` : ''
+      store.getState().announce(`${fallback}${t(`workshop.output.tier.${attempt.evaluation.tier}`)}. ${message.text}`)
     }
     // Deliberately keyed on a new result or tip only: message.text, store and t follow from them.
   }, [attempt, revealed, tip])
@@ -169,7 +178,7 @@ export function MissionsView({ missionId, onNextMission, renderBuilder, focusOnO
         revealed={revealed}
         reading={reading}
       />
-      {renderBuilder({ input: buildingInput, runKey: attempt?.id ?? 0, seen: revealed, onDone, onBlockClick, onReading: setReading })}
+      {renderBuilder({ input: buildingInput, runKey: attempt?.id ?? 0, seen: revealed, onDone, onUnavailable, onBlockClick, onReading: setReading })}
       <AiOutput
         className="ws-area-output"
         mission={mission}

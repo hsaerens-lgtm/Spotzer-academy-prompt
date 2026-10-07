@@ -250,6 +250,28 @@ test('a 3D failure falls back to the plan view', async () => {
   error.mockRestore()
 })
 
+// F12: the plan view standing in for a failed 3D builder is announced with the result, so the parent is told first.
+test('a 3D failure tells the parent that the plan view stands in for the run, before the run is done', async () => {
+  const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+  scene.mockImplementation(() => {
+    throw new Error('WebGL not available')
+  })
+  const order: string[] = []
+  const onUnavailable = vi.fn((key: number) => order.push(`unavailable ${key}`))
+  const onDone = vi.fn((key: number) => order.push(`done ${key}`))
+  await act(async () => render(<BuilderWindow input={leaning} runKey={1} labels={labels} onDone={onDone} onUnavailable={onUnavailable} />))
+  expect(order).toEqual(['unavailable 1', 'done 1'])
+  error.mockRestore()
+})
+
+test('the plan view chosen from the start (no WebGL) is no fallback', async () => {
+  resetAppStore({ webgl: 'unavailable' })
+  const onUnavailable = vi.fn()
+  const { onDone } = await show({ onUnavailable })
+  expect(onDone).toHaveBeenCalledWith(1)
+  expect(onUnavailable).not.toHaveBeenCalled()
+})
+
 // Review round 1: the real scene throws once its canvas reports a lost context (a captured setter stands in for it).
 test('a WebGL context lost while the scene is on screen hands the run to the plan view', async () => {
   const error = vi.spyOn(console, 'error').mockImplementation(() => {})

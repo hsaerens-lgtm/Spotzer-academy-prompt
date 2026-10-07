@@ -337,6 +337,24 @@ test('the report waits for its building; an older building finishing is ignored;
   expect(corrector().getByText(SCORE_LINE)).toBeInTheDocument()
 })
 
+// F12 and spec 6.1: a report whose building fell back to the plan view is announced with the fallback first.
+test('a report shown in the plan view after a 3D failure is announced with the fallback first', async () => {
+  const user = userEvent.setup()
+  const { store, builder } = await renderHeld()
+  await user.type(promptField(), 'Write a post')
+  await user.click(corrector().getByRole('button', { name: 'Check my prompt' }))
+  await waitFor(() => expect(builder.props?.input).not.toBeNull())
+  act(() => {
+    builder.props!.onUnavailable(1)
+    builder.props!.onDone(1)
+  })
+  await waitFor(() =>
+    expect(store.getState().announcement).toBe(
+      "The 3D builder isn't available here, so here's the plan view. 62/100. Leans. The building leans: the context floor is thin.",
+    ),
+  )
+})
+
 // The workshop unmounts the corrector while another program is open: coming back must not replay the last report.
 test('a revealed report shows again at once when the view opens again: no replay, no second announcement', async () => {
   const user = userEvent.setup()

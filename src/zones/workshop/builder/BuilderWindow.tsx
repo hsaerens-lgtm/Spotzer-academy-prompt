@@ -22,6 +22,8 @@ export interface BuilderWindowProps {
   /** What the window says before the first building; the missions' "after Build & test" by default. */
   emptyText?: string
   onDone?: (runKey: number) => void
+  /** The 3D builder failed during this run: the plan view shows it instead. Called before the run's onDone. */
+  onUnavailable?: (runKey: number) => void
   onBlockClick?: (block: CoreBlock) => void
   onReading?: (block: CoreBlock | null) => void
 }
@@ -42,7 +44,18 @@ let serials = 0
 
 const band = (percent: number) => (percent >= 80 ? 'good' : percent >= 50 ? 'mid' : 'poor')
 
-export function BuilderWindow({ className, input, runKey, labels, seen = false, emptyText, onDone, onBlockClick, onReading }: BuilderWindowProps) {
+export function BuilderWindow({
+  className,
+  input,
+  runKey,
+  labels,
+  seen = false,
+  emptyText,
+  onDone,
+  onUnavailable,
+  onBlockClick,
+  onReading,
+}: BuilderWindowProps) {
   const { t } = useTranslation()
   const threeD = useApp((s) => s.webgl === 'ok' && !s.readingMode)
   const reduced = useApp((s) => s.reducedMotion)
@@ -72,6 +85,12 @@ export function BuilderWindow({ className, input, runKey, labels, seen = false, 
     },
     [onDone],
   )
+  // The plan view takes the run over; a run already done (its result already shown and announced) needs no word on it.
+  const fail = () => {
+    const current = latest.current
+    setFailedRun(current)
+    if (current && reported.current !== current) onUnavailable?.(current.key)
+  }
   // Skip goes away when the run is done: if it had the focus, Reset view takes it rather than the page.
   const skipButton = useCallback((button: HTMLButtonElement | null) => {
     if (!button) return
@@ -126,7 +145,7 @@ export function BuilderWindow({ className, input, runKey, labels, seen = false, 
         ) : use3D ? (
           <>
             {/* Not keyed by run: one canvas (one WebGL context) for every Build & test of this window. */}
-            <SceneBoundary onError={() => setFailedRun(latest.current)}>
+            <SceneBoundary onError={fail}>
               <Suspense fallback={<p className="ws-output__note">{t('workshop.builder.loading')}</p>}>
                 <BuilderScene3D
                   input={run.input}

@@ -22,6 +22,8 @@ export interface CorrectorBuilderProps {
   /** The builder's text before the first check. */
   emptyText: string
   onDone: (runKey: number) => void
+  /** The 3D builder failed during this run and the plan view shows it: the report's announcement says so first. */
+  onUnavailable: (runKey: number) => void
 }
 
 export function CorrectorView({ renderBuilder }: { renderBuilder: (props: CorrectorBuilderProps) => ReactNode }) {
@@ -55,13 +57,21 @@ export function CorrectorView({ renderBuilder }: { renderBuilder: (props: Correc
   // One announcement per report, when its building is shown (keyed on that only: the rest follows from it), and one
   // per failed check and per Run both outcome, as they happen (Ada's bubble is not a live region).
   // The refs skip what the store already held when the view opened: that was announced at the time.
+  // The check whose building the plan view took over from a failed 3D builder (spec 6.1).
+  const planViewRun = useRef<number | null>(null)
+  const onUnavailable = useCallback((key: number) => {
+    planViewRun.current = key
+  }, [])
   const lastRevealed = useRef(revealed)
   useEffect(() => {
     if (lastRevealed.current === revealed) return
     lastRevealed.current = revealed
     if (!revealed || !state.report || !input) return
     const { score, summary } = state.report
-    store.getState().announce(`${t('workshop.corrector.score', { score })}. ${t(`workshop.corrector.verdict.${OUTCOME_FOR_TIER[input.tier]}`)}. ${summary}`)
+    const fallback = planViewRun.current === state.checks ? `${t('workshop.builder.unavailable')} ` : ''
+    store
+      .getState()
+      .announce(`${fallback}${t('workshop.corrector.score', { score })}. ${t(`workshop.corrector.verdict.${OUTCOME_FOR_TIER[input.tier]}`)}. ${summary}`)
   }, [revealed])
 
   const lastStatus = useRef(state.status)
@@ -155,6 +165,7 @@ export function CorrectorView({ renderBuilder }: { renderBuilder: (props: Correc
         // Offline there is no Check my prompt button to point at.
         emptyText: t(state.health === 'offline' ? 'workshop.corrector.builderOffline' : 'workshop.corrector.builderEmpty'),
         onDone,
+        onUnavailable,
       })}
       <ImprovedPanel
         className="ws-area-output"

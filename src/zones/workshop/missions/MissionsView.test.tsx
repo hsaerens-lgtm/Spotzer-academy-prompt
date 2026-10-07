@@ -389,6 +389,30 @@ test('a result whose building was still going up when the view closed is built a
   await waitFor(() => expect(store.getState().announcement).toMatch(/^HOLDS \u00B7 EXCELLENT\. It holds!/))
 })
 
+// F12 and spec 6.1: when the 3D builder fails, the plan view takes over and the announcement says so before the result.
+test('a result shown in the plan view after a 3D failure is announced with the fallback first', async () => {
+  const user = userEvent.setup()
+  const store = makeWorkshopStore()
+  const slot = renderManual('delayed-website', store)
+  await fillLetter(user, { 'Context block': 'The website is late', 'Format block': 'Friendly' })
+  await user.click(screen.getByRole('button', { name: 'Build & test' }))
+  const failed = slot().runKey
+  act(() => {
+    slot().onUnavailable(failed)
+    slot().onDone(failed)
+  })
+  await waitFor(() =>
+    expect(store.getState().announcement).toMatch(
+      /^The 3D builder isn't available here, so here's the plan view\. LEANING · PASSABLE\. The Context block is only cardboard/,
+    ),
+  )
+  // The next test is built in 3D: its result is announced alone.
+  await fillLetter(user)
+  await user.click(screen.getByRole('button', { name: 'Build & test' }))
+  act(() => slot().onDone(slot().runKey))
+  await waitFor(() => expect(store.getState().announcement).toMatch(/^HOLDS · EXCELLENT\. It holds!/))
+})
+
 // The "Next mission" button goes away with the mission it was in: the new mission's first editor takes the focus.
 test('a view opened by "Next mission" puts the cursor in its first editor', () => {
   const open = (missionId: string) =>
