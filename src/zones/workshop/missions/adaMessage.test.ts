@@ -19,7 +19,7 @@ test('before any test, Ada introduces the mission', () => {
 })
 
 test('while the building is read, Ada waits', () => {
-  expect(adaMessage({ ...base, attempt: attempt(full) }).text).toBe('The AI is reading your building…')
+  expect(adaMessage({ ...base, attempt: attempt(full) }).text).toBe('The AI is reading your building\u2026')
 })
 
 test('a hole is named with its hint', () => {

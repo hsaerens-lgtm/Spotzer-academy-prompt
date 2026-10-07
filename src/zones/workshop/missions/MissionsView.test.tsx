@@ -50,7 +50,7 @@ afterEach(() => vi.useRealTimers())
 
 test('Ada introduces the mission and the output waits for a test', () => {
   renderView('delayed-website')
-  expect(screen.getByRole('region', { name: 'PROMPT_STUDIO.EXE — MISSION 1' })).toBeInTheDocument()
+  expect(screen.getByRole('region', { name: 'PROMPT_STUDIO.EXE \u2014 MISSION 1' })).toBeInTheDocument()
   expect(adaSays(/First mission: a client email with bad news/)).toBeInTheDocument()
   expect(screen.getByText('Press Build & test to see what the AI would write.')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Build & test' })).toBeDisabled()
@@ -61,10 +61,10 @@ test('a thin context leans: passable answer, cardboard badge, Ada names the weak
   const { store } = renderView('delayed-website')
   await fillLetter(user, { 'Context block': 'The website is late', 'Format block': 'Friendly' })
   await user.click(screen.getByRole('button', { name: 'Build & test' }))
-  expect(await screen.findByText('LEANING · PASSABLE')).toBeInTheDocument()
+  expect(await screen.findByText('LEANING \u00B7 PASSABLE')).toBeInTheDocument()
   expect(screen.getByText('CARDBOARD')).toBeInTheDocument()
   expect(await adaWillSay(/^The Context block is only cardboard\. Who is the client\?/)).toBeInTheDocument()
-  await waitFor(() => expect(store.getState().announcement).toMatch(/^LEANING · PASSABLE\. The Context block is only cardboard/))
+  await waitFor(() => expect(store.getState().announcement).toMatch(/^LEANING \u00B7 PASSABLE\. The Context block is only cardboard/))
 })
 
 test('a complete prompt holds, passes the mission and offers the next one', async () => {
@@ -72,7 +72,7 @@ test('a complete prompt holds, passes the mission and offers the next one', asyn
   const { onSelect } = renderView('delayed-website')
   await fillLetter(user)
   await user.click(screen.getByRole('button', { name: 'Build & test' }))
-  expect(await screen.findByText('HOLDS · EXCELLENT')).toBeInTheDocument()
+  expect(await screen.findByText('HOLDS \u00B7 EXCELLENT')).toBeInTheDocument()
   expect(await adaWillSay(/^It holds! Every block is solid stone/)).toBeInTheDocument()
   expect(appStore.getState().progress.workshop?.passed).toEqual(['delayed-website'])
   await user.click(await ada().findByRole('button', { name: 'Next mission' }))
@@ -87,7 +87,7 @@ test('"It\'s already there" counts the missing detail and rebuilds', async () =>
   expect(await adaWillSay(/^The Context block is only wood\. When will it be ready\?/)).toBeInTheDocument()
   await user.click(ada().getByRole('button', { name: "It's already there" }))
   expect(await adaWillSay(/^Sorry, I missed it! I was looking for something like "friday"\. It holds!/)).toBeInTheDocument()
-  expect(await screen.findByText('HOLDS · EXCELLENT')).toBeInTheDocument()
+  expect(await screen.findByText('HOLDS \u00B7 EXCELLENT')).toBeInTheDocument()
 })
 
 test('Edit my prompt puts the cursor in the weak block', async () => {
@@ -120,7 +120,7 @@ test('Ctrl+Enter builds and tests', async () => {
   renderView('delayed-website')
   await fill(user, 'Task block', 'Write an email')
   await user.keyboard('{Control>}{Enter}{/Control}')
-  expect(await screen.findByText('COLLAPSED · VAGUE')).toBeInTheDocument()
+  expect(await screen.findByText('COLLAPSED \u00B7 VAGUE')).toBeInTheDocument()
 })
 
 test('Before / After compares the first attempt with the latest one', async () => {
@@ -134,8 +134,8 @@ test('Before / After compares the first attempt with the latest one', async () =
   const output = screen.getByRole('region', { name: 'AI_OUTPUT.TXT' })
   expect(within(output).getByRole('heading', { name: 'Before' })).toBeInTheDocument()
   expect(within(output).getByRole('heading', { name: 'After' })).toBeInTheDocument()
-  expect(within(output).getByText('COLLAPSED · VAGUE')).toBeInTheDocument()
-  expect(within(output).getByText('HOLDS · EXCELLENT')).toBeInTheDocument()
+  expect(within(output).getByText('COLLAPSED \u00B7 VAGUE')).toBeInTheDocument()
+  expect(within(output).getByText('HOLDS \u00B7 EXCELLENT')).toBeInTheDocument()
   // Each side also shows what every block was made of.
   const side = (name: string) => within(within(output).getByRole('heading', { name }).closest('section')!)
   expect(side('Before').getAllByText('HOLE')).toHaveLength(3)
@@ -172,7 +172,7 @@ test('a fix mission starts from its collapsed prompt and Reset restores it', asy
   renderView('plumber-services')
   const editor = screen.getByRole('textbox', { name: 'Your prompt' })
   expect(editor).toHaveValue('Write a services page.')
-  expect(await screen.findByText('COLLAPSED · VAGUE')).toBeInTheDocument()
+  expect(await screen.findByText('COLLAPSED \u00B7 VAGUE')).toBeInTheDocument()
   expect(await screen.findByText(/We offer a wide range of high-quality services/)).toBeInTheDocument()
   expect(await adaWillSay(/^Level 3: this prompt gave the answer you see/)).toBeInTheDocument()
   await user.type(editor, ' For Bram.')
@@ -212,11 +212,11 @@ test('a double click on Build & test reveals the latest run only', async () => {
   await user.dblClick(screen.getByRole('button', { name: 'Build & test' }))
   const latest = slot!.runKey
   act(() => slot!.onDone(latest - 1))
-  expect(screen.getByText('The AI is reading your building…', { selector: '.ws-output__note' })).toBeInTheDocument()
-  expect(screen.queryByText('HOLDS · EXCELLENT')).toBeNull()
-  expect(adaSays('The AI is reading your building…')).toBeInTheDocument()
+  expect(screen.getByText('The AI is reading your building\u2026', { selector: '.ws-output__note' })).toBeInTheDocument()
+  expect(screen.queryByText('HOLDS \u00B7 EXCELLENT')).toBeNull()
+  expect(adaSays('The AI is reading your building\u2026')).toBeInTheDocument()
   act(() => slot!.onDone(latest))
-  expect(await screen.findByText('HOLDS · EXCELLENT')).toBeInTheDocument()
+  expect(await screen.findByText('HOLDS \u00B7 EXCELLENT')).toBeInTheDocument()
   expect(await adaWillSay(/^It holds!/)).toBeInTheDocument()
 })
 
