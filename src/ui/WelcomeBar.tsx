@@ -1,16 +1,14 @@
 import { useTranslation } from 'react-i18next'
 import { appStore, useApp } from '../core/store'
-import { listedMissionIds } from '../workshop/missionIndex'
 import { Button } from './Button'
 import './overlay.css'
+import { useWorkshopLabel } from './useWorkshopLabel'
 
 export function WelcomeBar() {
   const { t } = useTranslation()
   const firstVisit = useApp((s) => !s.progress.firstVisitDone)
   const hasScrolled = useApp((s) => s.hasScrolled)
-  const missionIds = listedMissionIds(useApp((s) => s.settings.lang))
-  // Spec 4.6: the saved id of a mission removed or renamed since is not counted.
-  const missionsPassed = useApp((s) => (s.progress.workshop?.passed ?? []).filter((id) => missionIds.includes(id)).length)
+  const workshopLabel = useWorkshopLabel()
   const { openMenu, requestZone } = appStore.getState()
   return (
     <section className="welcome bottom-panel panel at-card at-card--raised" aria-label={t('app.name')}>
@@ -24,9 +22,7 @@ export function WelcomeBar() {
           {t('welcome.learn')} <span className="arr" aria-hidden="true">→</span>
         </Button>
         <Button variant="ghost" onClick={() => requestZone('workshop', 'laptop')}>
-          {missionsPassed > 0
-            ? t('welcome.workshopProgress', { done: missionsPassed, total: missionIds.length })
-            : t('welcome.workshop')}
+          {workshopLabel}
         </Button>
         <Button variant="ghost" onClick={() => requestZone('dungeon', 'tv')}>
           {t('welcome.dungeon')}
