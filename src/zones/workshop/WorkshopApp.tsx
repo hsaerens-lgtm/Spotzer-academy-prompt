@@ -46,14 +46,12 @@ function Desktop() {
   const selectMission = (id: string) => openMission(id, false)
   const nextMission = (id: string) => openMission(id, true)
   const passedCount = passed.filter((id) => content.missionById.has(id)).length
-  // Every mission passed: Ada's last congratulations runs past her usual four lines, so her row grows (workshop.css).
-  const allDone = content.missions.every((mission) => passed.includes(mission.id))
   const renderBuilder = (props: Omit<BuilderWindowProps, 'className' | 'labels'>) => (
     <BuilderWindow className="ws-area-builder" labels={content.labels} {...props} />
   )
 
   return (
-    <div className={`ws-desktop ws-desktop--${view}${view === 'missions' && allDone ? ' ws-desktop--all-done' : ''}`} data-testid="workshop">
+    <div className={`ws-desktop ws-desktop--${view}`} data-testid="workshop">
       <DesktopIcons onOpen={setView} />
       {/* On the left in every program, and outside the views: picking a mission keeps the focus on it. */}
       <MissionList

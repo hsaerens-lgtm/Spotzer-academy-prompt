@@ -82,6 +82,15 @@ test('Escape and the close button dismiss the bubble; actions are shown', async 
   expect(onDismiss).toHaveBeenCalledTimes(2)
 })
 
+// A line past four lines of the narrowest bubble marks the bubble long: the desktop gives Ada's row more room for it.
+test('a line of more than 180 characters makes the bubble long', () => {
+  const { rerender } = render(<AdaBubble text={'x'.repeat(180)} />)
+  const bubble = () => document.querySelector('.ws-bubble')
+  expect(bubble()).not.toHaveClass('ws-bubble--long')
+  rerender(<AdaBubble text={'x'.repeat(181)} />)
+  expect(bubble()).toHaveClass('ws-bubble--long')
+})
+
 test('without text only Ada is shown', () => {
   const { container } = render(<AdaBubble text={null} />)
   expect(container.querySelector('.ws-bubble')).toBeNull()

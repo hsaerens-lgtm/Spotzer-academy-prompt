@@ -16,6 +16,9 @@ export interface AdaBubbleProps {
 
 const noop = () => {}
 
+/** Past this many characters a line runs over four lines of the narrowest bubble: the desktop grows Ada's row for it. */
+export const LONG_LINE = 180
+
 /**
  * Types its line with blips; screen readers get the whole line at once. Keyed on the text, so every line starts from
  * nothing. The rest of the line already holds its place, hidden: the bubble has its final size from the first
@@ -53,7 +56,7 @@ export function AdaBubble({ text, mood = 'neutral', pointing = false, actions, o
   return (
     <aside className="ws-ada-dock" aria-label={t('workshop.ada.name')}>
       {text && (
-        <div className="ws-bubble">
+        <div className={text.length > LONG_LINE ? 'ws-bubble ws-bubble--long' : 'ws-bubble'}>
           <p className="ws-bubble__text">
             <TypedText key={text} text={text} reduced={reduced} />
           </p>

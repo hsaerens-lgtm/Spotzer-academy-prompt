@@ -226,23 +226,6 @@ test('the workshop is done when its six real missions are passed, whatever else 
   expect(appStore.getState().progress.workshopDone).toBe(true)
 })
 
-// Ada's last congratulations (success, takeaway, bonus and the pointer to the office console) runs past her usual four
-// lines: once every mission is passed, the missions desktop gives her row the room for it, and keeps it for every line
-// she says from then on (no window moves between two of them). The fit itself is measured in the browser, in
-// tests/e2e/workshop.spec.ts.
-test('once every mission is passed, the missions desktop makes room for Ada', async () => {
-  const user = userEvent.setup()
-  for (const id of MISSION_IDS.slice(1)) appStore.getState().passWorkshopMission(id, 'Prompt', MISSION_IDS)
-  await renderApp()
-  const desktop = screen.getByTestId('workshop')
-  expect(desktop).not.toHaveClass('ws-desktop--all-done')
-  act(() => appStore.getState().passWorkshopMission(MISSION_IDS[0], 'Prompt', MISSION_IDS))
-  expect(desktop).toHaveClass('ws-desktop--all-done')
-  // The corrector has its own Ada, with its own lines.
-  await user.click(within(screen.getByRole('navigation', { name: 'Taskbar' })).getByRole('button', { name: 'Corrector' }))
-  expect(desktop).not.toHaveClass('ws-desktop--all-done')
-})
-
 // Escape never leaves the workshop: it closes the Athena menu first, then Ada's bubble.
 test("Escape closes the Athena menu first, then Ada's bubble", async () => {
   const user = userEvent.setup()

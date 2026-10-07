@@ -63,8 +63,8 @@
 .ws-icon__label { font-family: var(--ws-chrome); font-size: 17px; }
 
 /* Ada has her own place in the desktop grid (under the output, bottom right): her bubble never covers a window. Her
-   row has a fixed height (four lines and the buttons, eight once every mission is passed): a longer line scrolls inside
-   the bubble, no window moves while she talks. */
+   row has a fixed height (four lines and the buttons, eight for a long line, from its first character): no window moves
+   while she types. */
 .ws-ada-dock { grid-area: ada; display: flex; align-items: flex-end; justify-content: flex-end; gap: 10px; min-width: 0; min-height: 0; }
 .ws-bubble {
   position: relative; display: flex; flex-direction: column; flex: 0 1 auto; min-width: 0; max-width: 460px; max-height: 100%;
@@ -203,8 +203,8 @@
 .ws-changes { margin: 0 0 10px; padding-left: 18px; font-size: 14px; }
 
 /* Desktop grid: icons | missions | studio | builder (top), output (middle) and Ada (bottom), taskbar across.
-   Ada's row is reserved for her tallest bubble (four lines and the buttons): the builder and the output share the rest
-   and keep their size whatever she says, so nothing is covered and nothing moves. */
+   Ada's row is reserved for her bubble (four lines and the buttons, four more for a long line): the builder and the
+   output share the rest, so nothing is covered and nothing moves while she types. */
 .ws-desktop {
   --ws-ada-row: 140px;
   display: grid; gap: 12px; padding: 12px 12px 0;
@@ -216,10 +216,10 @@
     'icons missions studio ada'
     'task task task task';
 }
-/* Every mission passed: Ada's last congratulations (success, takeaway, bonus and the pointer to the office console, up
-   to 366 characters) takes eight lines in the narrowest bubble (1280 px wide). Her row gets four more lines (4 x 21 px)
-   for the whole all-done state, so no window moves between two of her lines. */
-.ws-desktop--all-done { --ws-ada-extra: 84px; }
+/* A long line (a lesson with its bonus, or the last congratulations with the pointer to the office console: up to 366
+   characters) takes eight lines in the narrowest bubble (1280 px wide). While Ada says one, her row gets four more lines
+   (4 x 21 px), so the lesson shows in full. */
+.ws-desktop:has(.ws-bubble--long) { --ws-ada-extra: 84px; }
 .ws-area-missions { grid-area: missions; }
 .ws-area-studio { grid-area: studio; }
 .ws-area-builder { grid-area: builder; }
@@ -245,6 +245,6 @@
   /* The building fills whatever height its window gets: no scroll bar inside the builder. */
   .ws-builder { min-height: 0; }
   .ws-builder__canvas { min-height: 100px; }
-  /* Ada's taller all-done row leaves the builder a little less. */
-  .ws-desktop--all-done .ws-builder__canvas { min-height: 80px; }
+  /* Ada's taller row for a long line leaves the builder a little less. */
+  .ws-desktop:has(.ws-bubble--long) .ws-builder__canvas { min-height: 80px; }
 }

@@ -403,3 +403,36 @@ test.describe('all six missions passed, smallest supported viewport (1280 x 600)
     }
   })
 })
+
+// The lesson of a passed mission before the last one (success, takeaway and the bonus line: 262 characters for this
+// one) shows in full too, without scrolling inside Ada's bubble: a long line gives her row more room, and every window
+// stays on the screen.
+async function passWithBonus(page: Page) {
+  await openWorkshop(page, '?mission=plumber-services')
+  await fill(page, 'Your prompt', lastMission.text)
+  await buildAndWait(page, 'HOLDS · EXCELLENT')
+  expect((await state(page)).progress.workshopDone).toBe(false)
+  const ada = page.getByRole('complementary', { name: 'Ada' })
+  const bubble = ada.locator('.ws-bubble__text')
+  await expect(bubble).toContainText('Bonus points: your extra blocks reinforce the building.')
+  await adaDone(page)
+  expect(await bubble.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(0)
+  const viewport = page.viewportSize()!
+  const windows = ['MISSIONS.EXE', 'PROMPT_STUDIO.EXE — MISSION 5', 'BUILDER.EXE', 'AI_OUTPUT.TXT'].map((name) => page.getByRole('region', { name }))
+  for (const area of [...windows, ada]) {
+    const box = (await area.boundingBox())!
+    expect(box.y + box.height).toBeLessThanOrEqual(viewport.height)
+    expect(box.x + box.width).toBeLessThanOrEqual(viewport.width)
+  }
+}
+
+test('a passed mission with a bonus block: Ada says the whole lesson', async ({ page }) => {
+  await passWithBonus(page)
+})
+
+test.describe('a passed mission with a bonus block, smallest supported viewport (1280 x 600)', () => {
+  test.use({ viewport: { width: 1280, height: 600 }, contextOptions: { screen: { width: 1280, height: 720 } } })
+  test('Ada says the whole lesson', async ({ page }) => {
+    await passWithBonus(page)
+  })
+})
