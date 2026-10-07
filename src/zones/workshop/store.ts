@@ -3,7 +3,7 @@ import { useStore } from 'zustand'
 import { createStore, type StoreApi } from 'zustand/vanilla'
 import type { WorkshopContent } from '../../workshop/content'
 import { assemblePrompt, evaluate, type Evaluation } from '../../workshop/engine/evaluate'
-import type { ApiError, BlockType, CorrectRequest, CorrectorReport, Mission, PromptInput } from '../../workshop/model'
+import type { ApiError, BlockType, CorrectRequest, CorrectorReport, Mission, PromptInput, RunResponse } from '../../workshop/model'
 
 export type WorkshopView = 'missions' | 'prompts' | 'corrector'
 
@@ -35,13 +35,16 @@ export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: ApiError 
 export interface CorrectorApi {
   health(): Promise<ApiResult<{ corrector: boolean }>>
   correct(body: CorrectRequest): Promise<ApiResult<CorrectorReport>>
-  run(prompt: string): Promise<ApiResult<{ answer: string }>>
+  run(prompt: string): Promise<ApiResult<RunResponse>>
 }
 
 export interface RunState {
   status: 'idle' | 'running' | 'done' | 'error'
   original: string | null
   improved: string | null
+  /** The answer was cut at the length limit (the answers are capped): the view says so under it. */
+  originalTruncated: boolean
+  improvedTruncated: boolean
   error: ApiError | null
 }
 
@@ -101,7 +104,7 @@ export interface WorkshopDeps {
   api: CorrectorApi
 }
 
-const IDLE_RUN: RunState = { status: 'idle', original: null, improved: null, error: null }
+const IDLE_RUN: RunState = { status: 'idle', original: null, improved: null, originalTruncated: false, improvedTruncated: false, error: null }
 
 function initialDraft(mission: Mission): PromptInput {
   if (mission.mode === 'blocks') return { mode: 'blocks', blocks: {} }
@@ -240,7 +243,16 @@ export function createWorkshopStore({ content, passMission, api }: WorkshopDeps)
         // A re-check made a newer report (and reset the run) while these answers were on their way: they are about the old one.
         if (get().corrector.checks !== checks) return
         if (original.ok && improved.ok) {
-          patchCorrector({ run: { status: 'done', original: original.data.answer, improved: improved.data.answer, error: null } })
+          patchCorrector({
+            run: {
+              status: 'done',
+              original: original.data.answer,
+              improved: improved.data.answer,
+              originalTruncated: original.data.truncated === true,
+              improvedTruncated: improved.data.truncated === true,
+              error: null,
+            },
+          })
         } else {
           const error = !original.ok ? original.error : !improved.ok ? improved.error : 'error'
           patchCorrector({ run: { ...IDLE_RUN, status: 'error', error } })

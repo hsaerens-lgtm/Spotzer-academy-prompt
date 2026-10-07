@@ -2,7 +2,7 @@
 import { makeBlocksFile, makeReport } from '../src/test/workshopFixtures'
 import { readConfig } from './config.ts'
 import { REPORT_JSON_SCHEMA, correctPrompt, parseReport } from './correct.ts'
-import type { CallOptions, CallResult } from './openai.ts'
+import { callOpenAI, type CallOptions, type CallResult, type FetchLike } from './openai.ts'
 import { runPrompt } from './run.ts'
 
 const config = readConfig({ OPENAI_API_KEY: 'test-key' })
@@ -53,4 +53,26 @@ test('running a prompt returns the answer, errors are mapped', async () => {
   expect(await runPrompt('Hi', deps(async () => ({ ok: false, error: 'timeout' })))).toEqual({ ok: false, error: 'timeout' })
   expect(await runPrompt('Hi', deps(async () => ({ ok: false, error: 'upstream' })))).toEqual({ ok: false, error: 'unavailable' })
   expect(await runPrompt('Hi', deps(async () => ({ ok: false, error: 'refused' })))).toEqual({ ok: false, error: 'error' })
+  expect(await runPrompt('Hi', deps(async () => ({ ok: false, error: 'incomplete' })))).toEqual({ ok: false, error: 'error' })
+})
+
+// Spec 3.9: "Run both" answers are capped; one cut at the cap is shown, marked as cut.
+test('running a prompt accepts an answer cut at the cap and says it was cut', async () => {
+  const call = vi.fn(async (_options: CallOptions): Promise<CallResult> => ({ ok: true, text: 'Dear Martin, the launch', truncated: true }))
+  expect(await runPrompt('Hi', deps(call))).toEqual({ ok: true, answer: 'Dear Martin, the launch', truncated: true })
+  expect(call.mock.calls[0][0]).toMatchObject({ maxOutputTokens: config.maxOutputRun, acceptTruncated: true })
+})
+
+// Through the real callOpenAI: a fake fetch answers as the Responses API does when the cap is reached.
+test('runPrompt over callOpenAI returns the text OpenAI wrote before the cap', async () => {
+  const incomplete = {
+    status: 'incomplete',
+    incomplete_details: { reason: 'max_output_tokens' },
+    output: [{ type: 'message', content: [{ type: 'output_text', text: 'Dear Martin, the launch' }] }],
+  }
+  const fetchImpl: FetchLike = async () => new Response(JSON.stringify(incomplete), { status: 200, headers: { 'Content-Type': 'application/json' } })
+  const result = await runPrompt('Hi', deps((options) => callOpenAI(options, fetchImpl)))
+  expect(result).toEqual({ ok: true, answer: 'Dear Martin, the launch', truncated: true })
+  // A check never takes a cut report: the same answer is an incomplete call, retried, then an error.
+  expect(await correctPrompt(request, deps((options) => callOpenAI(options, fetchImpl)))).toEqual({ ok: false, error: 'error' })
 })

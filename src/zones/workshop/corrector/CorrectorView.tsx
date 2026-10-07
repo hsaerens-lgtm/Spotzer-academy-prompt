@@ -7,7 +7,7 @@ import { isSubmitShortcut } from '../keys'
 import { useWorkshop, useWorkshopStore } from '../store'
 import { BevelButton } from '../ui/BevelButton'
 import { Window } from '../ui/Window'
-import { ImprovedPanel } from './ImprovedPanel'
+import { ImprovedPanel, runErrorKey } from './ImprovedPanel'
 import { Report } from './Report'
 import { useFocusReturn } from './useFocusReturn'
 
@@ -76,7 +76,7 @@ export function CorrectorView({ renderBuilder }: { renderBuilder: (props: Correc
     lastRun.current = state.run
     const { status, error } = state.run
     if (status === 'done') store.getState().announce(t('workshop.corrector.ran'))
-    else if (status === 'error' && error) store.getState().announce(t(`workshop.corrector.errors.${error}`))
+    else if (status === 'error' && error) store.getState().announce(t(runErrorKey(error)))
   }, [state.run])
 
   const adaText =

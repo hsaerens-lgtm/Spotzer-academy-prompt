@@ -150,7 +150,8 @@ export function createHandler(deps: HandlerDeps) {
     const decision = deps.limiter.take(clientKey(req, deps.config.trustProxy))
     if (!decision.ok) return finish(429, { error: 'rate' }, { 'Retry-After': String(decision.retryAfter) })
     const result = await runPrompt(parsed.data.prompt, { config: deps.config, apiKey, call: deps.call })
-    return result.ok ? finish(200, { answer: result.answer }) : finish(statusFor(result.error), { error: result.error })
+    if (!result.ok) return finish(statusFor(result.error), { error: result.error })
+    return finish(200, result.truncated ? { answer: result.answer, truncated: true } : { answer: result.answer })
   }
 
   return async (req: IncomingMessage, res: ServerResponse): Promise<void> => {

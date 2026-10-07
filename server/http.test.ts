@@ -86,6 +86,14 @@ test('runs a prompt', async () => {
   expect(await response.json()).toEqual({ answer: 'Hello!' })
 })
 
+test('runs a prompt whose answer was cut at the cap: the answer comes back marked as truncated', async () => {
+  await start()
+  call.mockResolvedValueOnce({ ok: true, text: 'Dear Martin, the launch', truncated: true })
+  const response = await post('/api/run', { prompt: 'Write the email' })
+  expect(response.status).toBe(200)
+  expect(await response.json()).toEqual({ answer: 'Dear Martin, the launch', truncated: true })
+})
+
 test('refuses bad input: broken JSON, wrong shape, too large, not JSON, another origin', async () => {
   await start()
   expect((await post('/api/correct', '{not json')).status).toBe(400)

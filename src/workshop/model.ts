@@ -145,7 +145,8 @@ export const correctRequestSchema = z
   })
   .strict()
 export const runRequestSchema = z.object({ prompt: z.string().trim().min(1).max(MAX_RUN_PROMPT) }).strict()
-export const runResponseSchema = z.object({ answer: z.string() }).strict()
+/** A run's answer; `truncated` when it was cut at the length limit (spec 3.9: the answers are capped). */
+export const runResponseSchema = z.object({ answer: z.string(), truncated: z.boolean().optional() }).strict()
 export const healthSchema = z.object({ corrector: z.boolean() }).strict()
 export const API_ERRORS = ['invalid', 'rate', 'timeout', 'unavailable', 'error'] as const
 export type ApiError = (typeof API_ERRORS)[number]
@@ -161,3 +162,4 @@ export type MissionIndex = z.infer<typeof missionIndexSchema>
 export type BlocksFile = z.infer<typeof blocksFileSchema>
 export type CorrectorReport = z.infer<typeof correctorReportSchema>
 export type CorrectRequest = z.infer<typeof correctRequestSchema>
+export type RunResponse = z.infer<typeof runResponseSchema>

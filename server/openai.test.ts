@@ -48,6 +48,28 @@ test('an incomplete or refused answer is reported as such', async () => {
   expect(await callOpenAI(options, async () => reply(refusal))).toEqual({ ok: false, error: 'refused' })
 })
 
+// Spec 3.9, "Run both": the answers are capped. An answer cut at the cap is still an answer, for a caller that takes one.
+test('an answer cut at max_output_tokens is returned as truncated, only to a caller that accepts it', async () => {
+  const capped = (text: string) => ({
+    status: 'incomplete',
+    incomplete_details: { reason: 'max_output_tokens' },
+    output: [{ type: 'reasoning' }, { type: 'message', content: [{ type: 'output_text', text }] }],
+  })
+  const run = { ...options, jsonSchema: undefined, acceptTruncated: true }
+  const fetchMock = vi.fn<FetchLike>(async () => reply(capped('Dear Martin, the launch')))
+  expect(await callOpenAI(run, fetchMock)).toEqual({ ok: true, text: 'Dear Martin, the launch', truncated: true })
+  // Never sent to OpenAI: it is about how the answer is read.
+  expect(JSON.parse(fetchMock.mock.calls[0][1].body as string)).not.toHaveProperty('acceptTruncated')
+  // A report cut short is no report.
+  expect(await callOpenAI(options, async () => reply(capped('{"score":')))).toEqual({ ok: false, error: 'incomplete' })
+  // Nothing written before the cap (all of it spent on reasoning), or cut for another reason: still incomplete.
+  expect(await callOpenAI(run, async () => reply(capped('')))).toEqual({ ok: false, error: 'incomplete' })
+  const filtered = { ...capped('Dear'), incomplete_details: { reason: 'content_filter' } }
+  expect(await callOpenAI(run, async () => reply(filtered))).toEqual({ ok: false, error: 'incomplete' })
+  const refused = { ...capped(''), output: [{ type: 'message', content: [{ type: 'refusal', refusal: 'No.' }] }] }
+  expect(await callOpenAI(run, async () => reply(refused))).toEqual({ ok: false, error: 'refused' })
+})
+
 test('an HTTP error or a network failure is an upstream error', async () => {
   expect(await callOpenAI(options, async () => reply({ error: { message: 'bad key' } }, 401))).toEqual({ ok: false, error: 'upstream' })
   expect(await callOpenAI(options, async () => Promise.reject(new Error('offline')))).toEqual({ ok: false, error: 'upstream' })

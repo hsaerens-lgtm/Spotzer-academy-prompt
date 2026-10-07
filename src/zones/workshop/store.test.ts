@@ -220,6 +220,28 @@ describe('corrector', () => {
       status: 'done',
       original: 'Answer to: Write a post',
       improved: `Answer to: ${makeReport().improvedPrompt}`,
+      originalTruncated: false,
+      improvedTruncated: false,
+      error: null,
+    })
+  })
+
+  // Spec 3.9: the answers are capped; the view says which one was cut at the length limit.
+  it('keeps which answer was cut at the length limit', async () => {
+    const run = vi.fn(async (prompt: string) => ({
+      ok: true as const,
+      data: prompt === 'Write a post' ? { answer: 'Dear Martin, the', truncated: true } : { answer: 'A whole answer.' },
+    }))
+    const store = makeWorkshopStore({ api: { run } })
+    store.getState().setCorrectorPrompt('Write a post')
+    await store.getState().checkPrompt()
+    await store.getState().runBoth()
+    expect(store.getState().corrector.run).toEqual({
+      status: 'done',
+      original: 'Dear Martin, the',
+      improved: 'A whole answer.',
+      originalTruncated: true,
+      improvedTruncated: false,
       error: null,
     })
   })
@@ -300,7 +322,7 @@ describe('corrector', () => {
     const first = makeReport({ improvedPrompt: 'First improved prompt.' })
     const second = makeReport({ score: 90, improvedPrompt: 'Second improved prompt.' })
     const twoReports = () => vi.fn().mockResolvedValueOnce({ ok: true, data: first }).mockResolvedValueOnce({ ok: true, data: second })
-    const idle = { status: 'idle', original: null, improved: null, error: null }
+    const idle = { status: 'idle', original: null, improved: null, originalTruncated: false, improvedTruncated: false, error: null }
 
     it('drops the result of a run that started on an older report', async () => {
       const { pending, run } = pendingRuns()
@@ -332,7 +354,14 @@ describe('corrector', () => {
       pending[2].resolve('fresh original')
       pending[3].resolve('fresh improved')
       await fresh
-      expect(store.getState().corrector.run).toEqual({ status: 'done', original: 'fresh original', improved: 'fresh improved', error: null })
+      expect(store.getState().corrector.run).toEqual({
+        status: 'done',
+        original: 'fresh original',
+        improved: 'fresh improved',
+        originalTruncated: false,
+        improvedTruncated: false,
+        error: null,
+      })
     })
 
     it('does not start a run while a check is in flight', async () => {

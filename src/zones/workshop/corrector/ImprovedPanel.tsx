@@ -1,13 +1,20 @@
 import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { diffWords } from '../../../workshop/diff'
-import type { CorrectorReport } from '../../../workshop/model'
+import type { ApiError, CorrectorReport } from '../../../workshop/model'
 import { CopyFallbackField } from '../CopyFallbackField'
 import { useCopyWithFallback } from '../copy'
 import type { RunState } from '../store'
 import { BevelButton } from '../ui/BevelButton'
 import { Window } from '../ui/Window'
 import { useFocusReturn } from './useFocusReturn'
+
+/**
+ * What a failed Run both says. The limit, a timeout or an unreachable AI read the same as for a check; the check's other
+ * texts speak of the check ("can't be checked", "went wrong with the check"), so a run has its own.
+ */
+export const runErrorKey = (error: ApiError) =>
+  error === 'rate' || error === 'timeout' || error === 'unavailable' ? `workshop.corrector.errors.${error}` : 'workshop.corrector.runError'
 
 export interface ImprovedPanelProps {
   className?: string
@@ -77,16 +84,18 @@ export function ImprovedPanel({ className, offline = false, report, revealed, ch
             </>
           )}
           {running && <p className="ws-output__note">{t('workshop.corrector.running')}</p>}
-          {run.status === 'error' && run.error && <p className="ws-error">{t(`workshop.corrector.errors.${run.error}`)}</p>}
+          {run.status === 'error' && run.error && <p className="ws-error">{t(runErrorKey(run.error))}</p>}
           {run.status === 'done' && (
             <div className="ws-compare">
               <section className="ws-compare__side">
                 <h3 className="ws-compare__title">{t('workshop.corrector.yours')}</h3>
                 <p className="ws-answer__text">{run.original}</p>
+                {run.originalTruncated && <p className="ws-answer__note">{t('workshop.corrector.truncated')}</p>}
               </section>
               <section className="ws-compare__side">
                 <h3 className="ws-compare__title">{t('workshop.corrector.improvedAnswer')}</h3>
                 <p className="ws-answer__text">{run.improved}</p>
+                {run.improvedTruncated && <p className="ws-answer__note">{t('workshop.corrector.truncated')}</p>}
               </section>
             </div>
           )}

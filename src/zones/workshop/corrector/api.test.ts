@@ -20,6 +20,15 @@ test('posts the prompt and validates the report', async () => {
   expect(JSON.parse(init.body as string)).toEqual({ prompt: 'Write', lang: 'en' })
 })
 
+test('a run answer cut at the length limit keeps its truncated flag; anything else extra is refused', async () => {
+  expect(await createCorrectorApi(async () => json({ answer: 'Dear Martin', truncated: true })).run('Hi')).toEqual({
+    ok: true,
+    data: { answer: 'Dear Martin', truncated: true },
+  })
+  expect(await createCorrectorApi(async () => json({ answer: 'Dear Martin' })).run('Hi')).toEqual({ ok: true, data: { answer: 'Dear Martin' } })
+  expect(await createCorrectorApi(async () => json({ answer: 'Dear Martin', truncated: 'yes' })).run('Hi')).toEqual({ ok: false, error: 'error' })
+})
+
 test('maps errors from the body, the status or the network', async () => {
   expect(await createCorrectorApi(async () => json({ error: 'rate' }, 429)).run('Hi')).toEqual({ ok: false, error: 'rate' })
   expect(await createCorrectorApi(async () => new Response('<html>Bad gateway</html>', { status: 502 })).run('Hi')).toEqual({ ok: false, error: 'unavailable' })

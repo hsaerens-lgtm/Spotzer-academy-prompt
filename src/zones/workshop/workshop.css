@@ -144,6 +144,7 @@
 .ws-tier--excellent { background: var(--oe-lime); }
 .ws-tier--passable { background: var(--oe-warn); }
 .ws-tier--vague { background: var(--oe-danger); color: var(--at-on-dark); }
+.ws-answer__note { margin: 6px 0 0; font-size: 13px; color: var(--at-on-dark-2); }
 .ws-answer__text { margin: 0; padding: 8px 10px; white-space: pre-wrap; font-size: 14px; line-height: 1.55; background: var(--at-ink); border: 1px dashed var(--at-hairline-2); }
 .ws-compare { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
 .ws-compare__title { margin: 0 0 6px; font-family: var(--ws-chrome); font-size: 18px; font-weight: 400; }

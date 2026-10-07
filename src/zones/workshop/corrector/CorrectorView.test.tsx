@@ -203,6 +203,42 @@ test('Run both shows both real answers side by side', async () => {
   expect(panel.getByRole('heading', { name: 'With the improved prompt' })).toBeInTheDocument()
 })
 
+// Spec 3.9: the answers are capped. One cut at the length limit is still shown, with a note under it.
+test('an answer cut at the length limit is shown with a note under it', async () => {
+  const user = userEvent.setup()
+  const run = vi.fn<CorrectorApi['run']>(async (prompt) =>
+    prompt === 'Write a post' ? { ok: true, data: { answer: 'Dear Martin, the launch', truncated: true } } : { ok: true, data: { answer: 'A whole answer.' } },
+  )
+  await renderView({ run })
+  await user.type(promptField(), 'Write a post')
+  await user.click(corrector().getByRole('button', { name: 'Check my prompt' }))
+  await user.click(await output().findByRole('button', { name: 'Run both' }))
+  const answer = await output().findByText('Dear Martin, the launch')
+  const notes = output().getAllByText('The answer was cut short at the length limit.')
+  expect(notes).toHaveLength(1)
+  expect(answer.nextElementSibling).toBe(notes[0])
+  expect(output().getByText('A whole answer.').nextElementSibling).toBeNull()
+})
+
+// The check's own error text speaks of the check: a failed run says it was the run.
+test('a failed Run both says the run went wrong, not the check', async () => {
+  const user = userEvent.setup()
+  const run = vi.fn<CorrectorApi['run']>().mockResolvedValueOnce({ ok: false, error: 'error' }).mockResolvedValue({ ok: false, error: 'invalid' })
+  const store = await renderView({ run })
+  await user.type(promptField(), 'Write a post')
+  await user.click(corrector().getByRole('button', { name: 'Check my prompt' }))
+  await user.click(await output().findByRole('button', { name: 'Run both' }))
+  const message = 'Something went wrong while running the prompts. Try again.'
+  expect(await output().findByText(message)).toBeInTheDocument()
+  expect(screen.queryByText(/with the check/)).toBeNull()
+  await waitFor(() => expect(store.getState().announcement).toBe(message))
+  // A prompt the server refuses to run is not a prompt that "can't be checked".
+  await user.click(output().getByRole('button', { name: 'Run both' }))
+  await waitFor(() => expect(store.getState().corrector.run.error).toBe('invalid'))
+  expect(output().getByText(message)).toBeInTheDocument()
+  expect(screen.queryByText(/can't be checked/)).toBeNull()
+})
+
 test('Run both is disabled while its answers or a new check are on their way', async () => {
   const user = userEvent.setup()
   let release!: () => void
