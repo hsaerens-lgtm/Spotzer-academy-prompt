@@ -8,7 +8,7 @@ import { AdaController } from './AdaController'
 import { CameraRig } from './camera/CameraRig'
 import { CrtScreen } from './CrtScreen'
 import { objectActions } from './interactions'
-import { layout } from './layout'
+import { CONTACT_SHADOW_Y, layout } from './layout'
 import { Lights } from './Lights'
 import { Room } from './Room'
 import { WallScreen3D } from './WallScreen3D'
@@ -45,7 +45,7 @@ export function OfficeScene() {
       <WallScreen3D />
       <AdaController />
       <ContactShadows
-        position={[layout.ada.position[0], 0.006, layout.ada.position[2]]}
+        position={[layout.ada.position[0], CONTACT_SHADOW_Y, layout.ada.position[2]]}
         scale={1.4}
         opacity={0.35}
         blur={2.5}
@@ -54,7 +54,7 @@ export function OfficeScene() {
         frames={1}
       />
       <ContactShadows
-        position={[table.position[0], 0.006, table.position[2]]}
+        position={[table.position[0], CONTACT_SHADOW_Y, table.position[2]]}
         scale={[5, 7.5]}
         opacity={0.55}
         blur={2.4}
