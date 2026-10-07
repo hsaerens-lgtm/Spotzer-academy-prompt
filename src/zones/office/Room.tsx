@@ -1,6 +1,5 @@
 import { materials } from '../../three/materials'
-
-export const ROOM = { width: 10, depth: 12, height: 3.2 }
+import { ROOM } from './layout'
 const WINDOW = { centerZ: -2.0, centerY: 1.65, width: 3.4, height: 2.1 }
 
 function LeftWall() {

@@ -7,6 +7,7 @@ import { appStore } from '../../../core/store'
 import { layout, layoutVersion } from '../layout'
 import {
   FLIGHT_SECONDS,
+  PARALLAX,
   RAIL_SMOOTH_TIME,
   easeInOutCubic,
   lerpPose,
@@ -15,8 +16,6 @@ import {
   wheelDelta,
   type PoseVectors,
 } from './railMath'
-
-const PARALLAX = { x: 0.35, y: 0.18 }
 
 export function CameraRig() {
   const camera = useThree((s) => s.camera)

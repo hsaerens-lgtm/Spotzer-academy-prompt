@@ -1,6 +1,6 @@
 import { bumpLayout, layout, type Vec3 } from './layout'
 
-export const TUNABLE = ['ada', 'screen', 'table', 'sideboard', 'lamp', 'laptop', 'cabinet', 'tv', 'retroConsole', 'sofa', 'logo'] as const
+export const TUNABLE = ['ada', 'screen', 'table', 'sideboard', 'lamp', 'laptop', 'tvStand', 'tv', 'retroConsole', 'sofa', 'logo', 'clock', 'cabinet', 'coffeeTable', 'shelves'] as const
 export type Tunable = (typeof TUNABLE)[number]
 
 export function isTuneEnabled(search: string, dev: boolean): boolean {

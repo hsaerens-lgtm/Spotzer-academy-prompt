@@ -15,7 +15,7 @@ import { WallScreen3D } from './WallScreen3D'
 
 export function OfficeScene() {
   const quality = useContext(QualityContext)
-  const { table, chairs, microphones, sideboard, lamp, laptop, cabinet, tv, retroConsole, sofa, logo } = layout.objects
+  const { table, chairs, microphones, sideboard, lamp, laptop, tvStand, tv, retroConsole, sofa, logo } = layout.objects
   return (
     <>
       <color attach="background" args={[brand.ink]} />
@@ -34,7 +34,7 @@ export function OfficeScene() {
       <Interactive id="laptop" onActivate={objectActions.laptop}>
         <SceneObject object="laptop" name="laptop" position={laptop.position} rotation-y={laptop.rotationY} />
       </Interactive>
-      <SceneObject object="cabinet" name="cabinet" position={cabinet.position} rotation-y={cabinet.rotationY} />
+      <SceneObject object="cabinet" name="tvStand" position={tvStand.position} rotation-y={tvStand.rotationY} />
       <Interactive id="tv" onActivate={objectActions.tv}>
         <SceneObject object="crtTv" name="tv" position={tv.position} rotation-y={tv.rotationY} />
         <CrtScreen />

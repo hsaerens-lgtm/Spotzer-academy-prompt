@@ -5,6 +5,8 @@ export const WHEEL_SENSITIVITY = 0.0012
 export const KEY_STEP = 0.25
 export const FLIGHT_SECONDS = 1.2
 export const RAIL_SMOOTH_TIME = 0.35
+/** Pointer parallax: the look target moves up to x sideways and y up or down (CameraRig; the framing tests use the extremes). */
+export const PARALLAX = { x: 0.35, y: 0.18 }
 
 export const clamp01 = (n: number) => Math.min(1, Math.max(0, n))
 export const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
