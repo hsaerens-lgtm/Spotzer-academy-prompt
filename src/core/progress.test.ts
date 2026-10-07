@@ -87,6 +87,20 @@ describe('workshop progress', () => {
     expect(workshopProgress(progress)).toEqual({ passed: [], prompts: {} })
   })
 
+  // A broken workshop part (hand-edited, or written by a buggy version) costs the workshop part only, never the office's.
+  it('a malformed workshop value is dropped, and the rest of the progress kept', () => {
+    const storage = memoryStorage()
+    const saved = { ...emptyProgress(), topicsSeen: ['tokens'], deeperSeen: ['llm'], firstVisitDone: true }
+    storage.setItem(PROGRESS_KEY, JSON.stringify({ ...saved, workshop: 42 }))
+    const progress = loadProgress(storage)
+    expect(progress).toEqual(saved)
+    expect(progress.workshop).toBeUndefined()
+    expect(workshopProgress(progress)).toEqual({ passed: [], prompts: {} })
+    // Saved again, the broken value is gone.
+    saveProgress(progress, storage)
+    expect(JSON.parse(storage.getItem(PROGRESS_KEY)!)).toEqual(saved)
+  })
+
   it('records a passed mission and its prompt, and flags the workshop done once every known mission is passed', () => {
     const one = withMissionPassed(emptyProgress(), 'a', 'Prompt A', ['a', 'b'])
     expect(one.workshop).toEqual({ passed: ['a'], prompts: { a: 'Prompt A' } })

@@ -12,8 +12,11 @@ const progressSchema = z.object({
   workshopDone: z.boolean(),
   dungeon: z.object({ passed: z.boolean(), bestScore: z.number() }).nullable(),
   firstVisitDone: z.boolean(),
-  /** Added by the workshop (spec 2); progress saved before it simply has no such key. */
-  workshop: workshopSchema.optional(),
+  /**
+   * Added by the workshop (spec 2); progress saved before it simply has no such key. A malformed value is dropped
+   * alone: it must not cost the office progress around it.
+   */
+  workshop: workshopSchema.optional().catch(undefined),
 })
 export type Progress = z.infer<typeof progressSchema>
 export type WorkshopProgress = z.infer<typeof workshopSchema>
