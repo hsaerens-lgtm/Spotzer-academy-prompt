@@ -182,6 +182,7 @@
       "yours": "With your prompt",
       "improvedAnswer": "With the improved prompt",
       "tryAgain": "Try again",
+      "stale": "Edited since this check. Check your prompt again to update the report and run both.",
       "errors": {
         "invalid": "That prompt can't be checked. Check its length and try again.",
         "rate": "You've reached the corrector's limit for now. Try again in a minute.",

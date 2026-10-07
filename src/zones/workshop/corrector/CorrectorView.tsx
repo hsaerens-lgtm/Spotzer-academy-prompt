@@ -1,0 +1,144 @@
+import { useCallback, useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
+import { inputFromReport, type BuildingInput } from '../../../workshop/building/plan'
+import { MAX_CORRECT_PROMPT, MAX_PURPOSE, OUTCOME_FOR_TIER } from '../../../workshop/model'
+import { AdaBubble } from '../ada/AdaBubble'
+import { isSubmitShortcut } from '../keys'
+import { useWorkshop, useWorkshopStore } from '../store'
+import { BevelButton } from '../ui/BevelButton'
+import { Window } from '../ui/Window'
+import { ImprovedPanel } from './ImprovedPanel'
+import { Report } from './Report'
+
+export interface CorrectorBuilderProps {
+  input: BuildingInput | null
+  runKey: number
+  onDone: (runKey: number) => void
+}
+
+export function CorrectorView({ renderBuilder }: { renderBuilder: (props: CorrectorBuilderProps) => ReactNode }) {
+  const { t } = useTranslation()
+  const store = useWorkshopStore()
+  const content = useWorkshop((s) => s.content)
+  const state = useWorkshop((s) => s.corrector)
+  const [revealedKey, setRevealedKey] = useState<number | null>(null)
+  const [dismissed, setDismissed] = useState<string | null>(null)
+
+  useEffect(() => {
+    void store.getState().checkHealth()
+  }, [store])
+
+  const input = useMemo(() => (state.report ? inputFromReport(state.report) : null), [state.report])
+  const revealed = state.report !== null && revealedKey === state.checks
+  // The report is about the text that was checked: once the prompt is edited it no longer describes it.
+  const stale = state.report !== null && state.checkedPrompt !== state.prompt.trim()
+  const onDone = useCallback((key: number) => setRevealedKey(key), [])
+  const checking = state.status === 'checking'
+  const blank = state.prompt.trim() === ''
+  const check = () => {
+    // A closed bubble comes back with the next result.
+    setDismissed(null)
+    void store.getState().checkPrompt()
+  }
+
+  // One announcement per report, when its building is shown (keyed on that only: the rest follows from it).
+  useEffect(() => {
+    if (!revealed || !state.report || !input) return
+    const { score, summary } = state.report
+    store.getState().announce(`${t('workshop.corrector.score', { score })}. ${t(`workshop.corrector.verdict.${OUTCOME_FOR_TIER[input.tier]}`)}. ${summary}`)
+  }, [revealed])
+
+  // And one per failed check: Ada's bubble is not a live region.
+  useEffect(() => {
+    if (state.status === 'error' && state.error) store.getState().announce(t(`workshop.corrector.errors.${state.error}`))
+  }, [state.status, state.error])
+
+  const adaText =
+    state.health === 'offline'
+      ? `${t('workshop.corrector.offline')} ${t('workshop.corrector.offlineHelp')}`
+      : checking
+        ? t('workshop.corrector.checking')
+        : state.status === 'error' && state.error
+          ? t(`workshop.corrector.errors.${state.error}`)
+          : state.report && !revealed
+            ? t('workshop.output.reading')
+            : state.report
+              ? state.report.summary
+              : t('workshop.corrector.intro')
+
+  const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+    if (!isSubmitShortcut(event)) return
+    event.preventDefault()
+    if (!blank && !checking) check()
+  }
+
+  return (
+    <>
+      <Window title={t('workshop.windows.corrector')} variant="primary" className="ws-area-main">
+        {state.health === 'offline' ? (
+          <div className="ws-offline">
+            <p className="ws-offline__title">{t('workshop.corrector.offline')}</p>
+            <p>{t('workshop.corrector.offlineHelp')}</p>
+          </div>
+        ) : (
+          <>
+            <p className="ws-warning">{t('workshop.corrector.warning')}</p>
+            <label className="ws-free">
+              <span className="ws-free__label">{t('workshop.corrector.promptLabel')}</span>
+              <textarea
+                className="ws-field"
+                rows={8}
+                maxLength={MAX_CORRECT_PROMPT}
+                value={state.prompt}
+                onChange={(event) => store.getState().setCorrectorPrompt(event.target.value)}
+                onKeyDown={onKeyDown}
+              />
+            </label>
+            <p className="ws-count">{t('workshop.corrector.count', { count: state.prompt.length, max: MAX_CORRECT_PROMPT })}</p>
+            <label className="ws-free">
+              <span className="ws-free__label">{t('workshop.corrector.purposeLabel')}</span>
+              <input
+                className="ws-field"
+                maxLength={MAX_PURPOSE}
+                value={state.purpose}
+                onChange={(event) => store.getState().setCorrectorPurpose(event.target.value)}
+                onKeyDown={onKeyDown}
+              />
+            </label>
+            <div className="ws-studio__actions">
+              <BevelButton tone="primary" disabled={blank || checking} aria-keyshortcuts="Control+Enter" onClick={check}>
+                {state.status === 'error' ? t('workshop.corrector.tryAgain') : t('workshop.corrector.check')}
+              </BevelButton>
+            </div>
+            {checking && <p className="ws-output__note">{t('workshop.corrector.checking')}</p>}
+            {/* A failed check comes first: the report below it, if any, is the previous one. */}
+            {state.status === 'error' && state.error && <p className="ws-error">{t(`workshop.corrector.errors.${state.error}`)}</p>}
+            {state.report && input && revealed && (
+              <>
+                {stale && <p className="ws-stale">{t('workshop.corrector.stale')}</p>}
+                <Report report={state.report} building={input} labels={content.labels} />
+              </>
+            )}
+          </>
+        )}
+      </Window>
+      {renderBuilder({ input, runKey: state.checks, onDone })}
+      <ImprovedPanel
+        className="ws-area-output"
+        report={state.report}
+        revealed={revealed}
+        checkedPrompt={state.checkedPrompt}
+        stale={stale}
+        checking={checking}
+        run={state.run}
+        onRun={() => void store.getState().runBoth()}
+      />
+      <AdaBubble
+        text={adaText === dismissed ? null : adaText}
+        mood={state.status === 'error' || state.health === 'offline' ? 'surprised' : checking ? 'thinking' : 'happy'}
+        pointing={revealed}
+        onDismiss={() => setDismissed(adaText)}
+      />
+    </>
+  )
+}
