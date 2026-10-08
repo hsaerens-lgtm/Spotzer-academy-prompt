@@ -222,8 +222,7 @@ describe('startRouter', () => {
       expect(window.history.length).toBe(before)
     })
 
-    // Review focus 4: Back and Forward between missions.
-    it('follows Back to the previous mission', () => {
+    it('applies a hash change inside the workshop to the route', () => {
       window.history.replaceState(null, '', '#/workshop?mission=newsletter')
       const store = newStore()
       stop = startRouter(store)
