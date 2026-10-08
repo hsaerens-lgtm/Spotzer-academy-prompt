@@ -123,7 +123,8 @@ export function buildMaterials(sets: TextureSets) {
       new MeshStandardMaterial({ name: 'signBack', color: brand.surface1, emissive: brand.onDark, emissiveIntensity: 0 }),
       'emissive',
     ),
-    ceilingStrip: glow('ceilingStrip', tints.warmLight, 0, { roughness: 0.4 }),
+    // A matt grey diffuser: it neither mirrors nor whitens in the daylight, and glows warm at dusk (Task 7 review).
+    ceilingStrip: glow('ceilingStrip', tints.diffuserGlow, 0, { roughness: 0.85, color: tints.diffuser }),
     lampShade: glow('lampShade', tints.warmLight, 0, { roughness: 0.4 }),
   }
 }

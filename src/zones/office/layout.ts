@@ -149,6 +149,7 @@ export const layout = {
     screenGlow: { position: [-1.0, 1.9, -5.3] as Vec3 },
     pendant: { position: [-1.0, 2.1, -1.8] as Vec3 },
     lamp: { position: [1.3, 1.12, -5.5] as Vec3, target: [1.3, 0.68, -4.9] as Vec3 },
+    crt: { position: [4.25, 0.75, -1.4] as Vec3, target: [2.9, 0.45, -1.4] as Vec3 }, // before the TV picture, aimed at the sofa
   },
 }
 

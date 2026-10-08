@@ -97,12 +97,15 @@ test('tints come from tints.ts and brand.ts', () => {
     rug: tints.rug, blackMetal: tints.blackMetal, brushedMetal: tints.brushedMetal, consoleShell: tints.consoleShell,
     consoleDark: tints.consoleDark, porcelain: brand.onDark, glass: tints.glass, screenOff: brand.ink,
     limeGlow: brand.lime, mintGlow: brand.mint, logoLime: brand.lime, logoMint: brand.mint, logoInk: brand.onDark,
-    signBack: brand.surface1, ceilingStrip: tints.warmLight, lampShade: tints.warmLight,
+    signBack: brand.surface1, ceilingStrip: tints.diffuser, lampShade: tints.warmLight,
   }
   for (const key of KEYS) expect(m[key].color.getHexString(), key).toBe(new Color(expected[key]).getHexString())
   expect(m.limeGlow.emissive.getHexString()).toBe(new Color(brand.lime).getHexString())
   expect(m.signBack.emissive.getHexString()).toBe(new Color(brand.onDark).getHexString())
   expect(m.lampShade.emissive.getHexString()).toBe(new Color(tints.warmLight).getHexString())
+  // The ceiling strips: a matt grey diffuser by day that glows warm at dusk (Task 7 review).
+  expect(m.ceilingStrip.emissive.getHexString()).toBe(new Color(tints.diffuserGlow).getHexString())
+  expect(m.ceilingStrip.roughness).toBe(0.85)
   expect([tints.sofaFabric, tints.cushion, tints.porcelain, tints.visor]).toEqual([brand.blueGrey, brand.lime, brand.onDark, brand.nearBlack])
 })
 

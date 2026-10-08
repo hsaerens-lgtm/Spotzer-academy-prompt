@@ -43,7 +43,7 @@ test('mixPreset returns a at 0 and b at 1', () => {
 test('mixPreset blends colours, vectors and numbers halfway', () => {
   const { day, night } = PRESETS
   const half = mixPreset(day, night, 0.5)
-  expect(half.sunIntensity).toBeCloseTo((4.2 + 0.45) / 2)
+  expect(half.sunIntensity).toBeCloseTo((day.sunIntensity + night.sunIntensity) / 2)
   expect(half.exposure).toBeCloseTo(1.075)
   half.sunPosition.toArray().forEach((n, i) => expect(n).toBeCloseTo((day.sunPosition.getComponent(i) + night.sunPosition.getComponent(i)) / 2))
   expect(half.sunColor.r).toBeCloseTo((day.sunColor.r + night.sunColor.r) / 2)

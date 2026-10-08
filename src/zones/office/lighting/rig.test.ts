@@ -1,7 +1,7 @@
 import { OrthographicCamera, RectAreaLight, Vector3 } from 'three'
 import { QUALITY_SETTINGS, type Quality } from '../../../app/quality'
 import { PHASES } from '../../../core/phase'
-import { GLAZING, ROOM, WALL_T } from '../layout'
+import { GLAZING, ROOM, WALL_T, layout } from '../layout'
 import { PRESETS, SUN_TARGET, mixPreset } from './presets'
 import { RIG, rigLights } from './rig'
 
@@ -14,7 +14,7 @@ function sunPositions(): { label: string; position: Vector3 }[] {
 }
 
 const names = (quality: Quality) => rigLights(QUALITY_SETTINGS[quality]).map((light) => light.name)
-const ALWAYS = ['sun', 'sky-fill', 'window-light', 'lamp-light', 'screen-glow']
+const ALWAYS = ['sun', 'sky-fill', 'window-light', 'lamp-light', 'screen-glow', 'crt-glow']
 
 test('every preset sends the sun through the glazing', () => {
   for (const { label, position } of sunPositions()) {
@@ -92,4 +92,24 @@ test('the light count never depends on the phase', () => {
   }
   expect(names('high')).toContain('pendant-light')
   expect(rigLights.length).toBe(1)
+})
+
+// Review round 1: the lounge corner had no light at night; the CRT picture lights it, as a real one would.
+test('the CRT glow shines from the TV picture onto the sofa', () => {
+  const { position, target } = layout.lights.crt
+  const tv = layout.objects.tv.position
+  const sofa = layout.objects.sofa.position
+  // Just in front of the picture (the TV faces -x), level with the TV.
+  expect(tv[0] - position[0]).toBeGreaterThan(0)
+  expect(tv[0] - position[0]).toBeLessThan(0.5)
+  expect(position[2]).toBeCloseTo(tv[2])
+  // Aimed at the sofa, which stays within the light's reach; a spot cone opens 90 degrees at most.
+  expect(target[0]).toBeCloseTo(sofa[0])
+  expect(target[2]).toBeCloseTo(sofa[2])
+  expect(new Vector3(...target).distanceTo(new Vector3(...position))).toBeLessThan(RIG.crtGlow.distance)
+  expect(RIG.crtGlow.angle).toBeLessThanOrEqual(Math.PI / 2)
+  // It follows the wall-screen glow of the phase (faint by day), 1 to 1.5 times as strong.
+  expect(RIG.crtGlow.candela).toBeGreaterThanOrEqual(1)
+  expect(RIG.crtGlow.candela).toBeLessThanOrEqual(1.5)
+  expect(rigLights(QUALITY_SETTINGS.low).find((light) => light.name === 'crt-glow')?.kind).toBe('spot')
 })

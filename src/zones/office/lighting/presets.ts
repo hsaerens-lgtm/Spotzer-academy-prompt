@@ -76,9 +76,9 @@ const V = (x: number, y: number, z: number) => new Vector3(x, y, z)
  */
 export const PRESETS: Record<Phase, Preset> = {
   day: {
-    sunColor: C('#fff0d8'), sunIntensity: 4.2, sunPosition: V(-10.86, 6.13, 1.26),
+    sunColor: C('#fff0d8'), sunIntensity: 8, sunPosition: V(-10.86, 6.13, 1.26),
     hemiSky: C('#dfe9f5'), hemiGround: C('#b89c7c'), hemiIntensity: 0.5,
-    environment: 0.32, windowColor: C('#e4eefc'), windowIntensity: 3.2,
+    environment: 0.32, windowColor: C('#e4eefc'), windowIntensity: 2.6,
     ceiling: 0, bulb: 0, lampIntensity: 0, sign: 0.4, screenGlow: 0.35, exposure: 1.0,
     skyTop: C('#4f8fd6'), skyHorizon: C('#d6e4ee'), sunDisc: C('#fff4de'), sunSize: 1,
     stars: 0, night: 0, cityAmbient: C('#9aa6b4'), cloudColor: C('#ffffff'), cloudOpacity: 0.9,
@@ -87,7 +87,7 @@ export const PRESETS: Record<Phase, Preset> = {
     sunColor: C('#ff8a4c'), sunIntensity: 3.6, sunPosition: V(-13.28, 2.42, 4.5),
     hemiSky: C('#f2b894'), hemiGround: C('#6a4a3a'), hemiIntensity: 0.32,
     environment: 0.18, windowColor: C('#ffb07e'), windowIntensity: 1.8,
-    ceiling: 0.35, bulb: 0.5, lampIntensity: 1.1, sign: 1.2, screenGlow: 0.7, exposure: 1.0,
+    ceiling: 0.35, bulb: 0.25, lampIntensity: 1.1, sign: 1.2, screenGlow: 0.7, exposure: 1.0,
     skyTop: C('#3b4c86'), skyHorizon: C('#f6a56a'), sunDisc: C('#ffb870'), sunSize: 2.4,
     stars: 0.15, night: 0.45, cityAmbient: C('#8a6a74'), cloudColor: C('#ffa98a'), cloudOpacity: 0.85,
   },

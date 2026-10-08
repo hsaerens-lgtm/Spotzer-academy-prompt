@@ -5,7 +5,7 @@ export const tints = {
   floor: '#c8a27a', wall: '#b9ad9c', ceiling: '#e6e0d6', skirting: '#8f8577', slats: '#c99a68', oak: '#d2a878', walnut: '#a8774f',
   chairFabric: '#7d7368', sofaFabric: brand.blueGrey, cushion: brand.lime, rug: '#b8aa96',
   blackMetal: '#2a2b2d', brushedMetal: '#b9bcc0', consoleShell: '#c9c6bd', consoleDark: '#3a3d40',
-  porcelain: brand.onDark, visor: brand.nearBlack, glass: '#dfe8ee', warmLight: '#ffd29a', posterPaper: '#f1ece2',
+  porcelain: brand.onDark, visor: brand.nearBlack, glass: '#dfe8ee', warmLight: '#ffd29a', diffuser: '#857a6b', diffuserGlow: '#b8a58a', posterPaper: '#f1ece2',
   leafGreens: ['#30552c', '#3b6136', '#274525', '#446d3b', '#213d21', '#365730'], stem: '#4a6b3a', soil: '#241c15',
   potGlazes: { terracotta: '#a5613f', cream: '#d8cdb8', slate: '#555b5e', brass: '#8a6a34' },
   potDots: { terracotta: ['#7a3a1f', '#d88a5f', '#5a2a14'], cream: ['#8a857a', '#b8b2a6', '#5c574f'], slate: ['#2a2b2d', '#6d7275', '#3f4447'], brass: ['#5e4520', '#b08a4a', '#3d2c12'] },

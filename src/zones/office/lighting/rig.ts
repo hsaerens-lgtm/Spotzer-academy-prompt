@@ -14,6 +14,8 @@ export const RIG = {
   pendant: { candela: 6, distance: 6, decay: 2, colour: '#ffd9a8' },
   lamp: { colour: '#ffd6a0', angle: 0.75, penumbra: 0.6, distance: 3, decay: 2 },
   screenGlow: { colour: '#9fb8c8', distance: 4, decay: 2 },
+  // The retro TV's picture lighting the lounge corner (no shadow): candela x preset.screenGlow, in screenGlow's colour.
+  crtGlow: { candela: 1.5, angle: 1.0, penumbra: 1, distance: 4, decay: 2 },
   emissivePeak: 2.5,
   environment: {
     resolution: 256,
@@ -39,6 +41,7 @@ export function rigLights(settings: QualitySettings): { name: string; kind: RigL
     { name: 'window-light', kind: 'rectArea' },
     { name: 'lamp-light', kind: 'spot' },
     { name: 'screen-glow', kind: 'point' },
+    { name: 'crt-glow', kind: 'spot' },
   ]
   if (settings.accentLights) {
     CEILING_LINES.forEach((_, i) => lights.push({ name: `ceiling-light-${i}`, kind: 'rectArea' }))

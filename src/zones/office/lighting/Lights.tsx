@@ -1,29 +1,47 @@
-import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, type ReactNode } from 'react'
+import { Fragment, use, useEffect, useLayoutEffect, useMemo, useRef, type ReactNode } from 'react'
 import { Object3D, type DirectionalLight, type HemisphereLight, type PointLight, type RectAreaLight, type SpotLight } from 'three'
-import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js'
 import type { QualitySettings } from '../../../app/quality'
 import { CEILING_LINES, layout } from '../layout'
 import { useLightingApplier } from './live'
 import { SUN_TARGET } from './presets'
 import { RIG, rigLights } from './rig'
 
-// Area lights need their lookup tables in the WebGL renderer, once, before the first one is drawn.
-RectAreaLightUniformsLib.init()
+let areaLightTables: Promise<void> | null = null
+
+/**
+ * Area lights need their lookup tables in the WebGL renderer before the first one is drawn. The tables (about
+ * 0.1 MB of JS) load on the first Lights mount, once, outside the initial chunk: reading mode never builds them.
+ * A failed load is forgotten, so the next mount tries again.
+ */
+function areaLightTablesReady(): Promise<void> {
+  areaLightTables ??= import('three/addons/lights/RectAreaLightUniformsLib.js').then(
+    ({ RectAreaLightUniformsLib }) => RectAreaLightUniformsLib.init(),
+    (error: unknown) => {
+      areaLightTables = null
+      throw error
+    },
+  )
+  return areaLightTables
+}
 
 /**
  * The named lights of the office (rig.ts). Only the sun casts shadows: 2048 px on the high tier, 1024 on medium,
  * none on low. Colours, intensities and the sun's position follow the time of day through one applier.
  */
 export function Lights({ settings }: { settings: QualitySettings }) {
+  // Suspends the scene (its Suspense keeps the loading screen) until the area light tables are built.
+  use(areaLightTablesReady())
   const sun = useRef<DirectionalLight>(null)
   const sky = useRef<HemisphereLight>(null)
   const facade = useRef<RectAreaLight>(null)
   const lamp = useRef<SpotLight>(null)
   const glow = useRef<PointLight>(null)
+  const crt = useRef<SpotLight>(null)
   const pendant = useRef<PointLight>(null)
   const ceiling = useRef<(RectAreaLight | null)[]>([])
   const sunTarget = useMemo(() => new Object3D(), [])
   const lampTarget = useMemo(() => new Object3D(), [])
+  const crtTarget = useMemo(() => new Object3D(), [])
   const shadowSize = settings.shadowMapSize
 
   useLayoutEffect(() => {
@@ -39,11 +57,11 @@ export function Lights({ settings }: { settings: QualitySettings }) {
 
   useEffect(() => {
     const shadow = sun.current?.shadow
-    if (!shadow || shadowSize === 0) return
-    shadow.mapSize.set(shadowSize, shadowSize)
-    // A new size only takes effect with a new shadow map.
+    if (!shadow) return
+    // A new size only takes effect with a new shadow map; without shadows (low tier) the old one is only memory.
     shadow.map?.dispose()
     shadow.map = null
+    if (shadowSize > 0) shadow.mapSize.set(shadowSize, shadowSize)
   }, [shadowSize])
 
   useLightingApplier((p) => {
@@ -63,6 +81,7 @@ export function Lights({ settings }: { settings: QualitySettings }) {
     }
     if (lamp.current) lamp.current.intensity = p.lampIntensity
     if (glow.current) glow.current.intensity = p.screenGlow
+    if (crt.current) crt.current.intensity = RIG.crtGlow.candela * p.screenGlow
     for (const light of ceiling.current) if (light) light.intensity = RIG.ceilingLines.nits * p.ceiling
     if (pendant.current) pendant.current.intensity = RIG.pendant.candela * p.ceiling
   })
@@ -93,6 +112,20 @@ export function Lights({ settings }: { settings: QualitySettings }) {
         color={RIG.screenGlow.colour}
         distance={RIG.screenGlow.distance}
         decay={RIG.screenGlow.decay}
+        intensity={0}
+      />
+    ),
+    'crt-glow': (
+      <spotLight
+        ref={crt}
+        name="crt-glow"
+        position={layout.lights.crt.position}
+        target={crtTarget}
+        color={RIG.screenGlow.colour}
+        angle={RIG.crtGlow.angle}
+        penumbra={RIG.crtGlow.penumbra}
+        distance={RIG.crtGlow.distance}
+        decay={RIG.crtGlow.decay}
         intensity={0}
       />
     ),
@@ -129,6 +162,7 @@ export function Lights({ settings }: { settings: QualitySettings }) {
     <>
       <primitive object={sunTarget} position={SUN_TARGET} />
       <primitive object={lampTarget} position={layout.lights.lamp.target} />
+      <primitive object={crtTarget} position={layout.lights.crt.target} />
       {rigLights(settings).map(({ name }) => (
         <Fragment key={name}>{elements[name]}</Fragment>
       ))}
