@@ -222,8 +222,16 @@ test('the corrector reports, improves and runs both prompts (server answers simu
   await panel.getByRole('button', { name: 'Run both' }).click()
   await expect(panel.getByText('An improved post.')).toBeVisible()
   await expect(panel.getByText('A generic post.')).toBeVisible()
-  // The two answers sit under the improved prompt: the picture shows them.
-  await panel.getByText('An improved post.').scrollIntoViewIfNeeded()
+  // Spec 3.9 step 3: the improved prompt, its additions highlighted, is what the picture shows, from its heading down.
+  // Only the window's own body scrolls (scrollIntoView would also move the desktop, whose overflow is hidden).
+  await panel.getByRole('heading', { name: 'Improved prompt', exact: true }).evaluate((heading) => {
+    const body = heading.closest('.ws-window__body')!
+    body.scrollTop += heading.getBoundingClientRect().top - body.getBoundingClientRect().top
+  })
+  const improved = panel.locator('.ws-improved')
+  await expect(improved).toHaveText(report.improvedPrompt)
+  await expect(improved.locator('ins').first()).toBeVisible()
+  await expect(improved).toBeInViewport()
   await adaDone(page)
   await page.screenshot({ path: `${EVIDENCE}/05-corrector.png` })
 })
