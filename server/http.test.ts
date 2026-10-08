@@ -172,6 +172,25 @@ test('a request from the site itself, with Origin equal to Host, goes through; a
   expect((await from(`http://127.0.0.1:${port + 1}`)).status).toBe(403)
 })
 
+// DNS rebinding: a page on another name that resolves to 127.0.0.1 sends its own name as Host (and as Origin, so the
+// same-origin check passes). Bound to this machine only (npm run dev), the server answers only to its own names.
+test('bound to 127.0.0.1, the server answers only to Host localhost or 127.0.0.1, on any port', async () => {
+  await start({ env: { OPENAI_API_KEY: 'test-key', HOST: '127.0.0.1' } })
+  const body = JSON.stringify({ prompt: 'Hi' })
+  const run = (host: string) => raw('/api/run', { method: 'POST', headers: { 'Content-Type': 'application/json', Host: host, Origin: `http://${host}` }, body })
+  for (const host of [`127.0.0.1:${port}`, '127.0.0.1', 'localhost:5199', 'localhost']) expect((await run(host)).status, host).toBe(200)
+  for (const host of [`evil.example:${port}`, 'evil.example', 'localhost.evil.example:5199', '127.0.0.1.evil.example']) {
+    expect((await run(host)).status, host).toBe(403)
+  }
+  expect((await raw('/api/health', { headers: { Host: 'evil.example' } })).status).toBe(403)
+  expect(call).toHaveBeenCalledTimes(4)
+})
+
+test('bound to every interface (production), any Host name is served', async () => {
+  await start()
+  expect((await raw('/api/health', { headers: { Host: 'academy.example.com' } })).status).toBe(200)
+})
+
 test('without a key the corrector is unavailable and never calls OpenAI', async () => {
   await start({ env: {} })
   const response = await post('/api/correct', { prompt: 'Hi', lang: 'en' })

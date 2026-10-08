@@ -36,7 +36,7 @@ server.on('error', (error: NodeJS.ErrnoException) => {
 
 // Every interface by default (production, behind its own reverse proxy); "npm run dev" sets HOST=127.0.0.1 so a
 // development key can only be spent from this machine.
-const host = process.env.HOST?.trim() || undefined
+const host = config.host ?? undefined
 
 server.listen(config.port, host, () => {
   const corrector = config.apiKey ? `corrector on (${config.model})` : 'corrector off: no OPENAI_API_KEY in .env.local'

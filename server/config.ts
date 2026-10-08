@@ -15,6 +15,8 @@ export interface ServerConfig {
   timeoutMs: number
   reasoningEffort: string | null
   trustProxy: boolean
+  /** The address to listen on: null is every interface (production); "npm run dev" sets 127.0.0.1. */
+  host: string | null
 }
 
 type Env = Record<string, string | undefined>
@@ -41,5 +43,6 @@ export function readConfig(env: Env): ServerConfig {
     timeoutMs: positive(env.OPENAI_TIMEOUT_MS, 30_000),
     reasoningEffort: text(env.OPENAI_REASONING_EFFORT),
     trustProxy: env.TRUST_PROXY === '1',
+    host: text(env.HOST),
   }
 }

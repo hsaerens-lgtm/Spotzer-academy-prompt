@@ -68,6 +68,18 @@ function sameOrigin(req: IncomingMessage): boolean {
   }
 }
 
+/** This machine's own names, with any port: what a browser sends as Host for a page served from 127.0.0.1. */
+const LOOPBACK_HOST = /^(?:localhost|127\.0\.0\.1)(?::\d+)?$/i
+
+/**
+ * DNS rebinding: a page on another name made to resolve to 127.0.0.1 reaches a server bound there, and sends its own
+ * name as Host (and as Origin, so the same-origin check passes). Bound to 127.0.0.1 (npm run dev), the server only
+ * answers to this machine's own names. Bound to every interface (production), the reverse proxy in front decides.
+ */
+function hostAllowed(req: IncomingMessage, bindHost: string | null): boolean {
+  return bindHost !== '127.0.0.1' || LOOPBACK_HOST.test(req.headers.host ?? '')
+}
+
 const MAPPED_IPV4 = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i
 
 /**
@@ -105,6 +117,7 @@ export function createHandler(deps: HandlerDeps) {
     }
 
     if (route === null) return finish(400, { error: 'invalid' })
+    if (!hostAllowed(req, deps.config.host)) return finish(403, { error: 'invalid' })
 
     if (!route.startsWith('/api/')) {
       if (deps.distDir && (method === 'GET' || method === 'HEAD')) {

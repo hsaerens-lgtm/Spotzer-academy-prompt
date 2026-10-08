@@ -14,6 +14,7 @@ test('without any variable the corrector is off and safe defaults apply', () => 
     timeoutMs: 30000,
     reasoningEffort: null,
     trustProxy: false,
+    host: null,
   })
 })
 
@@ -33,4 +34,10 @@ test('variables are trimmed; invalid numbers fall back to the defaults', () => {
     TRUST_PROXY: '1',
   })
   expect(config).toMatchObject({ apiKey: 'test-key', model: 'gpt-5-mini', port: 9000, ratePerMinute: 10, ratePerDay: 100, reasoningEffort: 'low', trustProxy: true })
+})
+
+// The address the server listens on: every interface when unset (production); 127.0.0.1 for npm run dev.
+test('the bind host is read from HOST, trimmed, unset when blank', () => {
+  expect(readConfig({ HOST: ' 127.0.0.1 ' }).host).toBe('127.0.0.1')
+  expect(readConfig({ HOST: '  ' }).host).toBeNull()
 })
