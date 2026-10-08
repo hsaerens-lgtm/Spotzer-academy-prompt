@@ -89,8 +89,7 @@
       "menu": "Athena menu",
       "back": "Back to the office",
       "counter": "{{passed}}/{{total}} missions",
-      "soundOn": "Sound on",
-      "soundOff": "Sound off"
+      "sound": "Sound"
     },
     "levels": { "1": "Level 1 · Build with blocks", "2": "Level 2 · Write it freely", "3": "Level 3 · Fix the prompt" },
     "missions": { "listLabel": "Missions", "startHere": "Start here", "passed": "passed", "counter": "{{passed}}/{{total}}" },

@@ -89,8 +89,9 @@ export function Taskbar({ view, passed, total, onView, onBack }: TaskbarProps) {
         ))}
       </div>
       <div className="ws-taskbar__end">
+        {/* A toggle: one name, its state in aria-pressed (a label that flips would announce the opposite state). */}
         <BevelButton size="sm" aria-pressed={sound} onClick={() => appStore.getState().setSound(!sound)}>
-          {sound ? t('workshop.taskbar.soundOn') : t('workshop.taskbar.soundOff')}
+          {t('workshop.taskbar.sound')}
         </BevelButton>
         <BevelButton size="sm" onClick={onBack}>
           <span aria-hidden="true">&larr; </span>
