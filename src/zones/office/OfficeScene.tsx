@@ -13,6 +13,9 @@ import { useEmissiveLevels } from './lighting/emissive'
 import { Lights } from './lighting/Lights'
 import { OfficeEnvironment } from './lighting/OfficeEnvironment'
 import { PhaseDriver } from './lighting/PhaseDriver'
+import { PRESETS } from './lighting/presets'
+import { OUTDOOR } from './outdoor/cityPlan'
+import { Outdoor } from './outdoor/Outdoor'
 import { Room } from './Room'
 import { WallScreen3D } from './WallScreen3D'
 
@@ -24,10 +27,12 @@ export function OfficeScene() {
   return (
     <>
       <color attach="background" args={[brand.ink]} />
+      <fog attach="fog" args={[PRESETS.day.skyHorizon, OUTDOOR.fogNear, OUTDOOR.fogFar]} />
       <CameraRig />
       <OfficeEnvironment />
       <PhaseDriver />
       <Lights settings={settings} />
+      <Outdoor />
       <Room />
       <SceneObject object="table" name="table" position={table.position} />
       {chairs.map((chair, index) => (

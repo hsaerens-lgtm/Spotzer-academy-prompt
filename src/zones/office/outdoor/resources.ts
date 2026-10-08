@@ -1,0 +1,48 @@
+// Ported from Horn.os (owner's project): js/scene/city.js (canvasTexture)
+import { CanvasTexture, RepeatWrapping, SRGBColorSpace, type Material, type Mesh, type Object3D, type Texture } from 'three'
+
+/*
+ * GPU resources of the outdoor, which is built outside React (like Horn.os) and rendered as <primitive> objects:
+ * painted canvas textures, and their disposal (R3F never disposes a primitive).
+ */
+
+/** A texture painted on a 2D canvas: sRGB unless told otherwise, repeated when `repeat` is given, anisotropy 8. */
+export function canvasTexture(
+  width: number,
+  height: number,
+  draw: (g: CanvasRenderingContext2D, w: number, h: number) => void,
+  options: { repeat?: [number, number]; srgb?: boolean } = {},
+): CanvasTexture {
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const context = canvas.getContext('2d')
+  if (!context) throw new Error('canvasTexture: no 2D canvas context')
+  draw(context, width, height)
+  const texture = new CanvasTexture(canvas)
+  if (options.srgb ?? true) texture.colorSpace = SRGBColorSpace
+  if (options.repeat) {
+    texture.wrapS = RepeatWrapping
+    texture.wrapT = RepeatWrapping
+    texture.repeat.set(...options.repeat)
+  }
+  texture.anisotropy = 8
+  return texture
+}
+
+/** Disposes every geometry, material and material texture under `root`, each once. */
+export function disposeTree(root: Object3D): void {
+  const geometries = new Set<{ dispose: () => void }>()
+  const materials = new Set<Material>()
+  root.traverse((object) => {
+    const mesh = object as Partial<Mesh>
+    if (mesh.geometry) geometries.add(mesh.geometry)
+    const list = Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : []
+    for (const material of list) materials.add(material)
+  })
+  for (const material of materials) {
+    for (const value of Object.values(material)) if ((value as Texture | null)?.isTexture) (value as Texture).dispose()
+    material.dispose()
+  }
+  for (const geometry of geometries) geometry.dispose()
+}
