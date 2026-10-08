@@ -4,7 +4,7 @@ import type { QualitySettings } from '../../../app/quality'
 import { CEILING_LINES, layout } from '../layout'
 import { useLightingApplier } from './live'
 import { SUN_TARGET } from './presets'
-import { RIG, rigLights } from './rig'
+import { RIG, crtGlowCandela, rigLights } from './rig'
 
 let areaLightTables: Promise<void> | null = null
 
@@ -81,7 +81,7 @@ export function Lights({ settings }: { settings: QualitySettings }) {
     }
     if (lamp.current) lamp.current.intensity = p.lampIntensity
     if (glow.current) glow.current.intensity = p.screenGlow
-    if (crt.current) crt.current.intensity = RIG.crtGlow.candela * p.screenGlow
+    if (crt.current) crt.current.intensity = crtGlowCandela(p)
     for (const light of ceiling.current) if (light) light.intensity = RIG.ceilingLines.nits * p.ceiling
     if (pendant.current) pendant.current.intensity = RIG.pendant.candela * p.ceiling
   })

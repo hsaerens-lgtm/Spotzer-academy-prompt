@@ -3,7 +3,7 @@ import { QUALITY_SETTINGS, type Quality } from '../../../app/quality'
 import { PHASES } from '../../../core/phase'
 import { GLAZING, ROOM, WALL_T, layout } from '../layout'
 import { PRESETS, SUN_TARGET, mixPreset } from './presets'
-import { RIG, rigLights } from './rig'
+import { RIG, crtGlowCandela, rigLights } from './rig'
 
 /** Sun positions of the three phases and of the blends each transition passes through. */
 function sunPositions(): { label: string; position: Vector3 }[] {
@@ -108,8 +108,17 @@ test('the CRT glow shines from the TV picture onto the sofa', () => {
   expect(target[2]).toBeCloseTo(sofa[2])
   expect(new Vector3(...target).distanceTo(new Vector3(...position))).toBeLessThan(RIG.crtGlow.distance)
   expect(RIG.crtGlow.angle).toBeLessThanOrEqual(Math.PI / 2)
-  // It follows the wall-screen glow of the phase (faint by day), 1 to 1.5 times as strong.
-  expect(RIG.crtGlow.candela).toBeGreaterThanOrEqual(1)
-  expect(RIG.crtGlow.candela).toBeLessThanOrEqual(1.5)
   expect(rigLights(QUALITY_SETTINGS.low).find((light) => light.name === 'crt-glow')?.kind).toBe('spot')
+})
+
+// Review round 1 ruling: the CRT follows the night factor, so it adds nothing by day and lights the sofa at night.
+test('the CRT glow is dark by day and strongest at night', () => {
+  expect(crtGlowCandela(PRESETS.day)).toBe(0)
+  expect(crtGlowCandela(PRESETS.sunset)).toBeCloseTo(PRESETS.sunset.night * RIG.crtGlow.candela)
+  expect(crtGlowCandela(PRESETS.night)).toBe(RIG.crtGlow.candela)
+  // About 7 cd at night: the sofa seats at 20 luma or more in the overview (measured on screenshots).
+  expect(RIG.crtGlow.candela).toBeGreaterThanOrEqual(6)
+  expect(RIG.crtGlow.candela).toBeLessThanOrEqual(8)
+  // During a transition it follows the blend of the night factor.
+  expect(crtGlowCandela(mixPreset(PRESETS.sunset, PRESETS.night, 0.5))).toBeCloseTo(((PRESETS.sunset.night + 1) / 2) * RIG.crtGlow.candela)
 })

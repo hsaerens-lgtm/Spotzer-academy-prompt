@@ -1,5 +1,6 @@
 import type { QualitySettings } from '../../../app/quality'
 import { CEILING_LINES, type Vec3 } from '../layout'
+import type { Preset } from './presets'
 
 /*
  * The light rig of the office (Horn.os office.js buildLights, refitted to a 10 x 12 m room): one shadow caster (the
@@ -14,8 +15,8 @@ export const RIG = {
   pendant: { candela: 6, distance: 6, decay: 2, colour: '#ffd9a8' },
   lamp: { colour: '#ffd6a0', angle: 0.75, penumbra: 0.6, distance: 3, decay: 2 },
   screenGlow: { colour: '#9fb8c8', distance: 4, decay: 2 },
-  // The retro TV's picture lighting the lounge corner (no shadow): candela x preset.screenGlow, in screenGlow's colour.
-  crtGlow: { candela: 1.5, angle: 1.0, penumbra: 1, distance: 4, decay: 2 },
+  // The retro TV's picture lighting the lounge corner (no shadow), in screenGlow's colour: see crtGlowCandela.
+  crtGlow: { candela: 7, angle: 1.0, penumbra: 1, distance: 4, decay: 2 },
   emissivePeak: 2.5,
   environment: {
     resolution: 256,
@@ -29,6 +30,14 @@ export const RIG = {
 } as const
 
 export type RigLightKind = 'directional' | 'hemisphere' | 'rectArea' | 'spot' | 'point'
+
+/**
+ * The CRT glow follows the night factor of the phase (review ruling): nothing by day, where it would only brighten a
+ * lit room, a little at sunset, all of it at night. A screenGlow term was ruled optional and is left out (k_day = 0).
+ */
+export function crtGlowCandela(preset: Pick<Preset, 'night'>): number {
+  return RIG.crtGlow.candela * preset.night
+}
 
 /**
  * The lights of a quality tier, by scene name. The list never depends on the phase: a light that a phase switches
