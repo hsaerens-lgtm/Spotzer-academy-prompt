@@ -50,5 +50,15 @@ test('the drawer cabinet, the coffee table, the pendants and the picture frames 
     // Nothing else draws them: without its model, an item has no source (AssetBoundary leaves it out).
     expect(hasSource(name, {}), name).toBe(false)
   }
-  expect(Object.keys(glbModels)).toHaveLength(7)
+  // Three base models, these four, and the five of Task 14: the final registry.
+  expect(Object.keys(glbModels)).toHaveLength(12)
+})
+
+// Task 14: the large plants, the vases and the clay planter (decor.test.ts checks their registry entries and stage).
+test('the large plants, the vases and the clay planter have no procedural fallback', () => {
+  const plants = { pottedPlant: 'potted_plant_01', pachira: 'pachira_aquatica_01', vaseTall: 'ceramic_vase_01', vaseRound: 'ceramic_vase_04', clayPot: 'planter_pot_clay' }
+  for (const [name, assetId] of Object.entries(plants) as [ObjectName, string][]) {
+    expect(glbModels[name], name).toBe(publicUrl(`assets/models/${assetId}.glb`))
+    expect(hasSource(name, {}), name).toBe(false)
+  }
 })
