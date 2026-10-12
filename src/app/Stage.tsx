@@ -15,7 +15,6 @@ import {
   reduceQuality,
   rendererName,
 } from './quality'
-import { SceneReadySignal } from './SceneReadySignal'
 import { TestApiBridge } from './TestApiBridge'
 import { onContextLost } from './webgl'
 
@@ -24,10 +23,18 @@ const tuneEnabled = isTuneEnabled(window.location.search, import.meta.env.DEV)
 
 export function Stage() {
   const active = useApp((s) => s.zone === 'office' || s.transition !== null)
+  const sceneReady = useApp((s) => s.sceneReady)
+  const decorReady = useApp((s) => s.decorReady)
   const [quality, dispatchQuality] = useReducer(reduceQuality, INITIAL_QUALITY)
   const [software, setSoftware] = useState(false)
   return (
-    <div className="stage" data-testid="stage" data-quality={quality.level}>
+    <div
+      className="stage"
+      data-testid="stage"
+      data-quality={quality.level}
+      data-scene-ready={String(sceneReady)}
+      data-decor-ready={String(decorReady)}
+    >
       <Canvas
         shadows="percentage"
         dpr={software ? SOFTWARE_DPR : QUALITY_SETTINGS[quality.level].dpr}
@@ -54,10 +61,9 @@ export function Stage() {
           <QualityContext.Provider value={quality.level}>
             <SoftwareRendererContext.Provider value={software}>
               {import.meta.env.DEV && <TestApiBridge />}
+              {/* The base (textures and three models) suspends here; SceneReadySignal and the decor stage live in OfficeScene. */}
               <Suspense fallback={null}>
                 <OfficeScene />
-                {/* Inside the boundary, after the scene: while the scene suspends (textures, models), the loading screen stays. */}
-                <SceneReadySignal />
               </Suspense>
               {TuneMode && tuneEnabled && (
                 <Suspense fallback={null}>

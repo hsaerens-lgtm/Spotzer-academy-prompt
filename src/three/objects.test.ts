@@ -40,3 +40,15 @@ test('the sideboard, the TV and the wall clock are drawn by their CC0 models', (
   // Nothing else draws the clock: without its model it has no source.
   expect(hasSource('clock', {})).toBe(false)
 })
+
+// Task 12: the decor stage's four models (each in its own AssetBoundary).
+test('the drawer cabinet, the coffee table, the pendants and the picture frames are drawn by their CC0 models', () => {
+  const decor = { cabinet: 'drawer_cabinet', coffeeTable: 'modern_coffee_table_01', pendant: 'modern_ceiling_lamp_01', pictureFrame: 'hanging_picture_frame_01' }
+  for (const [name, assetId] of Object.entries(decor) as [ObjectName, string][]) {
+    expect(OBJECT_NAMES, name).toContain(name)
+    expect(resolveObject(name), name).toEqual({ kind: 'glb', url: publicUrl(`assets/models/${assetId}.glb`) })
+    // Nothing else draws them: without its model, an item has no source (AssetBoundary leaves it out).
+    expect(hasSource(name, {}), name).toBe(false)
+  }
+  expect(Object.keys(glbModels)).toHaveLength(7)
+})
