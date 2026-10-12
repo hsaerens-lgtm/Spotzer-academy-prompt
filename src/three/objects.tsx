@@ -1,7 +1,6 @@
 import { useGLTF } from '@react-three/drei'
 import { useMemo, type ComponentType } from 'react'
 import { Cabinet } from './props/Cabinet'
-import { Chair } from './props/Chair'
 import { CrtTv } from './props/CrtTv'
 import { Lamp } from './props/Lamp'
 import { Laptop } from './props/Laptop'
@@ -13,9 +12,9 @@ import { Sofa } from './props/Sofa'
 import { Table } from './props/Table'
 import type { ObjectProps } from './types'
 
+/** The chairs are no longer an object of their own: props/ChairSet.tsx draws all of them as instances. */
 export type ObjectName =
   | 'table'
-  | 'chair'
   | 'sideboard'
   | 'cabinet'
   | 'laptop'
@@ -35,7 +34,6 @@ export const glbModels: Partial<Record<ObjectName, string>> = {}
 
 const procedural: Record<ObjectName, ComponentType<ObjectProps>> = {
   table: Table,
-  chair: Chair,
   sideboard: Sideboard,
   cabinet: Cabinet,
   laptop: Laptop,

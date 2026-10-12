@@ -4,6 +4,7 @@ import { brand } from '../../core/brand'
 import { Interactive } from '../../three/interactive'
 import { useMaterials } from '../../three/materials'
 import { SceneObject } from '../../three/objects'
+import { ChairSet } from '../../three/props/ChairSet'
 import { AdaController } from './AdaController'
 import { CameraRig } from './camera/CameraRig'
 import { CrtScreen } from './CrtScreen'
@@ -35,9 +36,7 @@ export function OfficeScene() {
       <Outdoor />
       <Room />
       <SceneObject object="table" name="table" position={table.position} />
-      {chairs.map((chair, index) => (
-        <SceneObject key={index} object="chair" name={`chair-${index}`} position={chair.position} rotation-y={chair.rotationY} />
-      ))}
+      <ChairSet placements={chairs} />
       {microphones.map((mic, index) => (
         <SceneObject key={index} object="microphone" name={`microphone-${index}`} position={mic.position} rotation-y={mic.rotationY} />
       ))}
@@ -56,24 +55,8 @@ export function OfficeScene() {
       <SceneObject object="logoCubes" name="logo" position={logo.position} rotation-y={logo.rotationY} />
       <WallScreen3D />
       <AdaController />
-      <ContactShadows
-        position={[layout.ada.position[0], CONTACT_SHADOW_Y, layout.ada.position[2]]}
-        scale={1.4}
-        opacity={0.35}
-        blur={2.5}
-        far={1.6}
-        resolution={256}
-        frames={1}
-      />
-      <ContactShadows
-        position={[table.position[0], CONTACT_SHADOW_Y, table.position[2]]}
-        scale={[5, 7.5]}
-        opacity={0.55}
-        blur={2.4}
-        far={1.4}
-        resolution={512}
-        frames={1}
-      />
+      <ContactShadows position={[layout.ada.position[0], CONTACT_SHADOW_Y, layout.ada.position[2]]} scale={1.4} opacity={0.35} blur={2.5} far={1.6} resolution={256} frames={1} />
+      <ContactShadows position={[table.position[0], CONTACT_SHADOW_Y, table.position[2]]} scale={[5, 7.5]} opacity={0.55} blur={2.4} far={1.4} resolution={512} frames={1} />
     </>
   )
 }

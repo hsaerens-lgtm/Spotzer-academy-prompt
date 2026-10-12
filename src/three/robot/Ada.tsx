@@ -7,7 +7,9 @@ import type { Gesture, Mood } from '../../content/schema'
 import { brand } from '../../core/brand'
 import { HoverOutline } from '../interactive'
 import { logoBoxes } from '../logo'
-import { materials } from '../materials'
+import { useMaterials } from '../materials'
+import { roundedBox } from '../shapes'
+import { tints } from '../tints'
 import { FACE_H, FACE_W, drawFace, eyeShapes, faceKey, quantizePulse } from './face'
 import { ADA, HEAD_Y, VISOR, bodyProfile, bodyRadiusAt } from './geometry'
 import { BLINK_SECONDS, NEUTRAL_POSE, gesturePose, hoverY, nextBlinkDelay } from './motion'
@@ -48,31 +50,36 @@ function createHalo() {
 }
 
 function Arm() {
-  const m = materials()
+  const m = useMaterials()
   return (
-    <mesh position-y={-ADA.armLength / 2} scale={[0.055, ADA.armLength / 2, 0.085]} material={m.porcelain} castShadow>
+    <mesh position-y={-ADA.armLength / 2} scale={[0.055, ADA.armLength / 2, 0.085]} material={m.porcelain} castShadow receiveShadow>
       <sphereGeometry args={[1, 24, 16]} />
     </mesh>
   )
 }
 
+/** The five-square mark on the chest: lime and mint glow; the "ink" squares stay dark on the white shell, as before. */
 function ChestLogo() {
-  const m = materials()
-  const byColor = { lime: m.lime, mint: m.mint, ink: m.ink }
+  const m = useMaterials()
+  const byColor = { lime: m.logoLime, mint: m.logoMint, ink: m.consoleDark }
   const z = bodyRadiusAt(ADA.chestY) + 0.002
   return (
     <group position={[0, ADA.chestY, z]}>
       {logoBoxes(0.0011).map((box, index) => (
-        <mesh key={index} position={[box.position[0], box.position[1], 0]} material={byColor[box.color]}>
-          <boxGeometry args={[box.size[0], box.size[1], 0.006]} />
-        </mesh>
+        <mesh
+          key={index}
+          geometry={roundedBox(box.size[0], box.size[1], 0.006, 0.001)}
+          position={[box.position[0], box.position[1], 0]}
+          material={byColor[box.color]}
+          receiveShadow={box.color === 'ink'}
+        />
       ))}
     </group>
   )
 }
 
 export function Ada({ mood, gesture, gestureKey, speaking, reducedMotion, lookAt, ...group }: AdaProps) {
-  const m = materials()
+  const m = useMaterials()
   const body = useRef<Group>(null)
   const head = useRef<Group>(null)
   const armPX = useRef<Group>(null)
@@ -127,15 +134,15 @@ export function Ada({ mood, gesture, gestureKey, speaking, reducedMotion, lookAt
   return (
     <group {...group}>
       <group ref={body}>
-        <mesh geometry={bodyGeometry} material={m.porcelain} castShadow>
+        <mesh geometry={bodyGeometry} material={m.porcelain} castShadow receiveShadow>
           <HoverOutline />
         </mesh>
-        <mesh position-y={ADA.beltY} rotation-x={Math.PI / 2} material={m.mint}>
+        <mesh position-y={ADA.beltY} rotation-x={Math.PI / 2} material={m.limeGlow}>
           <torusGeometry args={[bodyRadiusAt(ADA.beltY) + 0.002, 0.005, 8, 64]} />
         </mesh>
         <ChestLogo />
         <group ref={head} position-y={HEAD_Y}>
-          <mesh scale={[1, 0.85, 0.95]} material={m.porcelain} castShadow>
+          <mesh scale={[1, 0.85, 0.95]} material={m.porcelain} castShadow receiveShadow>
             <sphereGeometry args={[ADA.headRadius, 48, 32]} />
             <HoverOutline />
           </mesh>
@@ -143,14 +150,16 @@ export function Ada({ mood, gesture, gestureKey, speaking, reducedMotion, lookAt
             <sphereGeometry
               args={[ADA.headRadius * 1.015, 48, 24, VISOR.phiStart, VISOR.phiLength, VISOR.thetaStart, VISOR.thetaLength]}
             />
+            {/* Black lacquered glass over the face: the face texture glows through it, unchanged. */}
             <meshPhysicalMaterial
-              color="#050607"
+              color={tints.visor}
               roughness={0.1}
               clearcoat={1}
-              emissive="#ffffff"
+              emissive={brand.onDark}
               emissiveMap={face.texture}
               emissiveIntensity={1.4}
               toneMapped={false}
+              userData={{ auditExempt: 'glass' }}
             />
           </mesh>
         </group>
@@ -161,7 +170,7 @@ export function Ada({ mood, gesture, gestureKey, speaking, reducedMotion, lookAt
           <Arm />
         </group>
       </group>
-      <mesh position-y={-0.02} rotation-x={-Math.PI / 2} raycast={() => null}>
+      <mesh position-y={-0.02} rotation-x={-Math.PI / 2} raycast={() => null} userData={{ auditExempt: 'emissive' }}>
         <circleGeometry args={[0.3, 48]} />
         <meshBasicMaterial map={halo} transparent opacity={0.55} depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
       </mesh>

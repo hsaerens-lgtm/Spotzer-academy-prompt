@@ -1,9 +1,9 @@
-import { RoundedBox } from '@react-three/drei'
 import { useEffect, useMemo } from 'react'
 import { CanvasTexture, SRGBColorSpace } from 'three'
 import { brand } from '../../core/brand'
 import { HoverOutline } from '../interactive'
-import { materials } from '../materials'
+import { useMaterials } from '../materials'
+import { roundedBox } from '../shapes'
 import type { ObjectProps } from '../types'
 
 /** Abstract "app window" for the laptop screen: shapes only, no text to translate. */
@@ -27,21 +27,22 @@ function screenTexture() {
   return texture
 }
 
+/** Aluminium laptop at the end of the table: base, lid leaning back 15 degrees, and its glowing screen (audit: screen). */
 export function Laptop(props: ObjectProps) {
-  const m = materials()
+  const m = useMaterials()
   const texture = useMemo(screenTexture, [])
   useEffect(() => () => texture.dispose(), [texture])
   return (
     <group {...props}>
-      <RoundedBox args={[0.34, 0.018, 0.24]} radius={0.008} smoothness={2} position-y={0.009} material={m.metal} castShadow>
+      <mesh geometry={roundedBox(0.34, 0.018, 0.24, 0.008)} position-y={0.009} material={m.brushedMetal} castShadow receiveShadow>
         <HoverOutline />
-      </RoundedBox>
-      {/* hinge at the back edge; the lid leans back 15° */}
+      </mesh>
+      {/* hinge at the back edge; the lid leans back 15 degrees */}
       <group position={[0, 0.018, -0.12]} rotation-x={-0.26}>
-        <RoundedBox args={[0.34, 0.22, 0.012]} radius={0.006} smoothness={2} position={[0, 0.11, -0.006]} material={m.metal} castShadow>
+        <mesh geometry={roundedBox(0.34, 0.22, 0.012, 0.006)} position={[0, 0.11, -0.006]} material={m.brushedMetal} castShadow receiveShadow>
           <HoverOutline />
-        </RoundedBox>
-        <mesh position={[0, 0.112, 0.0008]}>
+        </mesh>
+        <mesh position={[0, 0.112, 0.0008]} userData={{ auditExempt: 'screen' }}>
           <planeGeometry args={[0.31, 0.19]} />
           <meshBasicMaterial map={texture} toneMapped={false} />
         </mesh>
