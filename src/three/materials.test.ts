@@ -60,12 +60,13 @@ test('every shared material is textured or exempt', () => {
 test('metal sets use the ARM blue channel for metalness', () => {
   const sets = fakeSets()
   const m = buildMaterials(sets)
-  for (const key of ['blackMetal', 'brushedMetal'] as const) {
+  for (const key of ['brushedMetal'] as const) {
     expect(m[key].metalness, key).toBe(1)
     expect(m[key].metalnessMap, key).toBe(sets[key].arm)
     expect(m[key].roughnessMap, key).toBe(sets[key].arm)
   }
-  for (const key of ['floor', 'oak', 'walnut', 'chairFabric', 'rug', 'consoleShell', 'paintedSteel'] as const) {
+  // The black powder-coat and the painted steel use the metal set as dielectrics (powderCoat.test.ts, banquette.test.ts).
+  for (const key of ['floor', 'oak', 'walnut', 'chairFabric', 'rug', 'consoleShell', 'blackMetal', 'paintedSteel'] as const) {
     expect(m[key].metalness, key).toBe(0)
     expect(m[key].metalnessMap, key).toBeNull()
   }

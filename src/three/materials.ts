@@ -60,7 +60,7 @@ export function pbrMaterial(
 
 /** Every shared material of the office. Pure: works on plain Texture objects (unit tests) as on loaded ones. */
 export function buildMaterials(sets: TextureSets) {
-  const pbr = (name: string, set: TextureSetId, tint: string, extra: { roughness?: number; colorMap?: boolean } = {}) =>
+  const pbr = (name: string, set: TextureSetId, tint: string, extra: { roughness?: number; colorMap?: boolean; metal?: boolean } = {}) =>
     pbrMaterial(sets[set], { name, tint, metal: TEXTURE_SETS[set].metal, ...extra })
   const glow = (name: string, colour: string, emissiveIntensity: number, extra: MeshStandardMaterialParameters = {}) =>
     markExempt(new MeshStandardMaterial({ name, color: colour, emissive: colour, emissiveIntensity, ...extra }), 'emissive')
@@ -76,11 +76,12 @@ export function buildMaterials(sets: TextureSets) {
     sofaFabric: pbr('sofaFabric', 'fabric', tints.sofaFabric),
     cushion: pbr('cushion', 'fabric', tints.cushion),
     rug: pbr('rug', 'carpet', tints.rug),
-    blackMetal: pbr('blackMetal', 'blackMetal', tints.blackMetal),
-    // Black paint on steel, for a large face (the banquette's base): the blackMetal textures as a dielectric, with the
-    // colour map's own dark grey as its albedo. As a tinted metal it was a black body (0.023 x 0.11 = 0.0026, no diffuse
-    // term) and read pure black in the shade; this one lights like any other surface (banquette.test.ts).
-    paintedSteel: pbrMaterial(sets.blackMetal, { name: 'paintedSteel', tint: tints.paintedSteel, metal: false }),
+    // Black powder-coat on steel and aluminium: the metal046a textures as a dielectric (`metal: false`: no metalness map).
+    // As a tinted metal it was a black body (reflectance 0.023 x 0.11 = 0.0026, no diffuse term): flat silhouettes, no
+    // highlights. As a coat its albedo is the tint times the colour map (about 0.04) and it catches the lights (powderCoat.test.ts).
+    blackMetal: pbr('blackMetal', 'blackMetal', tints.blackMetal, { metal: false }),
+    // The same textures with the colour map's own dark grey as the albedo (tint white), for a large face (the banquette's base).
+    paintedSteel: pbr('paintedSteel', 'blackMetal', tints.paintedSteel, { metal: false }),
     // Aluminium: metal027's colour map (mean sRGB 46) would cap its reflectance near black, so the tint is its colour.
     brushedMetal: pbr('brushedMetal', 'brushedMetal', tints.brushedMetal, { colorMap: false }),
     consoleShell: pbr('consoleShell', 'wall', tints.consoleShell, { roughness: 0.7 }),

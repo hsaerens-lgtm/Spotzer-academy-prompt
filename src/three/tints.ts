@@ -4,7 +4,8 @@ import { brand } from '../core/brand'
 export const tints = {
   floor: '#c8a27a', wall: '#b9ad9c', ceiling: '#e6e0d6', skirting: '#8f8577', slats: '#c99a68', oak: '#d2a878', walnut: '#a8774f',
   chairFabric: '#a39684', sofaFabric: '#809fb3', cushion: brand.lime, rug: '#b8aa96',
-  blackMetal: '#2a2b2d', brushedMetal: '#b9bcc0', consoleShell: '#c9c6bd', consoleDark: '#3a3d40',
+  // Black powder-coat: over the colour map (mean 0.11 linear) this is an albedo of about 0.031.
+  blackMetal: '#919296', brushedMetal: '#b9bcc0', consoleShell: '#c9c6bd', consoleDark: '#3a3d40',
   // Painted steel (the banquette's base): white leaves the colour map as it is, a dark grey paint (mean sRGB 93).
   paintedSteel: '#ffffff',
   porcelain: brand.onDark, visor: brand.nearBlack, glass: '#dfe8ee', warmLight: '#ffd29a', diffuser: '#857a6b', diffuserGlow: '#b8a58a', posterPaper: '#f1ece2',
