@@ -21,7 +21,7 @@ import {
 export type ZoneId = 'office' | 'workshop' | 'dungeon'
 export const ZONES: readonly ZoneId[] = ['office', 'workshop', 'dungeon']
 export type Via = 'laptop' | 'tv'
-export type HoverTarget = 'laptop' | 'tv' | 'ada'
+export type HoverTarget = 'laptop' | 'tv' | 'ada' | 'clock'
 export type WorkshopApp = 'corrector' | 'prompts'
 export interface WorkshopRoute {
   mission: string | null

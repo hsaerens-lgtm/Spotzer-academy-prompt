@@ -40,7 +40,8 @@ export function isSoftwareRenderer(renderer: string): boolean {
 
 /**
  * True once Stage has found a software rasterizer: the office then hides what costs the most per frame and no journey
- * needs (the street trees, Task 8). Never true on a GPU: the spec's tier table applies unchanged on the reference PC.
+ * needs (the park, Task 8; the sideboard and its lamp, Task 11). Never true on a GPU: the spec's tier table applies
+ * unchanged on the reference PC.
  */
 export const SoftwareRendererContext = createContext(false)
 

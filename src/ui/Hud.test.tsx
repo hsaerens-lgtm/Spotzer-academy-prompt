@@ -1,7 +1,7 @@
 import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { getContent } from '../content/load'
-import { appStore } from '../core/store'
+import { appStore, type AppState } from '../core/store'
 import { resetAppStore } from '../test/resetAppStore'
 import { Hud } from './Hud'
 
@@ -60,4 +60,28 @@ test('the HUD is inert while the expanded view is open', () => {
   expect(hud).toHaveAttribute('inert')
   act(() => appStore.getState().setExpandOpen(false))
   expect(hud).not.toHaveAttribute('inert')
+})
+
+test('the Time of day button advances the phase', async () => {
+  resetAppStore({ phase: 'day', phaseTransition: null })
+  render(<Hud />)
+  await userEvent.click(screen.getByRole('button', { name: 'Time of day' }))
+  expect(appStore.getState().phase).toBe('sunset')
+})
+
+test('the Time of day button only shows in the 3D office', () => {
+  const hidden: [string, Partial<AppState>][] = [
+    ['reading mode', { readingMode: true }],
+    ['no WebGL', { webgl: 'unavailable' }],
+    ['another zone', { zone: 'workshop' }],
+  ]
+  for (const [name, overrides] of hidden) {
+    resetAppStore(overrides)
+    const { unmount } = render(<Hud />)
+    expect(screen.queryByRole('button', { name: 'Time of day' }), name).not.toBeInTheDocument()
+    unmount()
+  }
+  resetAppStore()
+  render(<Hud />)
+  expect(screen.getByRole('button', { name: 'Time of day' })).toBeInTheDocument()
 })

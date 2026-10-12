@@ -88,7 +88,7 @@ export const layout = {
   ] as Pose[],
   flights: {
     laptop: { position: [-0.8, 0.95, 0.39], target: [-0.8, 0.87, 0.1] },
-    tv: { position: [3.95, 0.8, -1.4], target: [4.35, 0.78, -1.4] },
+    tv: { position: [4.05, 0.763, -1.4], target: [4.42, 0.758, -1.4] },
   } as Record<Via, Pose>,
   objects: {
     table: { position: [TABLE.center.x, 0, TABLE.center.z] } as Placement,

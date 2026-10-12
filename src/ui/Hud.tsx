@@ -16,7 +16,9 @@ export function Hud() {
   const webglOk = useApp((s) => s.webgl === 'ok')
   const expandOpen = useApp((s) => s.expandOpen)
   const zone = useApp((s) => s.zone)
-  const { setSound, setLang, setReadingMode } = appStore.getState()
+  // The keyboard way to the wall clock: only where the 3D office is on screen.
+  const officeIn3D = useApp((s) => s.zone === 'office' && s.webgl === 'ok' && !s.readingMode)
+  const { setSound, setLang, setReadingMode, advancePhase } = appStore.getState()
   const seenCount = content.topics.filter((topic) => seen.includes(topic.id)).length
 
   // The workshop's fake PC has its own taskbar (sound, back to the office).
@@ -32,6 +34,11 @@ export function Hud() {
         <span className="hud__progress" data-testid="progress">
           {t('hud.progress', { seen: seenCount, total: content.topics.length })}
         </span>
+        {officeIn3D && (
+          <Button size="sm" variant="solid" onClick={() => advancePhase()}>
+            {t('hud.timeOfDay')}
+          </Button>
+        )}
         {webglOk && (
           <Button size="sm" variant="solid" onClick={() => setReadingMode(!readingMode)}>
             {readingMode ? t('hud.exitReadingMode') : t('hud.readingMode')}

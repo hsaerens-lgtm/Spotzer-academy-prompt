@@ -59,7 +59,10 @@ export const MODEL_PARTS = {
 /** Model materials whose name matches are glass (audit exemption). */
 export const GLASS_MATERIAL = /_glass$/
 /**
- * The TV picture, in the normalised television_02 frame (origin at the bottom centre, front +z).
- * Starting values; Task 11 aligns them on screenshots. center.z sits at most 6 mm in front of the model's front face.
+ * The TV picture, in the normalised television_02 frame (origin at the bottom centre, front +z), aligned on screenshots
+ * in Task 11. The glass bulges from z 0.143 at its rim (x +/-0.153, y 0.144 to 0.370) to 0.175 at its centre, the
+ * model's front face. The flat picture sits 2 mm in front of that centre (at most 6 mm): seen from the TV flight's end,
+ * 37 cm away, it covers the glass up to its rim, edges bowed out included, and stays inside the bezel. 4:3, like its
+ * textures.
  */
-export const CRT_SCREEN = { width: 0.27, height: 0.2, center: [0, 0.235, 0.177] as [number, number, number] }
+export const CRT_SCREEN = { width: 0.3, height: 0.225, center: [0, 0.258, 0.177] as [number, number, number] }

@@ -29,3 +29,14 @@ test('declared models live under assets/models', () => {
     expect(catalogue, name).toContain(url)
   }
 })
+
+test('the sideboard, the TV and the wall clock are drawn by their CC0 models', () => {
+  expect(resolveObject('sideboard')).toEqual({ kind: 'glb', url: modelUrl('sideboard') })
+  expect(resolveObject('crtTv')).toEqual({ kind: 'glb', url: modelUrl('television') })
+  expect(resolveObject('clock')).toEqual({ kind: 'glb', url: modelUrl('wallClock') })
+  expect([glbModels.sideboard, glbModels.crtTv, glbModels.clock]).toEqual(
+    ['modern_wooden_cabinet', 'television_02', 'wall_clock'].map((id) => publicUrl(`assets/models/${id}.glb`)),
+  )
+  // Nothing else draws the clock: without its model it has no source.
+  expect(hasSource('clock', {})).toBe(false)
+})

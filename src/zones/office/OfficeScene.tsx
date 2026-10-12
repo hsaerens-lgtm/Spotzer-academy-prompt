@@ -18,13 +18,15 @@ import { PRESETS } from './lighting/presets'
 import { OUTDOOR } from './outdoor/cityPlan'
 import { Outdoor } from './outdoor/Outdoor'
 import { Room } from './Room'
+import { SideboardSet } from './SideboardSet'
+import { WallClock } from './WallClock'
 import { WallScreen3D } from './WallScreen3D'
 
 export function OfficeScene() {
   const settings = useQualitySettings()
   const materials = useMaterials()
   useEmissiveLevels(materials)
-  const { table, chairs, microphones, sideboard, lamp, laptop, tvStand, tv, retroConsole, sofa, floorLamp, logo, shelves } = layout.objects
+  const { table, chairs, microphones, laptop, tvStand, tv, retroConsole, sofa, floorLamp, logo, shelves } = layout.objects
   return (
     <>
       <color attach="background" args={[brand.ink]} />
@@ -40,14 +42,13 @@ export function OfficeScene() {
       {microphones.map((mic, index) => (
         <SceneObject key={index} object="microphone" name={`microphone-${index}`} position={mic.position} rotation-y={mic.rotationY} />
       ))}
-      <SceneObject object="sideboard" name="sideboard" position={sideboard.position} />
-      <SceneObject object="lamp" name="lamp" position={lamp.position} />
+      <SideboardSet />
       <Interactive id="laptop" onActivate={objectActions.laptop}>
         <SceneObject object="laptop" name="laptop" position={laptop.position} rotation-y={laptop.rotationY} />
       </Interactive>
       <SceneObject object="tvStand" name="tvStand" position={tvStand.position} rotation-y={tvStand.rotationY} />
       <Interactive id="tv" onActivate={objectActions.tv}>
-        <SceneObject object="crtTv" name="tv" position={tv.position} rotation-y={tv.rotationY} />
+        <SceneObject object="crtTv" name="tv" outline position={tv.position} rotation-y={tv.rotationY} />
         <CrtScreen />
         <SceneObject object="retroConsole" name="retroConsole" position={retroConsole.position} rotation-y={retroConsole.rotationY} />
       </Interactive>
@@ -55,6 +56,7 @@ export function OfficeScene() {
       <SceneObject object="floorLamp" name="floorLamp" position={floorLamp.position} rotation-y={floorLamp.rotationY} />
       <SceneObject object="logoCubes" name="logo" position={logo.position} rotation-y={logo.rotationY} />
       <SceneObject object="shelves" name="shelves" position={shelves.position} rotation-y={shelves.rotationY} />
+      <WallClock />
       <WallScreen3D />
       <AdaController />
       <ContactShadows position={[layout.ada.position[0], CONTACT_SHADOW_Y, layout.ada.position[2]]} scale={1.4} opacity={0.35} blur={2.5} far={1.6} resolution={256} frames={1} />

@@ -11,7 +11,8 @@
     "soundOff": "Sound off",
     "progress": "{{seen}}/{{total}} topics",
     "readingMode": "Reading mode",
-    "exitReadingMode": "3D mode"
+    "exitReadingMode": "3D mode",
+    "timeOfDay": "Time of day"
   },
   "welcome": {
     "greeting": "Hi, I'm Ada. Welcome to the office – take a seat and let's talk about AI.",
@@ -43,7 +44,8 @@
   "objects": {
     "laptop": "Prompt Workshop",
     "tv": "The Dungeon",
-    "ada": "Ada"
+    "ada": "Ada",
+    "clock": "Change the time of day"
   },
   "zones": {
     "soonLabel": "Coming soon",

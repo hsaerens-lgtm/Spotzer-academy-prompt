@@ -18,3 +18,10 @@ test('clicking Ada makes her wave', () => {
   objectActions.ada()
   expect(appStore.getState().adaPokes).toBe(1)
 })
+
+test('the wall clock moves to the next phase', () => {
+  resetAppStore({ phase: 'day', phaseTransition: null })
+  objectActions.clock()
+  expect(appStore.getState().phase).toBe('sunset')
+  expect(appStore.getState().phaseTransition).toMatchObject({ from: 'day', to: 'sunset' })
+})

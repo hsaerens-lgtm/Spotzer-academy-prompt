@@ -2,9 +2,9 @@ import { useGLTF } from '@react-three/drei'
 import { createPortal } from '@react-three/fiber'
 import { Fragment, useLayoutEffect, useMemo, type ComponentType } from 'react'
 import type { Object3D } from 'three'
+import { modelUrl } from './assets'
 import { cloneModel, meshesOf, normaliseModel, prepareModel, scaleToHeight } from './gltf'
 import { HoverOutline } from './interactive'
-import { CrtTv } from './props/CrtTv'
 import { FloorLamp } from './props/FloorLamp'
 import { Lamp } from './props/Lamp'
 import { Laptop } from './props/Laptop'
@@ -12,7 +12,6 @@ import { LogoCubes } from './props/LogoCubes'
 import { Microphone } from './props/Microphone'
 import { RetroConsole } from './props/RetroConsole'
 import { Shelves } from './props/Shelves'
-import { Sideboard } from './props/Sideboard'
 import { Sofa } from './props/Sofa'
 import { Table } from './props/Table'
 import { TvStand } from './props/TvStand'
@@ -22,7 +21,8 @@ export type ObjectName =
   | 'table' | 'laptop' | 'retroConsole' | 'sofa' | 'logoCubes' | 'lamp' | 'microphone' // procedural (existing)
   | 'tvStand' | 'shelves' // procedural, Task 10
   | 'floorLamp' // procedural, Task 10b
-  | 'sideboard' | 'crtTv' // procedural until Task 11, then GLB
+  | 'sideboard' | 'crtTv' // GLB since Task 11
+  | 'clock' // GLB, Task 11
 
 /** Every object name, in the order of the union (objects.test.ts checks that they match). */
 export const OBJECT_NAMES = [
@@ -30,6 +30,7 @@ export const OBJECT_NAMES = [
   'tvStand', 'shelves',
   'floorLamp',
   'sideboard', 'crtTv',
+  'clock',
 ] as const satisfies readonly ObjectName[]
 
 /**
@@ -37,7 +38,11 @@ export const OBJECT_NAMES = [
  * scripts/assets/manifest.json and src/three/assets.ts (MODELS), always through modelUrl() (publicUrl, no leading '/').
  * A model is normalised on load (standing on y = 0, centred on x and z); its front must face +z, in metres.
  */
-export const glbModels: Partial<Record<ObjectName, string>> = {}
+export const glbModels: Partial<Record<ObjectName, string>> = {
+  sideboard: modelUrl('sideboard'),
+  crtTv: modelUrl('television'),
+  clock: modelUrl('wallClock'),
+}
 
 const procedural: Partial<Record<ObjectName, ComponentType<ObjectProps>>> = {
   table: Table,
@@ -50,8 +55,6 @@ const procedural: Partial<Record<ObjectName, ComponentType<ObjectProps>>> = {
   tvStand: TvStand,
   shelves: Shelves,
   floorLamp: FloorLamp,
-  sideboard: Sideboard,
-  crtTv: CrtTv,
 }
 
 export interface ModelProps extends ObjectProps {

@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { CanvasTexture, NearestFilter, SRGBColorSpace, type Mesh } from 'three'
 import { brand } from '../../core/brand'
 import { useApp } from '../../core/store'
+import { CRT_SCREEN } from '../../three/assets'
 import { logoBoxes } from '../../three/logo'
-import { CRT_SCREEN } from '../../three/props/CrtTv'
 import { layout } from './layout'
 
 export const BLINK_SECONDS = 0.6
@@ -108,7 +108,7 @@ export function CrtScreen() {
   })
 
   return (
-    <group position={position} rotation-y={rotationY}>
+    <group position={position} rotation-y={rotationY} userData={{ auditExempt: 'screen' }}>
       <mesh position={[cx, cy, cz + 0.001]}>
         <planeGeometry args={[CRT_SCREEN.width, CRT_SCREEN.height]} />
         <meshBasicMaterial map={noiseOn ? noise.texture : title.base} toneMapped={false} />

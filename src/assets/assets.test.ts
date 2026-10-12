@@ -102,6 +102,23 @@ test('models are meshopt-compressed with WebP textures and never use Draco', asy
   }
 }, 60_000)
 
+// Task 11: a hovered model gets drei's Outlines on each mesh. Outlines draws an indexed geometry from a non-indexed copy
+// of its own, which it disposes on unhover; a non-indexed geometry it would use and dispose as is, although the loader
+// cache shares it with every copy of the model. Skinned meshes would take its skinned path instead.
+test('every model primitive is indexed and no model is skinned', async () => {
+  const files = listFiles().filter((file) => /^models\/[^/]+\.glb$/.test(file))
+  expect(files.length).toBeGreaterThan(0)
+  for (const file of files) {
+    const root = (await readModel(file.slice('models/'.length, -'.glb'.length))).getRoot()
+    expect(root.listSkins(), file).toEqual([])
+    const primitives = root.listMeshes().flatMap((mesh) => mesh.listPrimitives())
+    expect(primitives.length, file).toBeGreaterThan(0)
+    for (const primitive of primitives) {
+      expect(primitive.getIndices(), `${file}, material ${primitive.getMaterial()?.getName()}`).not.toBeNull()
+    }
+  }
+}, 60_000)
+
 test('the clock keeps three hand nodes with identity transforms', async () => {
   const nodes = (await readModel('wall_clock')).getRoot().listNodes()
   for (const name of Object.values(MODEL_PARTS.clockHands)) {
