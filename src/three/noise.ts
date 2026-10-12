@@ -13,8 +13,8 @@ import {
 
 /*
  * Small procedural textures computed in memory (no canvas, so they also work in the unit tests): a grey value noise
- * that breaks up flat colours and roughness, and Horn.os' glaze speckle for pots. Both are cached and never disposed.
- * A cached texture is shared by every caller that asks for the same options: never change its `repeat` or `offset`
+ * that breaks up flat colours and roughness, the same noise as a normal map, and Horn.os' glaze speckle for pots.
+ * All are cached and never disposed. A cached texture is shared by every caller that asks for the same options: never change its `repeat` or `offset`
  * (or anything else), clone() it first instead.
  */
 
@@ -36,7 +36,7 @@ export interface SpeckleOptions {
 }
 
 /** Horn.os' LCG: the same seed gives the same texture on every run. Returns numbers in [0, 1). */
-function lcg(seed: number): () => number {
+export function lcg(seed: number): () => number {
   let s = seed >>> 0
   return () => {
     s = (s * 1664525 + 1013904223) >>> 0
@@ -110,6 +110,48 @@ export function noiseTexture(options: NoiseOptions = {}): DataTexture {
   }
   const texture = dataTexture(data, size, [repeat, repeat], srgb)
   noiseCache.set(key, texture)
+  return texture
+}
+
+export interface NormalNoiseOptions {
+  size?: number
+  seed?: number
+  /** Slope of the relief per cell of the finest lattice; 2 is a fine grain, 6 a rough one. */
+  strength?: number
+  repeat?: number
+}
+
+const normalCache = new Map<string, DataTexture>()
+
+/**
+ * A tangent-space normal map (OpenGL convention, +Y up in the image) of the same tileable value noise: fine relief for a
+ * surface that has none of its own, such as soil. RGBA8, tileable, with mipmaps, linear. Defaults: 64 px, seed 1, strength 2, repeat 1.
+ */
+export function normalNoiseTexture(options: NormalNoiseOptions = {}): DataTexture {
+  const { size = 64, seed = 1, strength = 2, repeat = 1 } = options
+  const key = JSON.stringify([size, seed, strength, repeat])
+  const cached = normalCache.get(key)
+  if (cached) return cached
+  const height = valueNoise(size, seed)
+  const at = (x: number, y: number) => height[((y + size) % size) * size + ((x + size) % size)]
+  // A slope in heights per pixel, turned into one per lattice cell (the finest has size / 16 pixels) so that strength
+  // means the same at every size (strength 2 is a scale of size / 16).
+  const scale = (strength * size) / 32
+  const data = new Uint8Array(size * size * 4)
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const nx = -(at(x + 1, y) - at(x - 1, y)) * scale
+      const ny = -(at(x, y + 1) - at(x, y - 1)) * scale
+      const length = Math.hypot(nx, ny, 1)
+      const o = (y * size + x) * 4
+      data[o] = Math.round(((nx / length) * 0.5 + 0.5) * 255)
+      data[o + 1] = Math.round(((ny / length) * 0.5 + 0.5) * 255)
+      data[o + 2] = Math.round(((1 / length) * 0.5 + 0.5) * 255)
+      data[o + 3] = 255
+    }
+  }
+  const texture = dataTexture(data, size, [repeat, repeat], false)
+  normalCache.set(key, texture)
   return texture
 }
 

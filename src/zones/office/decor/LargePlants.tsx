@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { CylinderGeometry, MeshStandardMaterial, type Group } from 'three'
+import { MeshStandardMaterial, type Group } from 'three'
 import { ENV_MAP_INTENSITY } from '../../../three/materials'
-import { noiseTexture } from '../../../three/noise'
+import { noiseTexture, normalNoiseTexture, speckleTexture } from '../../../three/noise'
 import { SceneObject } from '../../../three/objects'
 import { useSway } from '../../../three/plants/sway'
 import { tints } from '../../../three/tints'
 import { layout } from '../layout'
 import { PACHIRA } from './pachira'
+import { soilGeometry, soilSpeckle } from './soil'
 
 export { PACHIRA }
 
@@ -14,24 +15,23 @@ export { PACHIRA }
 export const LARGE_PLANT_SWAY = 0.006
 
 /**
- * The soil of the clay planter, which comes empty: a dark disc just under the rim, the trunk's base at its top (the soil
- * line, PACHIRA.base). A colour map and a roughness map, both noise, so that it passes the material audit; shadows both ways.
+ * The soil of the clay planter, which comes empty: a skin of potting soil under the rim (soil.ts), its edge in the clay
+ * wall, the trunk's base at the soil line (PACHIRA.base). A speckled colour map in browns derived from the soil tint,
+ * a fine normal map and a roughness map, so that it passes the material audit; shadows both ways.
  */
 function PachiraSoil() {
-  const { radius, thickness } = PACHIRA.soil
-  const material = useMemo(
-    () =>
-      new MeshStandardMaterial({
-        name: 'pachira-soil',
-        color: tints.soil,
-        map: noiseTexture({ size: 64, min: 0.4, max: 1, seed: 29, repeat: 6, srgb: true }),
-        roughnessMap: noiseTexture({ seed: 31, repeat: 6 }),
-        roughness: 1,
-        envMapIntensity: ENV_MAP_INTENSITY.plant,
-      }),
-    [],
-  )
-  const geometry = useMemo(() => new CylinderGeometry(radius, radius, thickness, 32), [radius, thickness])
+  const material = useMemo(() => {
+    const { base, dots } = soilSpeckle(tints.soil)
+    return new MeshStandardMaterial({
+      name: 'pachira-soil',
+      map: speckleTexture({ base, dots, seed: PACHIRA.soil.seed, size: 128, count: 1600, repeat: [2, 2] }),
+      normalMap: normalNoiseTexture({ seed: 33, strength: 3, repeat: 4 }),
+      roughnessMap: noiseTexture({ seed: 31, repeat: 6 }),
+      roughness: 1,
+      envMapIntensity: ENV_MAP_INTENSITY.plant,
+    })
+  }, [])
+  const geometry = useMemo(() => soilGeometry(PACHIRA.soil), [])
   useEffect(
     () => () => {
       material.dispose()
@@ -39,7 +39,7 @@ function PachiraSoil() {
     },
     [material, geometry],
   )
-  return <mesh name="pachira-soil" position-y={PACHIRA.base - thickness / 2} geometry={geometry} material={material} castShadow receiveShadow />
+  return <mesh name="pachira-soil" position-y={PACHIRA.base} geometry={geometry} material={material} castShadow receiveShadow />
 }
 
 /** The Poly Haven floor plants: a large potted plant by the glazing, a money tree in a clay planter in the back corner. */

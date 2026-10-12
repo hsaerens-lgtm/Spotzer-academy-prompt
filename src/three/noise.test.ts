@@ -1,5 +1,5 @@
 import { Color, LinearMipmapLinearFilter, NoColorSpace, RepeatWrapping, SRGBColorSpace } from 'three'
-import { noiseTexture, speckleTexture } from './noise'
+import { noiseTexture, normalNoiseTexture, speckleTexture } from './noise'
 import { tints } from './tints'
 
 const pixels = (texture: { image: { data: unknown } }) => texture.image.data as Uint8Array
@@ -52,4 +52,41 @@ test('speckle starts from its base colour and repeats', () => {
   expect(texture.wrapT).toBe(RepeatWrapping)
   expect(texture.repeat.toArray()).toEqual([3, 1])
   expect(speckleTexture({ ...options, repeat: [2, 1] }).repeat.toArray()).toEqual([2, 1])
+})
+
+test('the normal noise is a tangent-space normal map of the same noise: unit vectors, flat on average, never constant', () => {
+  const texture = normalNoiseTexture({ size: 32, seed: 4, strength: 2 })
+  expect(normalNoiseTexture({ size: 32, seed: 4, strength: 2 })).toBe(texture)
+  expect(texture.colorSpace).toBe(NoColorSpace)
+  expect(texture.wrapS).toBe(RepeatWrapping)
+  expect(texture.generateMipmaps).toBe(true)
+  const data = pixels(texture)
+  let x = 0
+  let y = 0
+  let z = 0
+  let steepest = 0
+  for (let i = 0; i < data.length; i += 4) {
+    const v = [data[i] / 255 * 2 - 1, data[i + 1] / 255 * 2 - 1, data[i + 2] / 255 * 2 - 1]
+    // Unit length, up to the rounding of 8 bits; pointing out of the surface.
+    expect(Math.hypot(v[0], v[1], v[2])).toBeCloseTo(1, 1)
+    expect(v[2]).toBeGreaterThan(0)
+    expect(data[i + 3]).toBe(255)
+    x += v[0]
+    y += v[1]
+    z += v[2]
+    steepest = Math.max(steepest, Math.hypot(v[0], v[1]))
+  }
+  const count = data.length / 4
+  // Flat on average (a tangent-space map leans no way), but with some relief.
+  expect(Math.abs(x / count)).toBeLessThan(0.05)
+  expect(Math.abs(y / count)).toBeLessThan(0.05)
+  expect(z / count).toBeGreaterThan(0.8)
+  expect(steepest).toBeGreaterThan(0.15)
+  // Another seed, another relief; a stronger one leans more.
+  expect(pixels(normalNoiseTexture({ size: 32, seed: 5, strength: 2 }))).not.toEqual(data)
+  const strong = pixels(normalNoiseTexture({ size: 32, seed: 4, strength: 6 }))
+  let strongZ = 0
+  for (let i = 0; i < strong.length; i += 4) strongZ += strong[i + 2] / 255 * 2 - 1
+  expect(strongZ / count).toBeLessThan(z / count)
+  expect(normalNoiseTexture({ size: 32, seed: 4, strength: 2, repeat: 3 }).repeat.toArray()).toEqual([3, 3])
 })

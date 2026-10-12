@@ -1,6 +1,6 @@
 import { Document, WebIO } from '@gltf-transform/core'
 import { act, extend } from '@react-three/fiber'
-import { Box3, Group, Mesh, type MeshStandardMaterial, type Object3D } from 'three'
+import { Box3, Color, Group, Mesh, SRGBColorSpace, type DataTexture, type MeshStandardMaterial, type Object3D } from 'three'
 import { QualityContext, type Quality } from '../../../app/quality'
 import { appStore } from '../../../core/store'
 import { isClockDeprecation, mountR3F, type TestRoot } from '../../../test/r3fRoot'
@@ -234,21 +234,33 @@ test('the pachira stands in its enlarged clay planter, the tree 1.55 m tall from
   expect(named(state.scene, 'pottedPlant').children).toHaveLength(1)
 })
 
-// The clay planter has no soil of its own: a dark disc just under its rim, the trunk's base at its top.
-test('the pachira is seated in a soil disc in its planter', async () => {
+// The clay planter has no soil of its own: a skin of potting soil just under its rim, its edge in the clay wall, the trunk's base at the soil line.
+test('the pachira is seated in a skin of soil in its planter', async () => {
   const { state } = await mountDecor()
   const pachira = named(state.scene, 'pachira')
   const soil = named(state.scene, 'pachira-soil') as Mesh
   expect(soil.isMesh).toBe(true)
   expect(isInside(soil, pachira)).toBe(true)
   const box = new Box3().setFromObject(soil)
-  expect(box.max.y).toBeCloseTo(PACHIRA.base, 6)
-  expect(box.max.y - box.min.y).toBeCloseTo(PACHIRA.soil.thickness, 6)
+  // The soil line is the skin's own origin: it rises to a low dome above it and dips a little under it at the wall.
+  const { dome, bump, drop } = PACHIRA.soil
+  expect(box.max.y).toBeGreaterThan(PACHIRA.base)
+  expect(box.max.y).toBeLessThanOrEqual(PACHIRA.base + dome + bump + 1e-9)
+  expect(box.min.y).toBeGreaterThanOrEqual(PACHIRA.base - drop - bump - 1e-9)
   expect(box.max.x - box.min.x).toBeCloseTo(2 * PACHIRA.soil.radius, 2)
   const material = soil.material as MeshStandardMaterial
-  expect(material.color.getHexString()).toBe(tints.soil.slice(1))
-  // The audit rule: a colour map and a roughness map.
+  // The colour map is a speckle of browns derived from the soil tint (its mean is a warm brown of the same hue, a little lighter).
+  const hsl = (colour: Color) => colour.getHSL({ h: 0, s: 0, l: 0 }, SRGBColorSpace)
+  const pixels = (material.map as DataTexture).image.data as Uint8Array
+  const mean = [0, 1, 2].map((c) => pixels.reduce((sum, value, i) => (i % 4 === c ? sum + value : sum), 0) / (pixels.length / 4) / 255)
+  const speckle = hsl(new Color().setRGB(mean[0], mean[1], mean[2], SRGBColorSpace))
+  expect(material.color.getHexString()).toBe('ffffff')
+  expect(Math.abs(speckle.h - hsl(new Color(tints.soil)).h)).toBeLessThan(0.05)
+  expect(speckle.l).toBeGreaterThan(hsl(new Color(tints.soil)).l)
+  // The audit rule: a colour map and a normal or roughness map (both here).
   expect(isTextured(material)).toBe(true)
+  expect(material.normalMap).toBeTruthy()
+  expect(material.roughnessMap).toBeTruthy()
   expect([soil.castShadow, soil.receiveShadow]).toEqual([true, true])
 })
 
