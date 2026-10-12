@@ -3,10 +3,17 @@ import { BoxGeometry, type Material } from 'three'
 import { useMaterials } from '../../../three/materials'
 import { metreUVs } from '../../../three/uv'
 import { glassPanes, glazingFrameBoxes, type BoxSpec } from './plan'
+import { withoutUnderside } from './underside'
 
-/** One box of the room plan, with UVs in metres so its PBR textures keep their real size. */
-export function PlanBox({ spec, material }: { spec: BoxSpec; material: Material }) {
-  const geometry = useMemo(() => metreUVs(new BoxGeometry(...spec.size)), [spec])
+/**
+ * One box of the room plan, with UVs in metres so its PBR textures keep their real size. With underside={false} it
+ * leaves out its bottom face, for a slab lying on the floor (see withoutUnderside).
+ */
+export function PlanBox({ spec, material, underside = true }: { spec: BoxSpec; material: Material; underside?: boolean }) {
+  const geometry = useMemo(() => {
+    const box = metreUVs(new BoxGeometry(...spec.size))
+    return underside ? box : withoutUnderside(box)
+  }, [spec, underside])
   useEffect(() => () => geometry.dispose(), [geometry])
   return (
     <mesh

@@ -1,4 +1,3 @@
-import { ContactShadows } from '@react-three/drei'
 import { useRef } from 'react'
 import type { Group } from 'three'
 import { useQualitySettings } from '../../app/quality'
@@ -14,8 +13,9 @@ import { CameraRig } from './camera/CameraRig'
 import { CrtScreen } from './CrtScreen'
 import { Decor } from './decor/Decor'
 import { DecorStage } from './decor/DecorStage'
+import { FloorContactShadow } from './FloorContactShadow'
 import { objectActions } from './interactions'
-import { CONTACT_SHADOW_Y, layout } from './layout'
+import { layout } from './layout'
 import { useEmissiveLevels } from './lighting/emissive'
 import { Lights } from './lighting/Lights'
 import { OfficeEnvironment } from './lighting/OfficeEnvironment'
@@ -69,10 +69,7 @@ export function OfficeScene() {
         <WallScreen3D />
         <AdaController />
       </group>
-      {/* frames={1}: drei draws a contact shadow once per render of the component. OfficeScene renders again when
-          sceneReady turns true, so the shadows are drawn once more with the base visible (it is hidden while compiling). */}
-      <ContactShadows position={[layout.ada.position[0], CONTACT_SHADOW_Y, layout.ada.position[2]]} scale={1.4} opacity={0.35} blur={2.5} far={1.6} resolution={256} frames={1} />
-      <ContactShadows position={[table.position[0], CONTACT_SHADOW_Y, table.position[2]]} scale={[5, 7.5]} opacity={0.55} blur={2.4} far={1.4} resolution={512} frames={1} />
+      <FloorContactShadow />
       <SceneReadySignal target={base} />
       {sceneReady && (
         <DecorStage>

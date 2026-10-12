@@ -6,7 +6,7 @@ import { NodeIO, type Document } from '@gltf-transform/core'
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions'
 import { getBounds } from '@gltf-transform/functions'
 import { MeshoptDecoder } from 'meshoptimizer'
-import { CRT_SCREEN, GLASS_MATERIAL, MODEL_PARTS } from '../three/assets'
+import { CRT_SCREEN, FRAME_ARTWORK, GLASS_MATERIAL, MODEL_PARTS } from '../three/assets'
 import { assetManifestSchema, entryFiles, manifestFiles } from './manifest'
 import { ASSET_BUDGET, ASSETS_DIR, CREDITS_FILE, LICENCE, modelFile } from './paths'
 
@@ -138,6 +138,24 @@ test('the pendant has its bulb material and the frame its artwork material', asy
   expect(pendant.filter((name) => GLASS_MATERIAL.test(name))).toEqual(['modern_ceiling_lamp_01_glass'])
   expect(await materials('hanging_picture_frame_01')).toContain(MODEL_PARTS.frameArtwork)
   expect((await materials('wall_clock')).filter((name) => GLASS_MATERIAL.test(name))).toEqual(['wall_clock_glass'])
+})
+
+// The posters are painted at the artwork's proportions (decor/posters.ts): its size, in metres, as the scene shows it.
+test('the frame artwork measures FRAME_ARTWORK', async () => {
+  const [node] = (await readModel('hanging_picture_frame_01')).getRoot().listNodes()
+  const artwork = node.getMesh()!.listPrimitives().find((primitive) => primitive.getMaterial()?.getName() === MODEL_PARTS.frameArtwork)!
+  const position = artwork.getAttribute('POSITION')!
+  const [min, max, corner] = [[Infinity, Infinity], [-Infinity, -Infinity], [] as number[]]
+  for (let i = 0; i < position.getCount(); i++) {
+    position.getElement(i, corner)
+    for (const axis of [0, 1]) {
+      min[axis] = Math.min(min[axis], corner[axis])
+      max[axis] = Math.max(max[axis], corner[axis])
+    }
+  }
+  const [scaleX, scaleY] = node.getScale()
+  expect((max[0] - min[0]) * scaleX).toBeCloseTo(FRAME_ARTWORK.width, 3)
+  expect((max[1] - min[1]) * scaleY).toBeCloseTo(FRAME_ARTWORK.height, 3)
 })
 
 test('the clock glass stays alpha-blended at 0.4 once the transmission extension is stripped', async () => {

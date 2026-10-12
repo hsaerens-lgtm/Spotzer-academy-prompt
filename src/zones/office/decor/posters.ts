@@ -20,8 +20,11 @@ export interface PosterDesign {
   paper: string
   shapes: PosterShape[]
 }
-/** Pixel size of a poster: the 0.594 x 0.841 m artwork of hanging_picture_frame_01 (ISO A ratio). */
-export const POSTER_SIZE = { width: 512, height: 724 } as const
+/**
+ * Pixel size of a poster: the proportions of the artwork it hangs on (FRAME_ARTWORK, 0.513 x 0.7615 m), so that a disc
+ * drawn round in pixels is round on the wall.
+ */
+export const POSTER_SIZE = { width: 512, height: 760 } as const
 
 /** Horn.os' LCG: the same seed gives the same poster on every run. Returns numbers in [0, 1). */
 function lcg(seed: number): () => number {

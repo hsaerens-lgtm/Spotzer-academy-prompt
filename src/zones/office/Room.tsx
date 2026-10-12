@@ -32,12 +32,15 @@ function SlatWall() {
  */
 export function Room() {
   const m = useMaterials()
-  const boxes = useMemo(() => [...shellBoxes(), ...banquetteBoxes(), ...ceilingLineBoxes(), rugBox()], [])
+  const boxes = useMemo(() => [...shellBoxes(), ...banquetteBoxes(), ...ceilingLineBoxes()], [])
+  const rug = useMemo(rugBox, [])
   return (
     <group name="room">
       {boxes.map((spec) => (
         <PlanBox key={spec.name} spec={spec} material={m[spec.material]} />
       ))}
+      {/* No underside: lying on the floor, it would shade the whole rug in the floor contact shadow. */}
+      <PlanBox spec={rug} material={m[rug.material]} underside={false} />
       <SlatWall />
       <Glazing />
     </group>

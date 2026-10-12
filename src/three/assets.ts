@@ -66,3 +66,5 @@ export const GLASS_MATERIAL = /_glass$/
  * textures.
  */
 export const CRT_SCREEN = { width: 0.3, height: 0.225, center: [0, 0.258, 0.177] as [number, number, number] }
+/** The artwork of hanging_picture_frame_01 in metres, as the scene shows it (measured: 0.5132 x 0.7615 m). */
+export const FRAME_ARTWORK = { width: 0.513, height: 0.7615 } as const

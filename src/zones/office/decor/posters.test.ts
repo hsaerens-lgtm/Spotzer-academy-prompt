@@ -1,7 +1,8 @@
 import { BufferAttribute, Texture, Vector2 } from 'three'
 import { brand } from '../../../core/brand'
+import { FRAME_ARTWORK } from '../../../three/assets'
 import { tints } from '../../../three/tints'
-import { POSTER_COLOURS, fitToUvRect, posterDesign, uvRect } from './posters'
+import { POSTER_COLOURS, POSTER_SIZE, fitToUvRect, posterDesign, uvRect } from './posters'
 
 const SEEDS = [101, 103, 1, 7, 42, 2026]
 
@@ -33,6 +34,15 @@ test('posters are the same on every run', () => {
 
 test('the two frames show different posters', () => {
   expect(posterDesign(101)).not.toEqual(posterDesign(103))
+})
+
+// Task 12 ruling: a poster has the proportions of the artwork it hangs on, so its disc, round in pixels, is round on the wall.
+test('a poster has the proportions of the frame artwork, so its disc is round on the wall', () => {
+  expect(POSTER_SIZE.width / POSTER_SIZE.height).toBeCloseTo(FRAME_ARTWORK.width / FRAME_ARTWORK.height, 3)
+  for (const seed of SEEDS) {
+    const disc = posterDesign(seed).shapes.find((shape) => shape.kind === 'circle')!
+    expect(disc.w * FRAME_ARTWORK.width, `seed ${seed}`).toBeCloseTo(disc.h * FRAME_ARTWORK.height, 3)
+  }
 })
 
 // hanging_picture_frame_01's artwork samples only the middle of its square image (u 0.165 to 0.835, v 0.002 to 0.998):
