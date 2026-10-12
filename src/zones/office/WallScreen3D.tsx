@@ -30,10 +30,14 @@ export function WallScreen3D() {
       {/* The DOM page and drei's occlusion plane are a screen: exempt from the material audit. */}
       <group userData={{ auditExempt: 'screen' }}>
         {/* Sits below the DOM overlay (z-index 10) and never catches the pointer. occlude="blending" lets foreground meshes hide it. */}
+        {/* renderOrder -1 draws drei's occlusion plane before every other opaque object (three sorts by material before
+            depth): its depth then spares the slats and the dark plane behind it from being lit, a third of the
+            presentation view (Task 14b, about 6 ms a frame on the reference iGPU, the same pixels). */}
         {connected && (
           <Html
             transform
             occlude="blending"
+            renderOrder={-1}
             distanceFactor={screenDistanceFactor(size[0])}
             position-z={0.003}
             zIndexRange={[5, 0]}
