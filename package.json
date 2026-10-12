@@ -20,7 +20,8 @@
     "check": "npm run typecheck && npm run test && npm run build && npm run budget",
     "assets:fetch": "node --disable-warning=ExperimentalWarning scripts/assets/fetch.mjs",
     "assets:build": "node --disable-warning=ExperimentalWarning scripts/assets/build.mjs",
-    "shots": "node scripts/shots.mjs"
+    "shots": "node scripts/shots.mjs",
+    "perf": "node scripts/perf.mjs"
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "0.21.0",
