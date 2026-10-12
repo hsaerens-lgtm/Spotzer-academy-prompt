@@ -87,9 +87,9 @@
       "api": "https://ambientcg.com/api/v2/full_json?id=Metal046A&include=downloadData",
       "licence": "CC0-1.0",
       "stage": "base",
-      "usage": "Black metal: legs, mullions, frames",
+      "usage": "Black powder-coat: legs, mullions, frames",
       "tileMetres": 1.0,
-      "metal": true,
+      "metal": false,
       "resolution": { "color": 1024, "normal": 1024, "arm": 512 }
     },
     {

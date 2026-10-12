@@ -7,6 +7,7 @@ export interface TextureSetSpec {
   assetId: string
   /** Real-world size of one texture repeat, in metres (geometry UVs are in metres, see three/uv.ts). */
   tileMetres: number
+  /** The office uses the set as a metal: metalness 1, read from the ARM map. False: a dielectric (metalness 0). */
   metal: boolean
 }
 export const TEXTURE_SETS: Record<TextureSetId, TextureSetSpec> = {
@@ -16,7 +17,8 @@ export const TEXTURE_SETS: Record<TextureSetId, TextureSetSpec> = {
   walnut: { assetId: 'american_walnut_veneer', tileMetres: 1, metal: false },
   fabric: { assetId: 'fabric036', tileMetres: 0.5, metal: false },
   carpet: { assetId: 'carpet016', tileMetres: 1.7, metal: false },
-  blackMetal: { assetId: 'metal046a', tileMetres: 1, metal: true },
+  // A black powder-coat, not a black metal (Task 14c): every material of this set is a dielectric.
+  blackMetal: { assetId: 'metal046a', tileMetres: 1, metal: false },
   brushedMetal: { assetId: 'metal027', tileMetres: 1, metal: true },
 }
 export const TEXTURE_SET_IDS = Object.keys(TEXTURE_SETS) as TextureSetId[]

@@ -1,8 +1,10 @@
 // @vitest-environment node
 import { albedo, luminance } from '../test/albedo'
 import { fakeTextureSets } from '../test/textureSets'
+import { TEXTURE_SETS } from './assets'
 import { isTextured } from './audit'
-import { ENV_MAP_INTENSITY, buildMaterials } from './materials'
+import { ENV_MAP_INTENSITY, buildMaterials, pbrMaterial } from './materials'
+import { tints } from './tints'
 
 /*
  * The black parts of the office (chair bases, table legs, sofa legs, brackets, TV stand, microphone heads, the wall screen's
@@ -36,4 +38,21 @@ test('the brushed metal stays a metal without a colour map', () => {
   expect(brushedMetal.metalness).toBe(1)
   expect(brushedMetal.metalnessMap).toBe(sets.brushedMetal.arm)
   expect(brushedMetal.map).toBeNull()
+})
+
+// The texture set's own flag says how the office uses metal046a, so a material built from it later (pbr(..., 'blackMetal'))
+// is a coat by default and cannot become a black metal again without changing the flag (Task 14c review).
+test('the black metal set is a dielectric by its own flag: no material needs to override it', () => {
+  expect(TEXTURE_SETS.blackMetal.metal).toBe(false)
+  const sets = fakeTextureSets()
+  const later = pbrMaterial(sets.blackMetal, { name: 'later', tint: tints.blackMetal, metal: TEXTURE_SETS.blackMetal.metal })
+  expect(later.metalness).toBe(0)
+  expect(later.metalnessMap).toBeNull()
+  // The two materials built from it, the coat and the painted steel of the banquette's base.
+  const { blackMetal, paintedSteel } = buildMaterials(sets)
+  for (const material of [blackMetal, paintedSteel]) {
+    expect(material.metalness, material.name).toBe(0)
+    expect(material.metalnessMap, material.name).toBeNull()
+    expect(material.normalMap, material.name).toBe(sets.blackMetal.normal)
+  }
 })

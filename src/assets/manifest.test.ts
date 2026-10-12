@@ -60,7 +60,8 @@ test('texture resolutions follow the spec', () => {
     expect(entry.resolution.arm).toBeLessThanOrEqual(entry.resolution.color)
     expect(entry.stage).toBe('base')
   }
-  expect(textures.filter((entry) => entry.metal).map((entry) => entry.id)).toEqual(['metal046a', 'metal027'])
+  // metal046a is a black powder-coat in the office, a dielectric: only the brushed aluminium is a metal.
+  expect(textures.filter((entry) => entry.metal).map((entry) => entry.id)).toEqual(['metal027'])
   expect(edited((assets) => ((assets[2].resolution as { normal: number }).normal = 2048))).toBe(false)
   expect(edited((assets) => ((assets[2].resolution as { normal: number }).normal = 4096))).toBe(false)
   expect(edited((assets) => ((assets[2].resolution as { arm: number }).arm = 2048))).toBe(false)
