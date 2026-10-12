@@ -8,6 +8,7 @@ import {
   MeshLambertMaterial,
   MeshPhysicalMaterial,
   MeshStandardMaterial,
+  SRGBColorSpace,
   ShaderMaterial,
   Texture,
 } from 'three'
@@ -123,7 +124,7 @@ test('tints come from tints.ts and brand.ts', () => {
   const m = buildMaterials(fakeSets())
   const expected: Record<MaterialKey, string> = {
     floor: tints.floor, wall: tints.wall, ceiling: tints.ceiling, skirting: tints.skirting, slats: tints.slats,
-    oak: tints.oak, walnut: tints.walnut, chairFabric: tints.chairFabric, sofaFabric: brand.blueGrey, cushion: brand.lime,
+    oak: tints.oak, walnut: tints.walnut, chairFabric: tints.chairFabric, sofaFabric: tints.sofaFabric, cushion: brand.lime,
     rug: tints.rug, blackMetal: tints.blackMetal, brushedMetal: tints.brushedMetal, consoleShell: tints.consoleShell,
     consoleDark: tints.consoleDark, porcelain: brand.onDark, glass: tints.glass, screenOff: brand.ink,
     limeGlow: brand.lime, mintGlow: brand.mint, logoLime: brand.lime, logoMint: brand.mint, logoInk: brand.onDark,
@@ -136,7 +137,15 @@ test('tints come from tints.ts and brand.ts', () => {
   // The ceiling strips: a matt grey diffuser by day that glows warm at dusk (Task 7 review).
   expect(m.ceilingStrip.emissive.getHexString()).toBe(new Color(tints.diffuserGlow).getHexString())
   expect(m.ceilingStrip.roughness).toBe(0.85)
-  expect([tints.sofaFabric, tints.cushion, tints.porcelain, tints.visor]).toEqual([brand.blueGrey, brand.lime, brand.onDark, brand.nearBlack])
+  expect([tints.cushion, tints.porcelain, tints.visor]).toEqual([brand.lime, brand.onDark, brand.nearBlack])
+})
+
+test('the sofa fabric is the brand blue-grey lightened: the fabric map and its AO darken a tint about threefold', () => {
+  const hsl = (colour: string) => new Color(colour).getHSL({ h: 0, s: 0, l: 0 }, SRGBColorSpace)
+  const sofa = hsl(tints.sofaFabric)
+  expect(sofa.h).toBeCloseTo(hsl(brand.blueGrey).h, 2)
+  // At brand.blueGrey itself (l 0.26) the shadowed seats read near black: sRGB 11 by day (Task 10 review shots).
+  expect(sofa.l).toBeGreaterThan(0.5)
 })
 
 test('the shared materials pass the audit, and the emissive ones really have an emissive colour', () => {

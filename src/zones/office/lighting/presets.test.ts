@@ -34,6 +34,16 @@ test('spec values: environment and exposure per phase', () => {
   expect(PHASES.map((phase) => PRESETS[phase].exposure)).toEqual([1.0, 1.0, 1.15])
 })
 
+test('the sign is discreet by day, brighter at sunset and at night, and never washes out the brand cubes', () => {
+  const { day, sunset, night } = PRESETS
+  expect(day.sign).toBeLessThan(sunset.sign)
+  expect(sunset.sign).toBeLessThan(night.sign)
+  // Task 10 review shots: day 0.15 gives a mid-grey plate (sRGB 117); night 0.4 a plate of 187 with lime cubes of channel
+  // spread 88. At the night exposure the onDark plate reaches sRGB 200 near 0.5; at 2.5 it was 246 and the cubes pastel (50).
+  expect(day.sign).toBeLessThanOrEqual(0.2)
+  expect(night.sign).toBeLessThanOrEqual(0.5)
+})
+
 test('mixPreset returns a at 0 and b at 1', () => {
   expectPreset(mixPreset(PRESETS.day, PRESETS.night, 0), PRESETS.day)
   expectPreset(mixPreset(PRESETS.day, PRESETS.night, 1), PRESETS.night)

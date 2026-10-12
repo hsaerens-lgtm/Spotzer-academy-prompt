@@ -19,7 +19,7 @@ export interface Preset {
   bulb: number
   /** Sideboard lamp SpotLight, candela. */
   lampIntensity: number
-  /** Logo sign backlight emissive intensity. */
+  /** Logo sign backlight emissive intensity; at most 0.5, so the brand cubes in front keep their colours (emissive.ts). */
   sign: number
   /** Wall-screen glow PointLight, candela. */
   screenGlow: number
@@ -79,7 +79,7 @@ export const PRESETS: Record<Phase, Preset> = {
     sunColor: C('#fff0d8'), sunIntensity: 8, sunPosition: V(-10.86, 6.13, 1.26),
     hemiSky: C('#dfe9f5'), hemiGround: C('#b89c7c'), hemiIntensity: 0.85,
     environment: 0.32, windowColor: C('#e4eefc'), windowIntensity: 2.6,
-    ceiling: 0, bulb: 0, lampIntensity: 0, sign: 0.4, screenGlow: 0.35, exposure: 1.0,
+    ceiling: 0, bulb: 0, lampIntensity: 0, sign: 0.15, screenGlow: 0.35, exposure: 1.0,
     skyTop: C('#4f8fd6'), skyHorizon: C('#d6e4ee'), sunDisc: C('#fff4de'), sunSize: 1,
     stars: 0, night: 0, cityAmbient: C('#9aa6b4'), cloudColor: C('#ffffff'), cloudOpacity: 0.9,
   },
@@ -87,7 +87,7 @@ export const PRESETS: Record<Phase, Preset> = {
     sunColor: C('#ff8a4c'), sunIntensity: 3.6, sunPosition: V(-13.28, 2.42, 4.5),
     hemiSky: C('#f2b894'), hemiGround: C('#6a4a3a'), hemiIntensity: 0.32,
     environment: 0.18, windowColor: C('#ffb07e'), windowIntensity: 1.8,
-    ceiling: 0.35, bulb: 0.25, lampIntensity: 1.1, sign: 1.2, screenGlow: 0.7, exposure: 1.0,
+    ceiling: 0.35, bulb: 0.25, lampIntensity: 1.1, sign: 0.35, screenGlow: 0.7, exposure: 1.0,
     skyTop: C('#3b4c86'), skyHorizon: C('#f6a56a'), sunDisc: C('#ffb870'), sunSize: 2.4,
     stars: 0.15, night: 0.45, cityAmbient: C('#8a6a74'), cloudColor: C('#ffa98a'), cloudOpacity: 0.85,
   },
@@ -95,7 +95,7 @@ export const PRESETS: Record<Phase, Preset> = {
     sunColor: C('#8fa6e8'), sunIntensity: 0.45, sunPosition: V(-10.5, 6.0, -3.5),
     hemiSky: C('#2a3550'), hemiGround: C('#16110d'), hemiIntensity: 0.12,
     environment: 0.05, windowColor: C('#5b6fa8'), windowIntensity: 0.35,
-    ceiling: 1, bulb: 1, lampIntensity: 1.8, sign: 2.5, screenGlow: 1.0, exposure: 1.15,
+    ceiling: 1, bulb: 1, lampIntensity: 1.8, sign: 0.4, screenGlow: 1.0, exposure: 1.15,
     skyTop: C('#050918'), skyHorizon: C('#1c2748'), sunDisc: C('#c8d4ff'), sunSize: 0.8,
     stars: 1, night: 1, cityAmbient: C('#1a2030'), cloudColor: C('#3a4466'), cloudOpacity: 0.35,
   },
