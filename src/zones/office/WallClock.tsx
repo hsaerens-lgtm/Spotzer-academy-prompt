@@ -1,9 +1,11 @@
-import { useRef } from 'react'
+import { createPortal } from '@react-three/fiber'
+import { useMemo, useRef, useState } from 'react'
 import type { Mesh, Object3D } from 'three'
 import { MODEL_PARTS } from '../../three/assets'
-import { Interactive } from '../../three/interactive'
+import { meshesOf } from '../../three/gltf'
+import { HoverOutline, Interactive } from '../../three/interactive'
 import { SceneObject } from '../../three/objects'
-import { handAngles, handRestAngle, handRotationZ } from './clockHands'
+import { caseRing, handAngles, handRestAngle, handRotationZ, isClockCase } from './clockHands'
 import { objectActions } from './interactions'
 import { layout } from './layout'
 import { useLightingApplier } from './lighting/live'
@@ -33,11 +35,29 @@ function handPositions(node: Object3D): number[] {
 }
 
 /**
+ * The clock's hover outline: a ring round the outer shell of its case (caseRing), and nothing else. Drawn on every mesh
+ * of the model it haloed the hands and rang the glass, and on the case-and-dial mesh it left a hairline just inside the
+ * bezel. The ring is an invisible mesh of its own, a child of the case: it shares the case's positions, so it needs no
+ * placing, and carries the outline. Its geometry shares the case's attributes with the loader's cache: it is not disposed.
+ */
+function CaseOutline({ body }: { body: Mesh }) {
+  const geometry = useMemo(() => caseRing(body.geometry), [body])
+  return createPortal(
+    <mesh geometry={geometry} castShadow receiveShadow>
+      <meshBasicMaterial visible={false} />
+      <HoverOutline />
+    </mesh>,
+    body,
+  )
+}
+
+/**
  * The wall clock (Poly Haven wall_clock): a click moves the office to the next phase, like the HUD's Time of day button.
  * Its hands show the phase's time (14:00, 19:30, 23:00) and turn forward during a transition (lighting/live.ts minutes).
  */
 export function WallClock() {
   const hands = useRef<HandNode[]>([])
+  const [body, setBody] = useState<Mesh | null>(null)
   const { position, rotationY } = layout.objects.clock
   useLightingApplier((_preset, minutes) => {
     const angles = handAngles(minutes)
@@ -48,7 +68,6 @@ export function WallClock() {
       <SceneObject
         object="clock"
         name="clock"
-        outline
         position={position}
         rotation-y={rotationY}
         onModel={(root) => {
@@ -56,8 +75,10 @@ export function WallClock() {
             const node = root.getObjectByName(MODEL_PARTS.clockHands[hand])
             return node ? [{ hand, node, rest: handRestAngle(handPositions(node)) }] : []
           })
+          setBody(meshesOf(root).find(isClockCase) ?? null)
         }}
       />
+      {body && <CaseOutline body={body} />}
     </Interactive>
   )
 }

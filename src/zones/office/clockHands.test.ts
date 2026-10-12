@@ -1,5 +1,5 @@
 import { Vector3 } from 'three'
-import { CLOCK_MINUTES } from '../../core/phase'
+import { CLOCK_MINUTES, PHASES } from '../../core/phase'
 import { handAngles, handRestAngle, handRotationZ } from './clockHands'
 
 test('the hands show 14:00, 19:30 and 23:00', () => {
@@ -12,7 +12,8 @@ test('the hands show 14:00, 19:30 and 23:00', () => {
   const night = handAngles(CLOCK_MINUTES.night)
   expect(night.hour).toBeCloseTo((11 * Math.PI) / 6)
   expect(night.minute).toBeCloseTo(0)
-  expect([day.second, sunset.second, night.second]).toEqual([0, 0, 0])
+  // The second hand does not run: it is parked at 20 s, where it covers neither the minute hand nor the hour hand (below).
+  expect([day.second, sunset.second, night.second]).toEqual([(2 * Math.PI) / 3, (2 * Math.PI) / 3, (2 * Math.PI) / 3])
   // Halfway from night to day the clock passes 03:30 (clockMinutes 210): hour hand past 3, minute hand on 6.
   expect(handAngles(210).hour).toBeCloseTo(3.5 * (Math.PI / 6))
   expect(handAngles(210).minute).toBeCloseTo(Math.PI)
@@ -39,4 +40,18 @@ test('positive angles turn the hands clockwise', () => {
   expect(modelled.x).toBeCloseTo(0)
   expect(modelled.y).toBeCloseTo(-0.12)
   expect(handRotationZ(1, 1)).toBeCloseTo(0)
+})
+
+// Parked on 12 (second 0) it hid the minute hand at 14:00 and 23:00, which both point at 12.
+test('at each phase the second hand stays clear of the hour and the minute hands', () => {
+  const apart = (a: number, b: number) => {
+    const turn = Math.abs(a - b) % (2 * Math.PI)
+    return Math.min(turn, 2 * Math.PI - turn)
+  }
+  const fifteenDegrees = (15 * Math.PI) / 180
+  for (const phase of PHASES) {
+    const angles = handAngles(CLOCK_MINUTES[phase])
+    expect(apart(angles.second, angles.hour), `${phase}: second and hour hands`).toBeGreaterThanOrEqual(fifteenDegrees)
+    expect(apart(angles.second, angles.minute), `${phase}: second and minute hands`).toBeGreaterThanOrEqual(fifteenDegrees)
+  }
 })
