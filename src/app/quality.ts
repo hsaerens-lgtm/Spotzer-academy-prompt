@@ -77,6 +77,21 @@ export function dprFor(quality: Quality): number | [number, number] {
   return QUALITY_SETTINGS[quality].dpr
 }
 
+/**
+ * The bounds of drei's PerformanceMonitor, [lower, upper] in frames per second, for the display's refresh rate (drei
+ * takes the highest rate it has measured). It steps the tier down when 8 of its last 10 quarter-second samples are under
+ * the lower bound, and up when 8 are at or over the upper one.
+ * - Up to 100 Hz, drei's own [40, 60]: the display caps the rate at 60, so a machine that holds it stays where it is.
+ * - Faster displays: drei's [60, 100] stepped a machine at the spec's 60 fps down (its samples read 56 to 64), medium
+ *   then ran over 100 and stepped back up, until the fourth change settled it on low (Task 14b, the presentation view on
+ *   the reference PC's 240 Hz display). The tier steps down under 50 only, and back up at 125: 2.5 times the lower bound,
+ *   more than the 2.25 times the pixels that high draws over medium, so a step down is not undone into the same
+ *   slowdown.
+ */
+export function qualityBounds(refreshRate: number): [number, number] {
+  return refreshRate > 100 ? [50, 125] : [40, 60]
+}
+
 export interface QualityState {
   level: Quality
   changes: number

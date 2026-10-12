@@ -5,6 +5,7 @@ import {
   dprFor,
   isSoftwareRenderer,
   nextQuality,
+  qualityBounds,
   reduceQuality,
   rendererName,
   type QualityState,
@@ -86,4 +87,39 @@ test('a software rasterizer settles on low at once, at a reduced resolution', ()
   const settled = reduceQuality(INITIAL_QUALITY, 'software')
   expect(reduceQuality(settled, 'incline')).toBe(settled)
   expect(SOFTWARE_DPR).toBe(0.35)
+})
+
+/*
+ * drei's PerformanceMonitor takes 250 ms samples and steps the tier down when 8 of the last 10 are under the lower
+ * bound, up when 8 are at or over the upper one; it calls the highest rate it has seen the display's refresh rate.
+ * Its default bounds for a display over 100 Hz, [60, 100], stepped down a machine that holds the spec's 60 fps, then
+ * back up from medium, until the flip-flop rule settled it on low (Task 14b).
+ */
+const FAST_DISPLAYS = [120, 144, 165, 240]
+
+test('a machine that holds the spec 60 fps keeps its tier, whatever the display', () => {
+  for (const refresh of [60, ...FAST_DISPLAYS]) {
+    const [lower] = qualityBounds(refresh)
+    // A quarter second at a steady 60 fps holds 14 to 16 frames: samples read 56 to 64.
+    expect(lower, `${refresh} Hz`).toBeLessThan(56)
+  }
+})
+
+test('on a fast display, a machine under 45 fps still steps down', () => {
+  for (const refresh of FAST_DISPLAYS) expect(qualityBounds(refresh)[0], `${refresh} Hz`).toBeGreaterThanOrEqual(45)
+})
+
+test('a step down on a fast display is not undone into the same slowdown', () => {
+  // The high tier draws (1.5 / 1)^2 = 2.25 times the pixels of medium, with more lights and a larger shadow map: a
+  // machine just under the lower bound on high must not reach the upper bound on medium.
+  const [, highDpr] = QUALITY_SETTINGS.high.dpr as [number, number]
+  const pixels = (highDpr / (QUALITY_SETTINGS.medium.dpr as number)) ** 2
+  for (const refresh of FAST_DISPLAYS) {
+    const [lower, upper] = qualityBounds(refresh)
+    expect(upper, `${refresh} Hz`).toBeGreaterThan(lower * pixels)
+  }
+})
+
+test("a 60 Hz display keeps drei's bounds", () => {
+  expect(qualityBounds(60)).toEqual([40, 60])
 })

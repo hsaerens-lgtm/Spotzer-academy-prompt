@@ -12,6 +12,7 @@ import {
   SOFTWARE_DPR,
   SoftwareRendererContext,
   isSoftwareRenderer,
+  qualityBounds,
   reduceQuality,
   rendererName,
 } from './quality'
@@ -55,6 +56,7 @@ export function Stage() {
         }}
       >
         <PerformanceMonitor
+          bounds={qualityBounds}
           onDecline={() => dispatchQuality('decline')}
           onIncline={() => dispatchQuality('incline')}
         >
