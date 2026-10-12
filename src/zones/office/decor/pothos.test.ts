@@ -35,21 +35,30 @@ test('no vine of the banquette pothos goes into the bench', () => {
   expect(inside).toHaveLength(0)
 })
 
-test('no vine of the high-board pothos goes through the board', () => {
+// Not only through the board's thickness: nothing of the pothos is below the board's top inside its footprint, which
+// is where the lower row of books stands, so a vine does not hang under the board either.
+test('no vine of the high-board pothos goes through the board or hangs under it', () => {
   const inside = world(board[0]).filter(
-    ([x, y, z]) => y > boardBox.y0 + 1e-6 && y < boardBox.y1 - 1e-6 && x > boardBox.x0 && x < boardBox.x1 && z > boardBox.z0 && z < boardBox.z1,
+    ([x, y, z]) => y < boardBox.y1 - 1e-6 && x > boardBox.x0 && x < boardBox.x1 && z > boardBox.z0 && z < boardBox.z1,
   )
   expect(inside).toHaveLength(0)
 })
 
-// The vine tips: what hangs more than 5 cm below the top of the bench, or below the board's underside.
-test('most of the vine tips hang past the front edge of their bench or board', () => {
+// The vine tips: what hangs more than 5 cm below the top of the bench, or below the board's underside. All of them
+// are past the front edge (measured: 100 % of 1944 and 1458 vertices), the nearest 3.3 cm and 3.1 cm beyond it, the
+// median 7.4 cm and 6.5 cm. A reach that is a few centimetres short already fails the nearest tip: 0.14 instead of 0.18
+// on the bench puts 2 % of the tips back over the bench, with the nearest 7 mm inside, and passed the old 60 % check.
+test('the vine tips hang past the front edge of their bench or board, by at least 2 cm', () => {
   const benchTips = world(bench[0]).filter(([, y]) => y < BANQUETTE.height - 0.05)
   expect(benchTips.length).toBeGreaterThan(100)
-  expect(benchTips.filter(([x]) => x >= BANQUETTE.x1).length / benchTips.length).toBeGreaterThanOrEqual(0.6)
+  const benchOver = benchTips.map(([x]) => x - BANQUETTE.x1)
+  expect(benchOver.filter((over) => over >= 0).length / benchTips.length).toBeGreaterThanOrEqual(0.9)
+  expect(Math.min(...benchOver)).toBeGreaterThanOrEqual(0.02)
   const boardTips = world(board[0]).filter(([, y]) => y < boardBox.y0 - 0.05)
   expect(boardTips.length).toBeGreaterThan(100)
-  expect(boardTips.filter(([, , z]) => z >= boardBox.z1).length / boardTips.length).toBeGreaterThanOrEqual(0.6)
+  const boardOver = boardTips.map(([, , z]) => z - boardBox.z1)
+  expect(boardOver.filter((over) => over >= 0).length / boardTips.length).toBeGreaterThanOrEqual(0.9)
+  expect(Math.min(...boardOver)).toBeGreaterThanOrEqual(0.02)
 })
 
 test('each pot stands fully on its support, at the front of it', () => {
