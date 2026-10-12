@@ -1,8 +1,9 @@
-import { act, createRoot, extend, type RootState } from '@react-three/fiber'
+import { extend } from '@react-three/fiber'
 import type { ReactNode } from 'react'
 import { DataTexture, Fog, Group, type Material, type Mesh, type Object3D, type Points, type ShaderMaterial, type Texture } from 'three'
 import { QualityContext, SoftwareRendererContext, type Quality } from '../../../app/quality'
 import { appStore } from '../../../core/store'
+import { ignoreClockDeprecation, mountR3F, type TestRoot } from '../../../test/r3fRoot'
 import { untexturedMeshes } from '../../../three/audit'
 import { applyLighting } from '../lighting/live'
 import { PRESETS } from '../lighting/presets'
@@ -18,60 +19,31 @@ vi.mock('./resources', async (importOriginal) => ({
   canvasTexture: () => new DataTexture(new Uint8Array(4), 1, 1),
 }))
 
-// The JSX elements these tests mount (<Canvas> registers all of three in the app), and React's act() environment.
+// The JSX elements these tests mount (<Canvas> registers all of three in the app).
 extend({ Group, Fog })
-;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
-// R3F 9.8 builds each root's clock with THREE.Clock, which three r183 deprecated: drop that one notice, keep the rest.
 beforeAll(() => {
-  const warn = console.warn.bind(console)
-  vi.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => {
-    if (typeof args[0] === 'string' && args[0].startsWith('THREE.Clock: This module has been deprecated')) return
-    warn(...args)
-  })
+  ignoreClockDeprecation()
 })
 afterAll(() => {
   vi.restoreAllMocks()
 })
 
-const mounted: (() => Promise<void>)[] = []
+const roots: TestRoot[] = []
 
-/** Mounts `element` in an R3F root with a stand-in renderer (jsdom has no WebGL). Frames run only through `frame`. */
+/** Mounts `element` in an R3F root with a stand-in renderer (src/test/r3fRoot.tsx). Frames run only through `frame`. */
 async function mount(element: ReactNode, { quality = 'high' as Quality, software = false } = {}) {
-  const canvas = document.createElement('canvas')
-  const gl = { render: () => {}, setSize: () => {}, setPixelRatio: () => {}, domElement: canvas, shadowMap: {} }
-  const root = createRoot(canvas)
-  let state: RootState | undefined
-  await act(async () => {
-    await root.configure({
-      gl: gl as never,
-      frameloop: 'never',
-      size: { width: 160, height: 90, top: 0, left: 0 },
-      events: undefined,
-      onCreated: (created) => {
-        state = created
-      },
-    })
-    root.render(
-      <QualityContext.Provider value={quality}>
-        <SoftwareRendererContext.Provider value={software}>{element}</SoftwareRendererContext.Provider>
-      </QualityContext.Provider>,
-    )
-  })
-  if (!state) throw new Error('the R3F root was not created')
-  const created = state
-  let done = false
-  const unmount = async () => {
-    if (done) return
-    done = true
-    await act(async () => root.unmount())
-  }
-  mounted.push(unmount)
+  const root = await mountR3F(
+    <QualityContext.Provider value={quality}>
+      <SoftwareRendererContext.Provider value={software}>{element}</SoftwareRendererContext.Provider>
+    </QualityContext.Provider>,
+  )
+  roots.push(root)
   return {
-    scene: created.scene,
+    scene: root.state.scene,
     /** Runs one frame at `seconds` of elapsed time. */
-    frame: (seconds: number) => act(async () => created.advance(seconds)),
-    unmount,
+    frame: (seconds: number) => root.frame(seconds),
+    unmount: root.unmount,
   }
 }
 
@@ -83,7 +55,7 @@ const named = <T extends Object3D>(scene: Object3D, name: string) => {
 const uniforms = (scene: Object3D, name: string) => (named<Mesh | Points>(scene, name).material as ShaderMaterial).uniforms
 
 afterEach(async () => {
-  for (const unmount of mounted.splice(0)) await unmount()
+  for (const root of roots.splice(0)) await root.unmount()
   appStore.setState({ reducedMotion: false })
 })
 

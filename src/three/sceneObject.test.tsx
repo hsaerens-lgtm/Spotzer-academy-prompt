@@ -1,7 +1,8 @@
 import { Document, WebIO } from '@gltf-transform/core'
-import { act, createRoot, extend, type ReconcilerRoot } from '@react-three/fiber'
+import { act, extend } from '@react-three/fiber'
 import { Suspense, type ReactNode } from 'react'
 import { BackSide, Box3, Group, Mesh, Vector3, type Object3D, type ShaderMaterial } from 'three'
+import { ignoreClockDeprecation, mountR3F, type TestRoot } from '../test/r3fRoot'
 import { modelUrl } from './assets'
 import { HoverContext } from './interactive'
 import { SceneObject, glbModels } from './objects'
@@ -33,9 +34,8 @@ async function tinyGlb(): Promise<Uint8Array> {
   return new WebIO().writeBinary(document)
 }
 
-// The JSX elements GltfObject and drei's Outlines mount (<Canvas> registers all of three in the app), and act().
+// The JSX elements GltfObject and drei's Outlines mount (<Canvas> registers all of three in the app).
 extend({ Group, Mesh })
-;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 const requested: string[] = []
 beforeAll(async () => {
@@ -58,61 +58,35 @@ beforeAll(async () => {
       return new Response(glb.slice())
     }),
   )
-  // R3F 9.8 builds each root's clock with THREE.Clock, which three r183 deprecated: drop that one notice, keep the rest.
-  const warn = console.warn.bind(console)
-  vi.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => {
-    if (typeof args[0] === 'string' && args[0].startsWith('THREE.Clock: This module has been deprecated')) return
-    warn(...args)
-  })
+  ignoreClockDeprecation()
 })
 afterAll(() => {
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
 })
 
-const roots: ReconcilerRoot<HTMLCanvasElement>[] = []
+const roots: TestRoot[] = []
 afterEach(async () => {
-  for (const root of roots.splice(0)) await act(async () => root.unmount())
+  for (const root of roots.splice(0)) await root.unmount()
 })
 
 /**
- * Mounts `element` in an R3F root with a stand-in renderer (jsdom has no WebGL) and waits until the object named
+ * Mounts `element` in an R3F root with a stand-in renderer (src/test/r3fRoot.tsx) and waits until the object named
  * `ready` is in the scene (the model has loaded). `rerender` replaces the element.
  */
 async function mount(element: ReactNode, ready: string) {
-  const canvas = document.createElement('canvas')
-  const gl = {
-    render: () => {},
-    setSize: () => {},
-    setPixelRatio: () => {},
+  // drei's Outlines reads the drawing buffer's size from the renderer.
+  const root = await mountR3F(<Suspense fallback={null}>{element}</Suspense>, {
     getDrawingBufferSize: (target: { set: (x: number, y: number) => unknown }) => target.set(160, 90),
-    domElement: canvas,
-    shadowMap: {},
-  }
-  const root = createRoot(canvas)
-  roots.push(root)
-  let scene: Object3D | undefined
-  const render = (node: ReactNode) => root.render(<Suspense fallback={null}>{node}</Suspense>)
-  await act(async () => {
-    await root.configure({
-      gl: gl as never,
-      frameloop: 'never',
-      size: { width: 160, height: 90, top: 0, left: 0 },
-      events: undefined,
-      onCreated: (state) => {
-        scene = state.scene
-      },
-    })
-    render(element)
   })
-  if (!scene) throw new Error('the R3F root was not created')
-  const created = scene
+  roots.push(root)
+  const { scene } = root.state
   await vi.waitFor(async () => {
     await act(async () => {})
-    if (!created.getObjectByName(ready)) throw new Error(`${ready} has not loaded`)
+    if (!scene.getObjectByName(ready)) throw new Error(`${ready} has not loaded`)
   })
-  created.updateMatrixWorld(true)
-  return { scene: created, rerender: (node: ReactNode) => act(async () => render(node)) }
+  scene.updateMatrixWorld(true)
+  return { scene, rerender: (node: ReactNode) => root.render(<Suspense fallback={null}>{node}</Suspense>) }
 }
 
 function named(scene: Object3D, name: string): Object3D {

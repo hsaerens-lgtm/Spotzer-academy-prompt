@@ -9,13 +9,28 @@ export function isClockDeprecation(args: readonly unknown[]): boolean {
   return typeof args[0] === 'string' && args[0].startsWith('THREE.Clock: This module has been deprecated')
 }
 
+/**
+ * Drops the THREE.Clock notice (isClockDeprecation) from console.warn and lets every other warning through. For files
+ * that keep their roots' other warnings visible; vi.restoreAllMocks() removes it.
+ */
+export function ignoreClockDeprecation() {
+  const warn = console.warn.bind(console)
+  return vi.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => {
+    if (!isClockDeprecation(args)) warn(...args)
+  })
+}
+
 export interface TestRoot {
   /** The root's state: its scene, camera and stand-in renderer. */
   state: RootState
   /** Replaces what the root renders. */
   render: (element: ReactNode) => Promise<void>
-  /** One frame, as the render loop runs it: every useFrame callback, then the stand-in gl.render(). */
-  frame: () => Promise<void>
+  /**
+   * One frame, as the render loop runs it: every useFrame callback, then the stand-in gl.render(). The clock reads
+   * `seconds` of elapsed time when given, otherwise 1/60 s more than the frame before.
+   */
+  frame: (seconds?: number) => Promise<void>
+  /** Unmounts the root; a second call does nothing. */
   unmount: () => Promise<void>
 }
 
@@ -52,21 +67,25 @@ export async function mountR3F(element: ReactNode, gl: Record<string, unknown> =
   })
   if (!created) throw new Error('the R3F root was not created')
   const state = created
-  let seconds = 0
+  let elapsed = 0
+  let unmounted = false
   return {
     state,
     render: (next) =>
       act(async () => {
         root.render(next)
       }),
-    frame: () =>
+    frame: (seconds) =>
       act(async () => {
-        seconds += 1 / 60
-        advance(seconds, true, state)
+        elapsed = seconds ?? elapsed + 1 / 60
+        advance(elapsed, true, state)
       }),
-    unmount: () =>
-      act(async () => {
+    unmount: async () => {
+      if (unmounted) return
+      unmounted = true
+      await act(async () => {
         root.unmount()
-      }),
+      })
+    },
   }
 }

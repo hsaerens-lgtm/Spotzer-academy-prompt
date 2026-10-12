@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
-import { Color, SRGBColorSpace, Texture, type MeshStandardMaterial } from 'three'
+import { Color, SRGBColorSpace, type MeshStandardMaterial } from 'three'
 import { textureFile } from '../assets/paths'
 import { TEXTURE_SETS, TEXTURE_SET_IDS } from '../three/assets'
 import type { TextureSets } from '../three/textures'
@@ -30,9 +30,3 @@ export async function albedo(material: MeshStandardMaterial, sets: TextureSets):
   return base.multiply(await meanColour(TEXTURE_SETS[owner].assetId))
 }
 
-/** Texture sets of unloaded textures, one distinct Texture per map, for building the shared materials in a node test. */
-export function fakeTextureSets(): TextureSets {
-  const sets = {} as TextureSets
-  for (const id of TEXTURE_SET_IDS) sets[id] = { color: new Texture(), normal: new Texture(), arm: new Texture() }
-  return sets
-}

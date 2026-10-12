@@ -1,7 +1,5 @@
-import { Texture } from 'three'
-import { TEXTURE_SET_IDS } from '../../../three/assets'
+import { fakeTextureSets } from '../../../test/textureSets'
 import { buildMaterials } from '../../../three/materials'
-import type { TextureSets } from '../../../three/textures'
 import { CONTACT_SHADOW_Y, GLAZING, ROOM, RUG, SLAT_WALL, WALL_T, layout, type Vec3 } from '../layout'
 import {
   FLAT_LEVELS,
@@ -194,9 +192,7 @@ test('the ceiling lines sit just under the ceiling, inside the room', () => {
 })
 
 test('every box uses a shared material key', () => {
-  const sets = {} as TextureSets
-  for (const id of TEXTURE_SET_IDS) sets[id] = { color: new Texture(), normal: new Texture(), arm: new Texture() }
-  const keys = Object.keys(buildMaterials(sets))
+  const keys = Object.keys(buildMaterials(fakeTextureSets()))
   const all = [...shellBoxes(), ...glazingFrameBoxes(), ...slatBoxes(), ...banquetteBoxes(), ...ceilingLineBoxes(), rugBox()]
   for (const box of all) expect(keys, box.name).toContain(box.material)
   expect(new Set(all.map((b) => b.name)).size).toBe(all.length)

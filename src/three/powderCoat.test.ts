@@ -1,5 +1,6 @@
 // @vitest-environment node
-import { albedo, fakeTextureSets, luminance } from '../test/albedo'
+import { albedo, luminance } from '../test/albedo'
+import { fakeTextureSets } from '../test/textureSets'
 import { isTextured } from './audit'
 import { ENV_MAP_INTENSITY, buildMaterials } from './materials'
 

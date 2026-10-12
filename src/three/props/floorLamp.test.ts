@@ -1,65 +1,42 @@
-import { act, createRoot, extend } from '@react-three/fiber'
+import { extend } from '@react-three/fiber'
 import { Fragment, createElement, type ReactElement } from 'react'
 import { Box3, Group, Mesh, Vector3, type BufferGeometry, type Material, type Object3D } from 'three'
+import { ignoreClockDeprecation, mountR3F, type TestRoot } from '../../test/r3fRoot'
 import { SIZES } from '../../zones/office/footprints'
 import { layout } from '../../zones/office/layout'
 import { untexturedMeshes } from '../audit'
 import { useMaterials } from '../materials'
 import { FLOOR_LAMP, FloorLamp } from './FloorLamp'
 
-// The shared materials wait for the texture sets: stand-in textures instead, as in materials.test.ts.
+// The shared materials wait for the texture sets: stand-in textures instead (src/test/textureSets.ts).
 vi.mock('../materials', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../materials')>()
-  const { Texture } = await import('three')
-  const { TEXTURE_SET_IDS } = await import('../assets')
-  const sets = Object.fromEntries(TEXTURE_SET_IDS.map((id) => [id, { color: new Texture(), normal: new Texture(), arm: new Texture() }]))
-  const built = actual.buildMaterials(sets as Parameters<typeof actual.buildMaterials>[0])
+  const { fakeTextureSets } = await import('../../test/textureSets')
+  const built = actual.buildMaterials(fakeTextureSets())
   return { ...actual, useMaterials: () => built }
 })
 
-// The JSX elements the lamp mounts (<Canvas> registers all of three in the app), and React's act() environment.
+// The JSX elements the lamp mounts (<Canvas> registers all of three in the app).
 extend({ Group, Mesh })
-;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
-// R3F 9.8 builds each root's clock with THREE.Clock, which three r183 deprecated: drop that one notice, keep the rest.
 beforeAll(() => {
-  const warn = console.warn.bind(console)
-  vi.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => {
-    if (typeof args[0] === 'string' && args[0].startsWith('THREE.Clock: This module has been deprecated')) return
-    warn(...args)
-  })
+  ignoreClockDeprecation()
 })
 afterAll(() => {
   vi.restoreAllMocks()
 })
 
-const unmounts: (() => Promise<void>)[] = []
+const roots: TestRoot[] = []
 afterEach(async () => {
-  for (const unmount of unmounts.splice(0)) await unmount()
+  for (const root of roots.splice(0)) await root.unmount()
 })
 
-/** Mounts `elements` in an R3F root with a stand-in renderer (jsdom has no WebGL) and returns its scene. */
+/** Mounts `elements` in an R3F root with a stand-in renderer (src/test/r3fRoot.tsx) and returns its scene. */
 async function mount(...elements: ReactElement[]): Promise<Object3D> {
-  const canvas = document.createElement('canvas')
-  const gl = { render: () => {}, setSize: () => {}, setPixelRatio: () => {}, domElement: canvas, shadowMap: {} }
-  const root = createRoot(canvas)
-  let scene: Object3D | undefined
-  await act(async () => {
-    await root.configure({
-      gl: gl as never,
-      frameloop: 'never',
-      size: { width: 160, height: 90, top: 0, left: 0 },
-      events: undefined,
-      onCreated: (state) => {
-        scene = state.scene
-      },
-    })
-    root.render(createElement(Fragment, null, ...elements))
-  })
-  unmounts.push(() => act(async () => root.unmount()))
-  if (!scene) throw new Error('the R3F root was not created')
-  scene.updateMatrixWorld(true)
-  return scene
+  const root = await mountR3F(createElement(Fragment, null, ...elements))
+  roots.push(root)
+  root.state.scene.updateMatrixWorld(true)
+  return root.state.scene
 }
 
 function named(scene: Object3D, name: string): Object3D {

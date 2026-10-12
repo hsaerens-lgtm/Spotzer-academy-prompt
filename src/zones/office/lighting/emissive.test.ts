@@ -1,21 +1,13 @@
 import { renderHook } from '@testing-library/react'
-import { Texture } from 'three'
 import { PHASES } from '../../../core/phase'
-import { TEXTURE_SET_IDS } from '../../../three/assets'
+import { fakeTextureSets } from '../../../test/textureSets'
 import { buildMaterials } from '../../../three/materials'
-import type { TextureSets } from '../../../three/textures'
 import { useEmissiveLevels } from './emissive'
 import { applyLighting } from './live'
 import { PRESETS } from './presets'
 
-function fakeSets(): TextureSets {
-  const sets = {} as TextureSets
-  for (const id of TEXTURE_SET_IDS) sets[id] = { color: new Texture(), normal: new Texture(), arm: new Texture() }
-  return sets
-}
-
 test('the sign follows the phase while the ink squares keep the glow they are built with', () => {
-  const m = buildMaterials(fakeSets())
+  const m = buildMaterials(fakeTextureSets())
   const { unmount } = renderHook(() => useEmissiveLevels(m))
   for (const phase of PHASES) {
     // One source of truth (Task 10 review): only materials.ts sets the ink level. A level the applier would overwrite

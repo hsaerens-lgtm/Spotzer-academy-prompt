@@ -1,6 +1,7 @@
 // @vitest-environment node
 import type { MeshStandardMaterial } from 'three'
-import { albedo, fakeTextureSets, luminance } from '../../../test/albedo'
+import { albedo, luminance } from '../../../test/albedo'
+import { fakeTextureSets } from '../../../test/textureSets'
 import { buildMaterials } from '../../../three/materials'
 import { banquetteBoxes } from './plan'
 

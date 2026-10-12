@@ -13,17 +13,10 @@ import {
   Texture,
 } from 'three'
 import { brand } from '../core/brand'
-import { TEXTURE_SET_IDS } from './assets'
+import { fakeTextureSets } from '../test/textureSets'
 import { isTextured, untexturedMeshes } from './audit'
 import { ENV_MAP_INTENSITY, applyEnvironment, buildMaterials, pbrMaterial, type MaterialKey } from './materials'
-import type { TextureSets } from './textures'
 import { tints } from './tints'
-
-function fakeSets(): TextureSets {
-  const sets = {} as TextureSets
-  for (const id of TEXTURE_SET_IDS) sets[id] = { color: new Texture(), normal: new Texture(), arm: new Texture() }
-  return sets
-}
 
 const KEYS: MaterialKey[] = [
   'floor', 'wall', 'ceiling', 'skirting', 'slats', 'oak', 'walnut', 'chairFabric', 'sofaFabric', 'cushion', 'rug',
@@ -32,7 +25,7 @@ const KEYS: MaterialKey[] = [
 ]
 
 test('every shared material is textured or exempt', () => {
-  const sets = fakeSets()
+  const sets = fakeTextureSets()
   const m = buildMaterials(sets)
   expect(Object.keys(m)).toEqual(KEYS)
   for (const key of KEYS) {
@@ -58,7 +51,7 @@ test('every shared material is textured or exempt', () => {
 })
 
 test('metal sets use the ARM blue channel for metalness', () => {
-  const sets = fakeSets()
+  const sets = fakeTextureSets()
   const m = buildMaterials(sets)
   for (const key of ['brushedMetal'] as const) {
     expect(m[key].metalness, key).toBe(1)
@@ -78,7 +71,7 @@ test('metal sets use the ARM blue channel for metalness', () => {
 })
 
 test('a metal can drop its colour map: the tint is its reflectance, the other maps stay', () => {
-  const sets = fakeSets()
+  const sets = fakeTextureSets()
   // The default is a colour map, as for every other material.
   expect(pbrMaterial(sets.blackMetal, { name: 'default', tint: tints.blackMetal, metal: true }).map).toBe(sets.blackMetal.color)
   const bare = pbrMaterial(sets.brushedMetal, { name: 'bare', tint: tints.brushedMetal, metal: true, colorMap: false })
@@ -93,7 +86,7 @@ test('a metal can drop its colour map: the tint is its reflectance, the other ma
 // metal027's colour map has a mean sRGB of 46: for a metal the base colour is the reflectance (F0), so it capped the
 // aluminium laptop and the brushed microphones near black. Only brushedMetal goes without a colour map.
 test('only the brushed metal goes without a colour map', () => {
-  const sets = fakeSets()
+  const sets = fakeTextureSets()
   const m = buildMaterials(sets)
   for (const key of KEYS) {
     if (typeof m[key].userData.auditExempt === 'string') continue
@@ -108,7 +101,7 @@ test('only the brushed metal goes without a colour map', () => {
 })
 
 test('glass is transparent and marked as glass', () => {
-  const m = buildMaterials(fakeSets())
+  const m = buildMaterials(fakeTextureSets())
   expect(m.glass).toMatchObject({ transparent: true, opacity: 0.08, roughness: 0.05, metalness: 0, envMapIntensity: 1.5, depthWrite: false, side: DoubleSide })
   expect(m.glass.transmission).toBe(0)
   expect(m.glass.userData.auditExempt).toBe('glass')
@@ -123,7 +116,7 @@ test('glass is transparent and marked as glass', () => {
 })
 
 test('tints come from tints.ts and brand.ts', () => {
-  const m = buildMaterials(fakeSets())
+  const m = buildMaterials(fakeTextureSets())
   const expected: Record<MaterialKey, string> = {
     floor: tints.floor, wall: tints.wall, ceiling: tints.ceiling, skirting: tints.skirting, slats: tints.slats,
     oak: tints.oak, walnut: tints.walnut, chairFabric: tints.chairFabric, sofaFabric: tints.sofaFabric, cushion: brand.lime,
@@ -151,7 +144,7 @@ test('the sofa fabric is the brand blue-grey lightened: the fabric map and its A
 })
 
 test('the shared materials pass the audit, and the emissive ones really have an emissive colour', () => {
-  const m = buildMaterials(fakeSets())
+  const m = buildMaterials(fakeTextureSets())
   const box = new BoxGeometry()
   const room = new Group()
   for (const key of KEYS) room.add(Object.assign(new Mesh(box, m[key]), { name: key }))
@@ -167,7 +160,7 @@ test('the shared materials pass the audit, and the emissive ones really have an 
 })
 
 test('every material records its environment ratio', () => {
-  const sets = fakeSets()
+  const sets = fakeTextureSets()
   const m = buildMaterials(sets)
   for (const key of ['floor', 'oak', 'blackMetal', 'consoleShell', 'porcelain'] as const) {
     expect(m[key].userData.envBase, key).toBe(ENV_MAP_INTENSITY.surface)
@@ -179,7 +172,7 @@ test('every material records its environment ratio', () => {
 })
 
 test('applyEnvironment scales each ratio by the phase intensity', () => {
-  const sets = fakeSets()
+  const sets = fakeTextureSets()
   const m = buildMaterials(sets)
   const leaf = pbrMaterial(sets.oak, { name: 'leaf', tint: tints.oak, metal: false, envMapIntensity: ENV_MAP_INTENSITY.plant })
   const env = new Texture()
