@@ -131,11 +131,11 @@ test('the clock keeps three hand nodes with identity transforms', async () => {
   }
 })
 
-test('the pendant has its bulb material and the frame its artwork material', async () => {
+test('the pendant has its bulb and shell materials and the frame its artwork material', async () => {
   const materials = async (id: string) => (await readModel(id)).getRoot().listMaterials().map((material) => material.getName())
   const pendant = await materials('modern_ceiling_lamp_01')
   expect(pendant).toContain(MODEL_PARTS.pendantBulb)
-  expect(pendant.filter((name) => GLASS_MATERIAL.test(name))).toEqual(['modern_ceiling_lamp_01_glass'])
+  expect(pendant.filter((name) => GLASS_MATERIAL.test(name))).toEqual([MODEL_PARTS.pendantShell])
   expect(await materials('hanging_picture_frame_01')).toContain(MODEL_PARTS.frameArtwork)
   expect((await materials('wall_clock')).filter((name) => GLASS_MATERIAL.test(name))).toEqual(['wall_clock_glass'])
 })

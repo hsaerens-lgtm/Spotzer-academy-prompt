@@ -56,6 +56,7 @@ export function modelUrl(model: ModelId): string {
 export const MODEL_PARTS = {
   clockHands: { hour: 'wall_clock_hours_hand', minute: 'wall_clock_minute_hand', second: 'wall_clock_second_hand' },
   pendantBulb: 'modern_ceiling_globe',
+  pendantShell: 'modern_ceiling_lamp_01_glass',
   frameArtwork: 'hanging_picture_frame_01_artwork',
 } as const
 /** Model materials whose name matches are glass (audit exemption). */

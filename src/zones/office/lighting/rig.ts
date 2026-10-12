@@ -21,6 +21,9 @@ export const RIG = {
   // k tuned on the night overview (Task 10b): lounge wall by the TV 7.3 -> about 26 luma, sofa seats about 67, no hot spot.
   floorLamp: { colour: '#ffcf96', distance: 5, decay: 2, k: 1.5 },
   emissivePeak: 2.5,
+  // The pendants' opaque frosted shells glow with their bulbs (emissive = preset bulb x this; Task 16 ruling). Tuned on
+  // the night overview: the three globes read 200, 200 and 218 luma (the far one also takes the pendant light).
+  pendantShellPeak: 0.8,
   environment: {
     resolution: 256,
     lightformers: [

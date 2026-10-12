@@ -2,6 +2,7 @@ import { Document, WebIO } from '@gltf-transform/core'
 import { act, extend } from '@react-three/fiber'
 import { Box3, Color, Group, Mesh, SRGBColorSpace, type DataTexture, type MeshStandardMaterial, type Object3D } from 'three'
 import { QualityContext, type Quality } from '../../../app/quality'
+import { PHASES } from '../../../core/phase'
 import { appStore } from '../../../core/store'
 import { isClockDeprecation, mountR3F, type TestRoot } from '../../../test/r3fRoot'
 import { resetAppStore } from '../../../test/resetAppStore'
@@ -15,6 +16,7 @@ import { swayRotation } from '../../../three/plants/sway'
 import { tints } from '../../../three/tints'
 import { layout } from '../layout'
 import { PhaseDriver } from '../lighting/PhaseDriver'
+import { PRESETS } from '../lighting/presets'
 import { RIG } from '../lighting/rig'
 import { Decor } from './Decor'
 import { DecorStage } from './DecorStage'
@@ -23,10 +25,10 @@ import { vasePlantPosition } from './Vases'
 
 /*
  * The decor stage (Tasks 12 and 14) through the real model path (useGLTF, AssetBoundary, DecorStage): every item at its
- * layout place, the pendant bulbs driven by the phase, the frames' glass, the plants that sway on the high and medium
- * tiers only, the shadow rule, and a model that cannot load left out on its own.
- * No network: fetch serves tiny GLBs built here, one quad per material; the pendant's wears the bulb material, the
- * frame's its body and its glass (no artwork: painting a poster needs a 2D canvas, which jsdom lacks).
+ * layout place, the pendant bulbs and shells driven by the phase, the frames' glass, the plants that sway on the high and
+ * medium tiers only, the shadow rule, and a model that cannot load left out on its own.
+ * No network: fetch serves tiny GLBs built here, one quad per material; the pendant's wear the bulb and the shell
+ * materials, the frame's its body and its glass (no artwork: painting a poster needs a 2D canvas, which jsdom lacks).
  */
 
 // The books' atlas is painted on a canvas, which jsdom does not have: the books get a plain material here.
@@ -71,7 +73,7 @@ let errors: unknown[][]
 beforeAll(async () => {
   const plain = await tinyGlb('wood')
   const models = new Map([
-    [modelUrl('pendantLamp'), await tinyGlb(MODEL_PARTS.pendantBulb)],
+    [modelUrl('pendantLamp'), await tinyGlb(MODEL_PARTS.pendantBulb, MODEL_PARTS.pendantShell)],
     [modelUrl('pictureFrame'), await tinyGlb(FRAME_BODY, FRAME_GLASS)],
   ])
   // three's FileLoader wraps the model URL in a Request, and Node's Request refuses a URL without an origin.
@@ -180,6 +182,30 @@ test('the three pendants share one warm bulb, off by day and at its peak at nigh
   await act(async () => appStore.getState().setPhase('night'))
   await root.frame()
   expect(bulb.emissiveIntensity).toBeCloseTo(RIG.emissivePeak)
+})
+
+// Task 16 ruling: the shell is opaque (the asset build drops its transmission, and nothing transparent may stand in front
+// of the wall screen), so it hides the bulb; it glows warm itself, as frosted glass lit from inside, at the bulb's level.
+test('the three pendants share one frosted shell that glows warm at the bulb level in every phase, and stays opaque', async () => {
+  const root = await mountDecor()
+  const shellOf = (i: number) =>
+    meshesOf(named(root.state.scene, `pendant-${i}`))
+      .map((mesh) => mesh.material as MeshStandardMaterial)
+      .find((material) => material.name === MODEL_PARTS.pendantShell)
+  const shells = [0, 1, 2].map(shellOf)
+  expect(shells[0]).toBeDefined()
+  expect(new Set(shells).size).toBe(1)
+  const shell = shells[0]!
+  expect(shell.emissive.getHexString()).toBe(tints.warmLight.slice(1))
+  expect(shell.userData.auditExempt).toBe('emissive')
+  expect(shell.transparent).toBe(false)
+  expect(PRESETS.day.bulb).toBe(0)
+  for (const phase of PHASES) {
+    await act(async () => appStore.getState().setPhase(phase))
+    await root.frame()
+    expect(shell.emissiveIntensity, phase).toBeCloseTo(PRESETS[phase].bulb * RIG.pendantShellPeak)
+  }
+  expect(RIG.pendantShellPeak).toBeGreaterThan(0)
 })
 
 // hanging_picture_frame_01's glass is the frame's own colour map, metallic, with an opacity map the CC0 download leaves
