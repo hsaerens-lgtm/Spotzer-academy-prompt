@@ -31,6 +31,19 @@ test('a textured mesh passes', () => {
   expect(isTextured(new MeshStandardMaterial({ roughnessMap: new Texture() }))).toBe(false)
 })
 
+// A metal's base colour is its reflectance (F0), set by its tint: its texture is the metalness map (the ARM map) and a surface map.
+test('a metal textured by its metalness map needs no colour map', () => {
+  const metal = new MeshStandardMaterial({ name: 'brushed', metalness: 1, metalnessMap: new Texture(), normalMap: new Texture(), roughnessMap: new Texture() })
+  const root = named(new Group(), 'base')
+  root.add(named(new Mesh(box, metal), 'lid'))
+  expect(untexturedMeshes(root)).toEqual([])
+  expect(isTextured(metal)).toBe(true)
+  // A metalness map alone is not enough, and a flat metal is still reported.
+  expect(isTextured(new MeshStandardMaterial({ metalnessMap: new Texture() }))).toBe(false)
+  root.add(named(new Mesh(box, new MeshStandardMaterial({ name: 'flat', metalness: 1 })), 'plate'))
+  expect(untexturedMeshes(root)).toEqual(['base/plate#flat'])
+})
+
 test('an untextured mesh is reported with its path', () => {
   const root = named(new Group(), 'base')
   const table = named(new Group(), 'table')

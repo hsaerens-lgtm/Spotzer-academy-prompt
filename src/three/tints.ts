@@ -3,7 +3,7 @@ import { brand } from '../core/brand'
 /** Material tints that are not brand colours. Brand colours come from core/brand.ts only. */
 export const tints = {
   floor: '#c8a27a', wall: '#b9ad9c', ceiling: '#e6e0d6', skirting: '#8f8577', slats: '#c99a68', oak: '#d2a878', walnut: '#a8774f',
-  chairFabric: '#7d7368', sofaFabric: brand.blueGrey, cushion: brand.lime, rug: '#b8aa96',
+  chairFabric: '#a39684', sofaFabric: brand.blueGrey, cushion: brand.lime, rug: '#b8aa96',
   blackMetal: '#2a2b2d', brushedMetal: '#b9bcc0', consoleShell: '#c9c6bd', consoleDark: '#3a3d40',
   porcelain: brand.onDark, visor: brand.nearBlack, glass: '#dfe8ee', warmLight: '#ffd29a', diffuser: '#857a6b', diffuserGlow: '#b8a58a', posterPaper: '#f1ece2',
   leafGreens: ['#30552c', '#3b6136', '#274525', '#446d3b', '#213d21', '#365730'], stem: '#4a6b3a', soil: '#241c15',

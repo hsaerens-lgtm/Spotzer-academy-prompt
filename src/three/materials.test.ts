@@ -75,6 +75,36 @@ test('metal sets use the ARM blue channel for metalness', () => {
   expect(custom.aoMap).toBe(sets.oak.arm)
 })
 
+test('a metal can drop its colour map: the tint is its reflectance, the other maps stay', () => {
+  const sets = fakeSets()
+  // The default is a colour map, as for every other material.
+  expect(pbrMaterial(sets.blackMetal, { name: 'default', tint: tints.blackMetal, metal: true }).map).toBe(sets.blackMetal.color)
+  const bare = pbrMaterial(sets.brushedMetal, { name: 'bare', tint: tints.brushedMetal, metal: true, colorMap: false })
+  expect(bare.map).toBeNull()
+  expect(bare.color.getHexString()).toBe(new Color(tints.brushedMetal).getHexString())
+  expect(bare.normalMap).toBe(sets.brushedMetal.normal)
+  for (const map of [bare.roughnessMap, bare.aoMap, bare.metalnessMap]) expect(map).toBe(sets.brushedMetal.arm)
+  expect(bare.metalness).toBe(1)
+  expect(isTextured(bare)).toBe(true)
+})
+
+// metal027's colour map has a mean sRGB of 46: for a metal the base colour is the reflectance (F0), so it capped the
+// aluminium laptop and the brushed microphones near black. Only brushedMetal goes without a colour map.
+test('only the brushed metal goes without a colour map', () => {
+  const sets = fakeSets()
+  const m = buildMaterials(sets)
+  for (const key of KEYS) {
+    if (typeof m[key].userData.auditExempt === 'string') continue
+    if (key === 'brushedMetal') expect(m[key].map, key).toBeNull()
+    else expect(m[key].map, key).toBeTruthy()
+  }
+  expect(m.blackMetal.map).toBe(sets.blackMetal.color)
+  expect(m.brushedMetal.normalMap).toBe(sets.brushedMetal.normal)
+  expect(m.brushedMetal.roughnessMap).toBe(sets.brushedMetal.arm)
+  expect(m.brushedMetal.metalnessMap).toBe(sets.brushedMetal.arm)
+  expect(m.brushedMetal.color.getHexString()).toBe('b9bcc0')
+})
+
 test('glass is transparent and marked as glass', () => {
   const m = buildMaterials(fakeSets())
   expect(m.glass).toMatchObject({ transparent: true, opacity: 0.08, roughness: 0.05, metalness: 0, envMapIntensity: 1.5, depthWrite: false, side: DoubleSide })

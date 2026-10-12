@@ -39,16 +39,18 @@ function withEnvRatio<T extends MeshStandardMaterial>(material: T, ratio: number
  * A textured PBR material from one texture set: colour map tinted by `tint`, normal map, and the ARM map read three
  * ways (R ambient occlusion, G roughness, B metalness; metalness only for metal sets).
  * `envMapIntensity` is the material's environment ratio (default ENV_MAP_INTENSITY.surface), see applyEnvironment().
+ * `colorMap: false` leaves the colour map out, for a metal whose texture set is too dark to be its reflectance: the
+ * base colour of a metal is its F0, so the tint alone sets it, and the normal and ARM maps carry the surface.
  */
 export function pbrMaterial(
   textures: PbrTextures,
-  options: { name: string; tint: string; metal: boolean; roughness?: number; envMapIntensity?: number },
+  options: { name: string; tint: string; metal: boolean; roughness?: number; envMapIntensity?: number; colorMap?: boolean },
 ): MeshStandardMaterial {
   return withEnvRatio(
     new MeshStandardMaterial({
       name: options.name,
       color: options.tint,
-      map: textures.color,
+      map: options.colorMap === false ? null : textures.color,
       normalMap: textures.normal,
       roughnessMap: textures.arm,
       aoMap: textures.arm,
@@ -62,8 +64,8 @@ export function pbrMaterial(
 
 /** Every shared material of the office. Pure: works on plain Texture objects (unit tests) as on loaded ones. */
 export function buildMaterials(sets: TextureSets) {
-  const pbr = (name: string, set: TextureSetId, tint: string, roughness?: number) =>
-    pbrMaterial(sets[set], { name, tint, metal: TEXTURE_SETS[set].metal, roughness })
+  const pbr = (name: string, set: TextureSetId, tint: string, extra: { roughness?: number; colorMap?: boolean } = {}) =>
+    pbrMaterial(sets[set], { name, tint, metal: TEXTURE_SETS[set].metal, ...extra })
   const glow = (name: string, colour: string, emissiveIntensity: number, extra: MeshStandardMaterialParameters = {}) =>
     markExempt(new MeshStandardMaterial({ name, color: colour, emissive: colour, emissiveIntensity, ...extra }), 'emissive')
   return {
@@ -79,9 +81,10 @@ export function buildMaterials(sets: TextureSets) {
     cushion: pbr('cushion', 'fabric', tints.cushion),
     rug: pbr('rug', 'carpet', tints.rug),
     blackMetal: pbr('blackMetal', 'blackMetal', tints.blackMetal),
-    brushedMetal: pbr('brushedMetal', 'brushedMetal', tints.brushedMetal),
-    consoleShell: pbr('consoleShell', 'wall', tints.consoleShell, 0.7),
-    consoleDark: pbr('consoleDark', 'wall', tints.consoleDark, 0.7),
+    // Aluminium: metal027's colour map (mean sRGB 46) would cap its reflectance near black, so the tint is its colour.
+    brushedMetal: pbr('brushedMetal', 'brushedMetal', tints.brushedMetal, { colorMap: false }),
+    consoleShell: pbr('consoleShell', 'wall', tints.consoleShell, { roughness: 0.7 }),
+    consoleDark: pbr('consoleDark', 'wall', tints.consoleDark, { roughness: 0.7 }),
     // Lacquered porcelain: a slight colour and roughness variation under a clear coat, so it reflects the phase.
     porcelain: withEnvRatio(
       new MeshPhysicalMaterial({
