@@ -87,6 +87,23 @@ test('a plant sways only when it is animated and asks for it', async () => {
   expect([sway.rotation.x, sway.rotation.z]).toEqual([0, 0])
 })
 
+// The low tier, reduced motion and sway-free placements: a frame costs nothing once the plant stands straight.
+test('a plant at rest leaves its rotation alone from frame to frame', async () => {
+  const root = await mount(<Plant placement={plant} animate={false} />)
+  const sway = meshes(root)[1].parent!
+  await root.frame()
+  const rotate = vi.spyOn(sway.quaternion, 'setFromEuler')
+  await root.frame()
+  await root.frame()
+  expect(rotate).not.toHaveBeenCalled()
+  expect([sway.rotation.x, sway.rotation.z]).toEqual([0, 0])
+  // Swaying, it turns once per frame: both angles at once.
+  await root.render(<Plant placement={plant} animate />)
+  rotate.mockClear()
+  await root.frame()
+  expect(rotate).toHaveBeenCalledOnce()
+})
+
 test('a hanging plant is cords, pot and canopy, swinging about its hook', async () => {
   const root = await mount(<HangingPlant placement={hanging} animate name="hanging" />)
   const [cords, pot, canopy] = meshes(root)
