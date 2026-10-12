@@ -1,48 +1,62 @@
 import { useGLTF } from '@react-three/drei'
-import { useMemo, type ComponentType } from 'react'
-import { Cabinet } from './props/Cabinet'
+import { createPortal } from '@react-three/fiber'
+import { Fragment, useLayoutEffect, useMemo, type ComponentType } from 'react'
+import type { Object3D } from 'three'
+import { cloneModel, meshesOf, normaliseModel, prepareModel, scaleToHeight } from './gltf'
+import { HoverOutline } from './interactive'
 import { CrtTv } from './props/CrtTv'
 import { Lamp } from './props/Lamp'
 import { Laptop } from './props/Laptop'
 import { LogoCubes } from './props/LogoCubes'
 import { Microphone } from './props/Microphone'
 import { RetroConsole } from './props/RetroConsole'
+import { Shelves } from './props/Shelves'
 import { Sideboard } from './props/Sideboard'
 import { Sofa } from './props/Sofa'
 import { Table } from './props/Table'
+import { TvStand } from './props/TvStand'
 import type { ObjectProps } from './types'
 
-/** The chairs are no longer an object of their own: props/ChairSet.tsx draws all of them as instances. */
 export type ObjectName =
-  | 'table'
-  | 'sideboard'
-  | 'cabinet'
-  | 'laptop'
-  | 'crtTv'
-  | 'retroConsole'
-  | 'sofa'
-  | 'logoCubes'
-  | 'lamp'
-  | 'microphone'
+  | 'table' | 'laptop' | 'retroConsole' | 'sofa' | 'logoCubes' | 'lamp' | 'microphone' // procedural (existing)
+  | 'tvStand' | 'shelves' // procedural, Task 10
+  | 'sideboard' | 'crtTv' // procedural until Task 11, then GLB
+
+/** Every object name, in the order of the union (objects.test.ts checks that they match). */
+export const OBJECT_NAMES = [
+  'table', 'laptop', 'retroConsole', 'sofa', 'logoCubes', 'lamp', 'microphone',
+  'tvStand', 'shelves',
+  'sideboard', 'crtTv',
+] as const satisfies readonly ObjectName[]
 
 /**
- * Declare a GLB in public/models to replace an object's procedural version, e.g. { sofa: publicUrl('models/sofa.glb') }
- * (`publicUrl` is in src/core/publicUrl.ts: a URL under public/ must never start with `/`, or a subfolder host breaks).
- * The model must share the procedural origin (floor level, centred) and orientation (front = +z), in metres.
+ * CC0 models that draw an object instead of its procedural version: public/assets/models/<asset id>.glb, declared in
+ * scripts/assets/manifest.json and src/three/assets.ts (MODELS), always through modelUrl() (publicUrl, no leading '/').
+ * A model is normalised on load (standing on y = 0, centred on x and z); its front must face +z, in metres.
  */
 export const glbModels: Partial<Record<ObjectName, string>> = {}
 
-const procedural: Record<ObjectName, ComponentType<ObjectProps>> = {
+const procedural: Partial<Record<ObjectName, ComponentType<ObjectProps>>> = {
   table: Table,
-  sideboard: Sideboard,
-  cabinet: Cabinet,
   laptop: Laptop,
-  crtTv: CrtTv,
   retroConsole: RetroConsole,
   sofa: Sofa,
   logoCubes: LogoCubes,
   lamp: Lamp,
   microphone: Microphone,
+  tvStand: TvStand,
+  shelves: Shelves,
+  sideboard: Sideboard,
+  crtTv: CrtTv,
+}
+
+export interface ModelProps extends ObjectProps {
+  /** Lime hover outline on every mesh of a model (interactive models, inside an <Interactive>). */
+  outline?: boolean
+  /** Scale the model uniformly to this height, in metres, before normalising it. */
+  height?: number
+  /** Called once per placed copy, after preparation: the place to find named nodes and materials. */
+  onModel?: (root: Object3D) => void
 }
 
 export type ObjectSource = { kind: 'procedural' } | { kind: 'glb'; url: string }
@@ -52,19 +66,40 @@ export function resolveObject(name: ObjectName, models: Partial<Record<ObjectNam
   return url ? { kind: 'glb', url } : { kind: 'procedural' }
 }
 
-function GltfObject({ url, ...props }: ObjectProps & { url: string }) {
-  const { scene } = useGLTF(url, false)
-  const clone = useMemo(() => scene.clone(true), [scene])
+/** A declared model or a procedural component can draw the object. */
+export function hasSource(name: ObjectName, models: Partial<Record<ObjectName, string>> = glbModels): boolean {
+  return Boolean(models[name]) || procedural[name] !== undefined
+}
+
+function GltfObject({ url, outline = false, height, onModel, ...props }: ModelProps & { url: string }) {
+  // Draco off, drei's built-in meshopt decoder on: nothing is fetched from a CDN.
+  const { scene } = useGLTF(url, false, true)
+  const root = useMemo(() => {
+    const copy = cloneModel(scene)
+    prepareModel(copy)
+    if (height) scaleToHeight(copy, height)
+    normaliseModel(copy)
+    return copy
+  }, [scene, height])
+  // Once per copy, on purpose: a new onModel function on a later render does not run again.
+  useLayoutEffect(() => {
+    onModel?.(root)
+  }, [root])
+  const meshes = useMemo(() => (outline ? meshesOf(root) : []), [outline, root])
   return (
     <group {...props}>
-      <primitive object={clone} />
+      <primitive object={root} />
+      {meshes.map((mesh) => (
+        <Fragment key={mesh.uuid}>{createPortal(<HoverOutline />, mesh)}</Fragment>
+      ))}
     </group>
   )
 }
 
-export function SceneObject({ object, ...props }: ObjectProps & { object: ObjectName }) {
+export function SceneObject({ object, outline, height, onModel, ...props }: ModelProps & { object: ObjectName }) {
   const source = resolveObject(object)
-  if (source.kind === 'glb') return <GltfObject url={source.url} {...props} />
+  if (source.kind === 'glb') return <GltfObject url={source.url} outline={outline} height={height} onModel={onModel} {...props} />
   const Procedural = procedural[object]
+  if (!Procedural) throw new Error(`Nothing draws "${object}": declare its model in glbModels.`)
   return <Procedural {...props} />
 }

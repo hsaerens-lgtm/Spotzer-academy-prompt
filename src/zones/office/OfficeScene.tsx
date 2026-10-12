@@ -24,7 +24,7 @@ export function OfficeScene() {
   const settings = useQualitySettings()
   const materials = useMaterials()
   useEmissiveLevels(materials)
-  const { table, chairs, microphones, sideboard, lamp, laptop, tvStand, tv, retroConsole, sofa, logo } = layout.objects
+  const { table, chairs, microphones, sideboard, lamp, laptop, tvStand, tv, retroConsole, sofa, logo, shelves } = layout.objects
   return (
     <>
       <color attach="background" args={[brand.ink]} />
@@ -45,7 +45,7 @@ export function OfficeScene() {
       <Interactive id="laptop" onActivate={objectActions.laptop}>
         <SceneObject object="laptop" name="laptop" position={laptop.position} rotation-y={laptop.rotationY} />
       </Interactive>
-      <SceneObject object="cabinet" name="tvStand" position={tvStand.position} rotation-y={tvStand.rotationY} />
+      <SceneObject object="tvStand" name="tvStand" position={tvStand.position} rotation-y={tvStand.rotationY} />
       <Interactive id="tv" onActivate={objectActions.tv}>
         <SceneObject object="crtTv" name="tv" position={tv.position} rotation-y={tv.rotationY} />
         <CrtScreen />
@@ -53,6 +53,7 @@ export function OfficeScene() {
       </Interactive>
       <SceneObject object="sofa" name="sofa" position={sofa.position} rotation-y={sofa.rotationY} />
       <SceneObject object="logoCubes" name="logo" position={logo.position} rotation-y={logo.rotationY} />
+      <SceneObject object="shelves" name="shelves" position={shelves.position} rotation-y={shelves.rotationY} />
       <WallScreen3D />
       <AdaController />
       <ContactShadows position={[layout.ada.position[0], CONTACT_SHADOW_Y, layout.ada.position[2]]} scale={1.4} opacity={0.35} blur={2.5} far={1.6} resolution={256} frames={1} />
