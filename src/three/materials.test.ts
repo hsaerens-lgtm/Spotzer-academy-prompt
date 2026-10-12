@@ -27,7 +27,7 @@ function fakeSets(): TextureSets {
 
 const KEYS: MaterialKey[] = [
   'floor', 'wall', 'ceiling', 'skirting', 'slats', 'oak', 'walnut', 'chairFabric', 'sofaFabric', 'cushion', 'rug',
-  'blackMetal', 'brushedMetal', 'consoleShell', 'consoleDark', 'porcelain', 'glass', 'screenOff',
+  'blackMetal', 'paintedSteel', 'brushedMetal', 'consoleShell', 'consoleDark', 'porcelain', 'glass', 'screenOff',
   'limeGlow', 'mintGlow', 'logoLime', 'logoMint', 'logoInk', 'signBack', 'ceilingStrip', 'lampShade',
 ]
 
@@ -65,7 +65,7 @@ test('metal sets use the ARM blue channel for metalness', () => {
     expect(m[key].metalnessMap, key).toBe(sets[key].arm)
     expect(m[key].roughnessMap, key).toBe(sets[key].arm)
   }
-  for (const key of ['floor', 'oak', 'walnut', 'chairFabric', 'rug', 'consoleShell'] as const) {
+  for (const key of ['floor', 'oak', 'walnut', 'chairFabric', 'rug', 'consoleShell', 'paintedSteel'] as const) {
     expect(m[key].metalness, key).toBe(0)
     expect(m[key].metalnessMap, key).toBeNull()
   }
@@ -126,7 +126,7 @@ test('tints come from tints.ts and brand.ts', () => {
   const expected: Record<MaterialKey, string> = {
     floor: tints.floor, wall: tints.wall, ceiling: tints.ceiling, skirting: tints.skirting, slats: tints.slats,
     oak: tints.oak, walnut: tints.walnut, chairFabric: tints.chairFabric, sofaFabric: tints.sofaFabric, cushion: brand.lime,
-    rug: tints.rug, blackMetal: tints.blackMetal, brushedMetal: tints.brushedMetal, consoleShell: tints.consoleShell,
+    rug: tints.rug, blackMetal: tints.blackMetal, paintedSteel: tints.paintedSteel, brushedMetal: tints.brushedMetal, consoleShell: tints.consoleShell,
     consoleDark: tints.consoleDark, porcelain: brand.onDark, glass: tints.glass, screenOff: brand.ink,
     limeGlow: brand.lime, mintGlow: brand.mint, logoLime: brand.lime, logoMint: brand.mint, logoInk: brand.onDark,
     signBack: brand.surface1, ceilingStrip: tints.diffuser, lampShade: tints.warmLight,

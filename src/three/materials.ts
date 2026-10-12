@@ -77,6 +77,10 @@ export function buildMaterials(sets: TextureSets) {
     cushion: pbr('cushion', 'fabric', tints.cushion),
     rug: pbr('rug', 'carpet', tints.rug),
     blackMetal: pbr('blackMetal', 'blackMetal', tints.blackMetal),
+    // Black paint on steel, for a large face (the banquette's base): the blackMetal textures as a dielectric, with the
+    // colour map's own dark grey as its albedo. As a tinted metal it was a black body (0.023 x 0.11 = 0.0026, no diffuse
+    // term) and read pure black in the shade; this one lights like any other surface (banquette.test.ts).
+    paintedSteel: pbrMaterial(sets.blackMetal, { name: 'paintedSteel', tint: tints.paintedSteel, metal: false }),
     // Aluminium: metal027's colour map (mean sRGB 46) would cap its reflectance near black, so the tint is its colour.
     brushedMetal: pbr('brushedMetal', 'brushedMetal', tints.brushedMetal, { colorMap: false }),
     consoleShell: pbr('consoleShell', 'wall', tints.consoleShell, { roughness: 0.7 }),

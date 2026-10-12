@@ -135,7 +135,7 @@ export function banquetteBoxes(): BoxSpec[] {
   const top = 0.04
   return [
     box('banquette-top', [cx, height - top / 2, cz], [x1 - x0, top, z1 - z0], 'oak'),
-    box('banquette-base', [cx, (height - top) / 2, cz], [x1 - x0 - 0.06, height - top, z1 - z0 - 0.06], 'blackMetal'),
+    box('banquette-base', [cx, (height - top) / 2, cz], [x1 - x0 - 0.06, height - top, z1 - z0 - 0.06], 'paintedSteel'),
   ]
 }
 

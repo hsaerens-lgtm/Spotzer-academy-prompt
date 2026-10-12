@@ -5,6 +5,8 @@ export const tints = {
   floor: '#c8a27a', wall: '#b9ad9c', ceiling: '#e6e0d6', skirting: '#8f8577', slats: '#c99a68', oak: '#d2a878', walnut: '#a8774f',
   chairFabric: '#a39684', sofaFabric: '#809fb3', cushion: brand.lime, rug: '#b8aa96',
   blackMetal: '#2a2b2d', brushedMetal: '#b9bcc0', consoleShell: '#c9c6bd', consoleDark: '#3a3d40',
+  // Painted steel (the banquette's base): white leaves the colour map as it is, a dark grey paint (mean sRGB 93).
+  paintedSteel: '#ffffff',
   porcelain: brand.onDark, visor: brand.nearBlack, glass: '#dfe8ee', warmLight: '#ffd29a', diffuser: '#857a6b', diffuserGlow: '#b8a58a', posterPaper: '#f1ece2',
   leafGreens: ['#30552c', '#3b6136', '#274525', '#446d3b', '#213d21', '#365730'], stem: '#4a6b3a', soil: '#241c15',
   potGlazes: { terracotta: '#a5613f', cream: '#d8cdb8', slate: '#555b5e', brass: '#8a6a34' },
