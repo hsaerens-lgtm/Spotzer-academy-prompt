@@ -1,0 +1,251 @@
+/* Workshop: a retro 90s PC in Athena colours. VT323 only for the chrome; content stays in Montserrat. */
+.ws-desktop {
+  --ws-chrome: 'VT323', 'Courier New', monospace;
+  --ws-bevel-light: var(--oe-blue-grey-soft);
+  --ws-bevel-dark: var(--at-ink);
+  position: absolute; inset: 0; pointer-events: auto; overflow: hidden;
+  background-color: var(--at-ink);
+  background-image: radial-gradient(var(--at-surface-3) 1px, transparent 1px);
+  background-size: 14px 14px;
+  color: var(--at-on-dark); font-family: var(--oe-font-ui); font-size: 15px;
+}
+
+.ws-window {
+  display: flex; flex-direction: column; min-width: 0; min-height: 0;
+  background: var(--at-surface-1);
+  border: 2px solid; border-color: var(--ws-bevel-light) var(--ws-bevel-dark) var(--ws-bevel-dark) var(--ws-bevel-light);
+}
+.ws-window__bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 8px;
+  background: var(--oe-blue-grey); color: var(--at-on-dark);
+}
+.ws-window--primary > .ws-window__bar { background: var(--oe-lime); color: var(--at-ink); }
+/* The lime focus ring would vanish on the lime bar: controls in it get an ink ring. */
+.ws-window--primary > .ws-window__bar :focus-visible { outline-color: var(--at-ink); }
+.ws-window__title { margin: 0; font-family: var(--ws-chrome); font-size: 20px; font-weight: 400; letter-spacing: 0.04em; }
+.ws-window__tools { display: flex; align-items: center; gap: 6px; font-family: var(--ws-chrome); font-size: 18px; }
+.ws-window__body { flex: 1; min-height: 0; overflow: auto; padding: 12px 14px; }
+
+.ws-btn {
+  padding: 3px 14px; border: 2px solid; cursor: pointer;
+  font-family: var(--oe-font-ui); font-size: 14px; font-weight: 700;
+  background: var(--at-surface-2); color: var(--at-on-dark);
+  border-color: var(--ws-bevel-light) var(--ws-bevel-dark) var(--ws-bevel-dark) var(--ws-bevel-light);
+}
+.ws-btn:active { border-color: var(--ws-bevel-dark) var(--ws-bevel-light) var(--ws-bevel-light) var(--ws-bevel-dark); }
+.ws-btn--primary { background: var(--oe-lime); color: var(--at-ink); }
+.ws-btn--primary:hover { background: var(--oe-lime-hover); }
+.ws-btn--sm { padding: 1px 10px; font-size: 13px; }
+.ws-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.ws-btn[aria-pressed='true'] { background: var(--at-ink); border-color: var(--ws-bevel-dark) var(--ws-bevel-light) var(--ws-bevel-light) var(--ws-bevel-dark); }
+
+.ws-taskbar {
+  grid-area: task; display: flex; align-items: center; gap: 10px; padding: 3px 6px;
+  background: var(--at-surface-1); border-top: 2px solid var(--ws-bevel-light);
+}
+.ws-start { position: relative; }
+.ws-start .ws-btn { font-family: var(--ws-chrome); font-size: 18px; font-weight: 400; }
+.ws-start__menu {
+  position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 5; min-width: 220px; margin: 0; padding: 4px; list-style: none;
+  background: var(--at-surface-1); border: 2px solid; border-color: var(--ws-bevel-light) var(--ws-bevel-dark) var(--ws-bevel-dark) var(--ws-bevel-light);
+}
+.ws-start__item { display: block; width: 100%; padding: 6px 10px; border: 0; background: none; color: var(--at-on-dark); font: inherit; text-align: left; cursor: pointer; }
+.ws-start__item:hover, .ws-start__item:focus-visible { background: var(--oe-lime); color: var(--at-ink); }
+.ws-taskbar__tabs { display: flex; gap: 6px; }
+.ws-taskbar__end { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.ws-taskbar__counter { font-family: var(--ws-chrome); font-size: 18px; color: var(--at-on-dark-2); }
+
+.ws-icons { grid-area: icons; display: flex; flex-direction: column; gap: 16px; }
+.ws-icon { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px; border: 1px dashed transparent; background: none; color: var(--at-on-dark); cursor: pointer; }
+.ws-icon:hover { border-color: var(--oe-lime-mint); }
+.ws-icon__art { width: 34px; height: 28px; background: var(--at-surface-2); border: 2px solid var(--oe-lime-mint); }
+.ws-icon--corrector .ws-icon__art { border-color: var(--oe-lime); }
+.ws-icon__label { font-family: var(--ws-chrome); font-size: 17px; }
+
+/* Ada has her own place in the desktop grid (under the output, bottom right): her bubble never covers a window. Her
+   row has a fixed height (four lines and the buttons, eight for a long line, from its first character): no window moves
+   while she types. */
+.ws-ada-dock { grid-area: ada; display: flex; align-items: flex-end; justify-content: flex-end; gap: 10px; min-width: 0; min-height: 0; }
+.ws-bubble {
+  position: relative; display: flex; flex-direction: column; flex: 0 1 auto; min-width: 0; max-width: 460px; max-height: 100%;
+  padding: 10px 30px 10px 12px; background: var(--at-surface-1); border: 2px solid var(--oe-lime); font-size: 14px; line-height: 1.5;
+}
+.ws-bubble__text { margin: 0; min-height: 0; overflow-y: auto; }
+.ws-bubble__untyped { visibility: hidden; }
+.ws-bubble__actions { flex: none; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ws-bubble__close { position: absolute; top: 2px; right: 4px; border: 0; background: none; color: var(--at-on-dark-2); font-size: 18px; cursor: pointer; }
+.ws-ada { flex: none; animation: ws-float 3s ease-in-out infinite; }
+.ws-ada__shadow { fill: var(--oe-lime); opacity: 0.35; }
+.ws-ada__body, .ws-ada__head, .ws-ada__arm { fill: var(--at-on-dark); }
+.ws-ada__belt { fill: none; stroke: var(--oe-lime-mint); stroke-width: 2; }
+.ws-ada__visor { fill: var(--at-ink); }
+.ws-ada__eyes { fill: var(--oe-lime); stroke: var(--oe-lime); stroke-width: 3; stroke-linecap: round; animation: ws-blink 4s infinite; transform-box: fill-box; transform-origin: center; }
+.ws-ada__eyes path { fill: none; }
+.ws-ada__arm--right { transform-box: fill-box; transform-origin: 50% 15%; transition: transform 300ms var(--oe-ease); }
+.ws-ada--pointing .ws-ada__arm--right { transform: rotate(-150deg); }
+@keyframes ws-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes ws-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+@media (prefers-reduced-motion: reduce) {
+  .ws-ada, .ws-ada__eyes { animation: none; }
+  .ws-ada__arm--right { transition: none; }
+}
+
+/* Missions view */
+.ws-level + .ws-level { margin-top: 12px; }
+.ws-level__title { margin: 0 0 6px; font-family: var(--ws-chrome); font-size: 18px; font-weight: 400; color: var(--oe-lime-mint); letter-spacing: 0.04em; }
+.ws-mission-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.ws-mission {
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 8px; text-align: left; cursor: pointer;
+  border: 1px solid transparent; background: none; color: var(--at-on-dark); font: inherit; font-size: 14px;
+}
+.ws-mission:hover { border-color: var(--at-hairline-2); }
+.ws-mission[aria-current='true'] { background: var(--at-ink); border-color: var(--oe-lime); }
+.ws-mission__tick { flex: none; width: 13px; height: 13px; border: 2px solid var(--oe-blue-grey-soft); }
+.ws-mission__tick.is-done { background: var(--oe-lime); border-color: var(--oe-lime); }
+.ws-mission__title { flex: 1; }
+.ws-badge { flex: none; padding: 0 5px; background: var(--oe-lime); color: var(--at-ink); font-family: var(--ws-chrome); font-size: 16px; }
+
+.ws-brief { margin-bottom: 12px; padding: 8px 10px; background: var(--at-ink); border-left: 3px solid var(--oe-lime-mint); }
+.ws-brief__title { margin: 0 0 4px; font-family: var(--ws-chrome); font-size: 17px; font-weight: 400; color: var(--oe-lime-mint); }
+.ws-brief__text, .ws-brief__goal { margin: 0; font-size: 14px; line-height: 1.5; }
+.ws-brief__goal { margin-top: 6px; color: var(--at-on-dark-2); }
+.ws-brief__goal strong { color: var(--at-on-dark); }
+
+.ws-blocks { display: grid; gap: 8px; }
+.ws-block { display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; align-items: start; gap: 8px; }
+.ws-block__tag { padding: 4px 6px; font-family: var(--ws-chrome); font-size: 17px; color: var(--at-ink); background: var(--at-on-dark); }
+.ws-block--task .ws-block__tag { background: var(--oe-lime-mint); }
+.ws-block--context .ws-block__tag { background: var(--oe-warn); }
+.ws-block--format .ws-block__tag { background: var(--oe-lime); }
+.ws-block--example .ws-block__tag, .ws-block--constraint .ws-block__tag { background: var(--oe-blue-grey-soft); }
+.ws-field {
+  width: 100%; resize: vertical; padding: 6px 8px; font: inherit; font-size: 14px; line-height: 1.45; color: var(--at-on-dark); background: var(--at-ink);
+  border: 2px solid; border-color: var(--ws-bevel-dark) var(--ws-bevel-light) var(--ws-bevel-light) var(--ws-bevel-dark);
+}
+.ws-field::placeholder { color: var(--at-on-dark-3); }
+.ws-material { align-self: center; padding: 0 6px; font-family: var(--ws-chrome); font-size: 16px; border: 1px solid currentColor; }
+.ws-material--stone { color: var(--oe-lime); }
+.ws-material--wood { color: var(--oe-lime-mint); }
+.ws-material--cardboard, .ws-material--cracked { color: var(--oe-warn); }
+.ws-material--hole { color: var(--oe-danger); }
+.ws-add-block { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 2px dashed var(--oe-blue-grey-soft); font-size: 13px; color: var(--at-on-dark-2); }
+.ws-free { display: grid; gap: 6px; }
+.ws-free__label { font-family: var(--ws-chrome); font-size: 17px; color: var(--oe-lime-mint); }
+.ws-studio__actions { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.ws-studio__shortcut { margin-left: auto; font-family: var(--ws-chrome); font-size: 16px; color: var(--at-on-dark-3); }
+.ws-copy-fallback { display: grid; gap: 6px; margin-top: 10px; font-size: 13px; color: var(--at-on-dark-2); }
+.ws-block.is-reading .ws-field { border-color: var(--oe-lime); box-shadow: 0 0 0 2px var(--oe-lime); }
+.ws-reading { margin: 6px 0 0; font-size: 14px; }
+.ws-reading mark { background: var(--oe-lime); color: var(--at-ink); }
+
+.ws-output__note { margin: 0; color: var(--at-on-dark-2); font-size: 14px; }
+.ws-answer { display: grid; gap: 8px; }
+.ws-tier { justify-self: start; padding: 0 6px; font-family: var(--ws-chrome); font-size: 17px; color: var(--at-ink); }
+.ws-tier--excellent { background: var(--oe-lime); }
+.ws-tier--passable { background: var(--oe-warn); }
+.ws-tier--vague { background: var(--oe-danger); color: var(--at-on-dark); }
+.ws-answer__note { margin: 6px 0 0; font-size: 13px; color: var(--at-on-dark-2); }
+.ws-answer__text { margin: 0; padding: 8px 10px; white-space: pre-wrap; font-size: 14px; line-height: 1.55; background: var(--at-ink); border: 1px dashed var(--at-hairline-2); }
+.ws-compare { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.ws-compare__title { margin: 0 0 6px; font-family: var(--ws-chrome); font-size: 18px; font-weight: 400; }
+.ws-compare__prompt { margin: 0 0 8px; padding: 6px 8px; white-space: pre-wrap; font: inherit; font-size: 13px; color: var(--at-on-dark-2); background: var(--at-surface-2); }
+.ws-compare__blocks { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 0 0 8px; padding: 0; list-style: none; font-size: 13px; color: var(--at-on-dark-2); }
+.ws-compare__blocks li { display: flex; align-items: center; gap: 4px; }
+
+/* Builder */
+.ws-builder { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 220px; gap: 8px; }
+.ws-builder__canvas { flex: 1; min-height: 200px; background: var(--at-ink); }
+.ws-builder__status { display: flex; align-items: center; gap: 10px; min-height: 26px; }
+.ws-builder__outcome, .ws-builder__reading { font-family: var(--ws-chrome); font-size: 18px; }
+.ws-builder__reading { color: var(--oe-lime); }
+.ws-gauge { position: relative; width: 140px; height: 12px; background: var(--at-ink); border: 1px solid var(--oe-blue-grey-soft); }
+.ws-gauge__fill { position: absolute; inset: 0 auto 0 0; }
+.ws-gauge__fill--good { background: var(--at-band-good); }
+.ws-gauge__fill--mid { background: var(--at-band-mid); }
+.ws-gauge__fill--poor { background: var(--at-band-poor); }
+.ws-plan { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; margin: 0; padding: 8px; list-style: none; background: var(--at-ink); }
+.ws-plan > li { display: flex; justify-content: center; width: 100%; }
+.ws-plan__row {
+  display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; cursor: pointer; text-align: left;
+  font: inherit; font-size: 14px; color: var(--at-ink); border: 2px solid var(--at-ink);
+}
+.ws-plan__row--stone { background: var(--at-on-dark); }
+.ws-plan__row--wood { background: var(--oe-lime-mint); }
+.ws-plan__row--cardboard { background: var(--oe-warn); }
+.ws-plan__row--hole { background: transparent; color: var(--oe-danger); border: 2px dashed var(--oe-danger); }
+.ws-plan__row.is-cracked { background-image: linear-gradient(100deg, transparent 48%, var(--at-ink) 49%, var(--at-ink) 51%, transparent 52%); }
+.ws-plan__material { font-family: var(--ws-chrome); font-size: 16px; }
+.ws-plan--collapses .ws-plan__row { transform: rotate(-3deg); }
+.ws-plan--leans .ws-plan__row { transform: rotate(-1deg); }
+
+/* My prompts */
+.ws-prompts { display: grid; gap: 14px; margin: 0 0 14px; padding: 0; list-style: none; }
+.ws-prompts__item { display: grid; gap: 6px; justify-items: start; }
+.ws-prompts__title { margin: 0; font-family: var(--ws-chrome); font-size: 19px; font-weight: 400; color: var(--oe-lime-mint); }
+.ws-prompts__text { width: 100%; margin: 0; padding: 8px 10px; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 14px; background: var(--at-ink); border: 1px dashed var(--at-hairline-2); }
+.ws-prompts .ws-copy-fallback { width: 100%; margin-top: 0; }
+.ws-prompts__confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ws-prompts__confirm p { flex-basis: 100%; margin: 0; font-size: 14px; }
+
+/* Corrector */
+.ws-warning { margin: 0 0 10px; padding: 6px 10px; font-size: 13px; color: var(--at-ink); background: var(--oe-warn); }
+.ws-count { margin: 4px 0 10px; text-align: right; font-family: var(--ws-chrome); font-size: 16px; color: var(--at-on-dark-3); }
+.ws-error { margin: 8px 0 0; padding: 6px 10px; font-size: 14px; border-left: 3px solid var(--oe-danger); }
+.ws-stale { margin: 8px 0 0; padding: 6px 10px; font-size: 13px; color: var(--at-on-dark-2); border-left: 3px solid var(--oe-warn); }
+.ws-offline__title { font-family: var(--ws-chrome); font-size: 22px; color: var(--oe-warn); }
+.ws-report { display: grid; gap: 10px; margin-top: 14px; }
+.ws-report__score { margin: 0; }
+.ws-report__blocks { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.ws-report__block p { margin: 2px 0; font-size: 14px; line-height: 1.5; }
+.ws-report__label { display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--ws-chrome); font-size: 18px; font-weight: 400; }
+.ws-report__quote { margin: 4px 0 0; padding: 4px 8px; font-size: 13px; color: var(--at-on-dark-2); border-left: 2px solid var(--oe-lime-mint); }
+.ws-improved { margin: 0 0 8px; padding: 8px 10px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.55; background: var(--at-ink); }
+.ws-improved ins { text-decoration: none; color: var(--at-ink); background: var(--oe-lime); }
+.ws-changes { margin: 0 0 10px; padding-left: 18px; font-size: 14px; }
+
+/* Desktop grid: icons | missions | studio | builder (top), output (middle) and Ada (bottom), taskbar across.
+   Ada's row is reserved for her bubble (four lines and the buttons, four more for a long line): the builder and the
+   output share the rest, so nothing is covered and nothing moves while she types. */
+.ws-desktop {
+  --ws-ada-row: 140px;
+  display: grid; gap: 12px; padding: 12px 12px 0;
+  grid-template-columns: 76px minmax(220px, 19%) minmax(0, 1fr) minmax(0, 1.05fr);
+  grid-template-rows: minmax(0, 1.2fr) minmax(0, 0.8fr) calc(var(--ws-ada-row) + var(--ws-ada-extra, 0px)) 42px;
+  grid-template-areas:
+    'icons missions studio builder'
+    'icons missions studio output'
+    'icons missions studio ada'
+    'task task task task';
+}
+/* A long line (a lesson with its bonus, or the last congratulations with the pointer to the office console: up to 366
+   characters) takes eight lines in the narrowest bubble (1280 px wide). While Ada says one, her row gets four more lines
+   (4 x 21 px), so the lesson shows in full. */
+.ws-desktop:has(.ws-bubble--long) { --ws-ada-extra: 84px; }
+.ws-area-missions { grid-area: missions; }
+.ws-area-studio { grid-area: studio; }
+.ws-area-builder { grid-area: builder; }
+.ws-area-output { grid-area: output; }
+/* My prompts and the corrector open in place of the centre and right windows; the mission list stays on the left.
+   The corrector brings its own builder and output windows (and Ada), so its main window takes the centre column only. */
+.ws-desktop--prompts .ws-area-main { grid-row: 1 / 4; grid-column: 3 / 5; }
+.ws-desktop--corrector .ws-area-main { grid-area: studio; }
+.ws-taskbar { margin: 0 -12px; }
+
+/* Short screens (down to 1280 x 600): tighter spacing, smaller Ada; content text never below 14 px. */
+@media (max-height: 700px) {
+  .ws-desktop {
+    --ws-ada-row: 134px; gap: 8px; padding: 8px 8px 0;
+    grid-template-rows: minmax(0, 1.15fr) minmax(0, 0.85fr) calc(var(--ws-ada-row) + var(--ws-ada-extra, 0px)) 38px;
+  }
+  .ws-taskbar { margin: 0 -8px; }
+  .ws-window__body { padding: 8px 10px; }
+  .ws-brief { margin-bottom: 8px; padding: 6px 8px; }
+  .ws-blocks { gap: 6px; }
+  .ws-ada { width: 54px; height: 80px; }
+  .ws-bubble { padding: 8px 28px 8px 10px; }
+  /* The building fills whatever height its window gets: no scroll bar inside the builder. */
+  .ws-builder { min-height: 0; }
+  .ws-builder__canvas { min-height: 100px; }
+  /* Ada's taller row for a long line leaves the builder a little less. */
+  .ws-desktop:has(.ws-bubble--long) .ws-builder__canvas { min-height: 80px; }
+}

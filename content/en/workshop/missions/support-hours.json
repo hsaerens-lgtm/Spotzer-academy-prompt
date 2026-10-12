@@ -1,0 +1,70 @@
+{
+  "id": "support-hours",
+  "level": 2,
+  "mode": "free",
+  "title": "A support answer",
+  "situation": "A client, Dr. Lena Vos's dental practice, writes: How do I change our opening hours on the website? We now close at 5 pm on Fridays. In the agency's site editor, hours live under Settings, then Business info.",
+  "goal": "Write a prompt that gets the AI to draft a clear, friendly reply.",
+  "blocks": {
+    "role": {
+      "required": true,
+      "details": [
+        { "id": "role-job", "label": "Who the AI should be", "patterns": ["support agent", "customer support", "support specialist", "helpdesk", "customer service", "you are", "act as"], "hint": "Who should the AI be? A friendly support agent at a web agency." }
+      ]
+    },
+    "task": {
+      "required": true,
+      "details": [
+        { "id": "task-reply", "label": "A reply to the client", "patterns": ["reply", "answer", "respond", "response", "email"], "hint": "What should it write? A reply to the client's question." }
+      ]
+    },
+    "context": {
+      "required": true,
+      "details": [
+        { "id": "question", "label": "The client's exact question", "patterns": ["opening hours", "hours", "5 pm", "5pm"], "hint": "What exactly is the client asking? Paste their question about the opening hours." },
+        { "id": "where", "label": "Where the setting is", "patterns": ["settings", "business info"], "hint": "Where is the setting? Tell the AI: Settings, then Business info." },
+        { "id": "client", "label": "Who the client is", "patterns": ["lena", "vos", "dental", "dentist", "practice"], "hint": "Who is the client? Mention Dr. Vos's dental practice." }
+      ]
+    },
+    "format": {
+      "required": true,
+      "details": [
+        { "id": "steps", "label": "Easy steps", "patterns": ["step*", "numbered", "instructions"], "hint": "What shape? Numbered steps are easy to follow." },
+        { "id": "tone", "label": "A simple, kind tone", "patterns": ["friendly", "kind", "warm", "patient", "simple", "plain", "polite", "reassuring"], "hint": "What tone? Friendly and simple: the client isn't technical." }
+      ]
+    },
+    "example": {
+      "required": false,
+      "details": [
+        { "id": "example", "label": "An example to follow", "patterns": ["for example", "e.g.", "like this", "here is an example", "such as"], "hint": "Bonus: show how you usually start a reply, so the AI can match it." }
+      ]
+    },
+    "constraint": {
+      "required": false,
+      "details": [
+        { "id": "constraint", "label": "A rule to respect", "patterns": ["don't", "do not", "avoid", "no more than", "never", "must not", "without"], "hint": "Bonus: add a rule, like don't use technical terms." }
+      ]
+    }
+  },
+  "conflicts": [
+    { "id": "size-clash", "block": "format", "a": ["one sentence", "one line"], "b": ["numbered steps", "step by step", "steps"], "explain": "One sentence and numbered steps at the same time? The roof cracks. Steps work better here." }
+  ],
+  "answers": {
+    "vague": "Thank you for your message. You can change your opening hours in the website settings. Let us know if you need anything else.",
+    "passable": "Hi Dr. Vos,\n\nYou can update your opening hours in the website editor. Go to the settings and change Friday's closing time to 5 pm. Let us know if you need help!",
+    "excellent": "Hi Dr. Vos,\n\nGood news, it only takes a minute:\n1. Log in to your website editor.\n2. Open Settings, then Business info.\n3. Under Opening hours, set Friday to close at 5 pm.\n4. Click Save. The change is live straight away.\n\nIf anything looks off, just reply to this email and we'll sort it out.\n\nBest wishes,\nThe support team"
+  },
+  "ada": {
+    "intro": "A client needs help. Write a prompt for a reply they can follow without calling you back.",
+    "success": "It holds! The AI knew the exact question, where the setting lives and how to explain it simply.",
+    "takeaway": "For support answers, give the AI the client's exact question and the facts it can't know."
+  },
+  "samples": [
+    { "input": { "mode": "free", "text": "Answer the client." }, "expect": "vague" },
+    { "input": { "mode": "free", "text": "You are a support agent. Reply to a client who wants to change their opening hours. Be friendly." }, "expect": "passable" },
+    { "input": { "mode": "free", "text": "You are a friendly support agent at a web agency. Write a reply to Dr. Vos's dental practice: they asked how to change their opening hours, because they now close at 5 pm on Fridays. The setting is under Settings, then Business info. Explain it in numbered steps, in simple, friendly language." }, "expect": "excellent" },
+    { "input": { "mode": "free", "text": "You are a friendly support agent at a web agency. Write a reply to Dr. Vos's dental practice: they asked how to change their opening hours, because they now close at 5 pm on Fridays. The setting is under Settings, then Business info. Explain it in numbered steps, in simple, friendly language. Don't use technical terms." }, "expect": "excellent" },
+    { "input": { "mode": "free", "text": "You are a support agent. Write a reply to Dr. Vos's dental practice about changing their opening hours: the setting is under Settings, then Business info. Answer in one sentence with numbered steps, in a friendly tone." }, "expect": "passable" }
+  ],
+  "reviewed": "2026-10-06"
+}

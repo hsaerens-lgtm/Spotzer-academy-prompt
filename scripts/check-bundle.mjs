@@ -1,6 +1,7 @@
-import { readdirSync, readFileSync } from 'node:fs'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { gzipSync } from 'node:zlib'
 import { join } from 'node:path'
+import { findLeaks } from '../server/leaks.ts'
 
 const BUDGET_BYTES = 1.5 * 1024 * 1024
 const dist = 'dist'
@@ -40,3 +41,19 @@ if (leaking.length > 0) {
   process.exit(1)
 }
 console.log('No test API (__academy) in the production JS')
+
+// The OpenAI key lives on the server only: no production file may mention it, its variable or OpenAI's address.
+function walk(dir) {
+  return readdirSync(dir).flatMap((name) => {
+    const path = join(dir, name)
+    return statSync(path).isDirectory() ? walk(path) : [path]
+  })
+}
+const secrets = walk(dist)
+  .filter((file) => /\.(js|mjs|html|css|json|map|svg|txt|xml|webmanifest)$/.test(file))
+  .flatMap((file) => findLeaks(readFileSync(file, 'utf8')).map((leak) => `${file}: ${leak}`))
+if (secrets.length > 0) {
+  console.error(`OpenAI details leaked into the production build:\n${secrets.join('\n')}`)
+  process.exit(1)
+}
+console.log('No OpenAI key or address in the production build')

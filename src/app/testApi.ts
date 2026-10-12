@@ -12,6 +12,8 @@ export interface AcademyTestApi {
   rail: (t: number) => void
   /** Pixel position of a named 3D object's centre; added by TestApiBridge once the canvas is ready. */
   screenPosition?: (name: string) => { x: number; y: number } | null
+  /** The workshop screen state; added by WorkshopTestBridge while the workshop is open (development only). */
+  workshop?: () => unknown
 }
 
 declare global {

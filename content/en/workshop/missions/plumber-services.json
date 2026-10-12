@@ -1,0 +1,71 @@
+{
+  "id": "plumber-services",
+  "level": 3,
+  "mode": "fix",
+  "title": "The vague Services page",
+  "situation": "A colleague asked the AI for a Services page for a client, Bram's Plumbing, and got something useless. Bram is a local plumber in Utrecht: emergency repairs 24/7, boiler installation and servicing, leak detection, bathroom renovations.",
+  "goal": "Fix the prompt so the AI writes a page Bram can actually publish.",
+  "starter": "Write a services page.",
+  "blocks": {
+    "role": {
+      "required": true,
+      "details": [
+        { "id": "role-job", "label": "Who the AI should be", "patterns": ["copywriter", "content writer", "web writer", "seo", "marketer", "you are", "act as"], "hint": "Who should the AI be? A web copywriter writes pages that sell." }
+      ]
+    },
+    "task": {
+      "required": true,
+      "details": [
+        { "id": "task-page", "label": "A Services page", "patterns": ["services page", "service page", "services section", "web page", "page"], "hint": "What should it write? A Services page for the website." }
+      ]
+    },
+    "context": {
+      "required": true,
+      "details": [
+        { "id": "client", "label": "Who the client is", "patterns": ["bram*", "plumb*"], "hint": "Who is the client? Name Bram's Plumbing." },
+        { "id": "services", "label": "The services to list", "patterns": ["emergency", "boiler*", "leak*", "bathroom*", "24/7"], "hint": "Which services? List them: emergency repairs, boilers, leak detection, bathrooms." },
+        { "id": "area", "label": "Where Bram works", "patterns": ["utrecht", "local", "nearby", "region"], "hint": "Where does Bram work? Local customers search by town: Utrecht." }
+      ]
+    },
+    "format": {
+      "required": true,
+      "details": [
+        { "id": "tone", "label": "The tone", "patterns": ["friendly", "trustworthy", "reassuring", "professional", "clear", "warm", "confident"], "hint": "What tone? Trustworthy and clear: people call a plumber when something's wrong." },
+        { "id": "shape", "label": "Length and structure", "patterns": ["words", "short", "heading*", "section*", "paragraph*", "bullet*", "intro"], "hint": "What shape? Say how long and how it's organised, like a short intro plus one section per service." }
+      ]
+    },
+    "example": {
+      "required": false,
+      "details": [
+        { "id": "example", "label": "An example to follow", "patterns": ["for example", "e.g.", "like this", "here is an example", "such as"], "hint": "Bonus: paste a page you like, so the AI can follow its pattern." }
+      ]
+    },
+    "constraint": {
+      "required": false,
+      "details": [
+        { "id": "constraint", "label": "A rule to respect", "patterns": ["don't", "do not", "avoid", "no more than", "never", "must not", "without"], "hint": "Bonus: add a rule, like don't invent prices." }
+      ]
+    }
+  },
+  "conflicts": [
+    { "id": "length-clash", "block": "format", "a": ["short", "brief", "concise"], "b": ["in detail", "detailed", "very long", "thorough"], "explain": "Short and very detailed at the same time? The roof cracks. Pick one length." }
+  ],
+  "answers": {
+    "vague": "Our Services\n\nWe offer a wide range of high-quality services to meet all your needs. Our team is dedicated to excellence and customer satisfaction. Contact us today to learn more about what we can do for you.",
+    "passable": "Our Services\n\nBram's Plumbing offers plumbing services including repairs, boilers and bathrooms. We are experienced and reliable. Contact us for more information.",
+    "excellent": "Plumbing services in Utrecht: Bram's Plumbing\n\nA leak at midnight or a cold shower on Monday morning? Bram is a local plumber who answers the phone.\n\nEmergency repairs, 24/7: burst pipes, blocked drains, no hot water.\nBoilers: installation and yearly servicing.\nLeak detection: we find the source without breaking walls.\nBathroom renovations: from plan to last tile.\n\nCall Bram for a free quote."
+  },
+  "ada": {
+    "intro": "Level 3: this prompt gave the answer you see. The building collapsed. Can you fix it?",
+    "success": "Now it holds! Same request, but with the client, the services, the area and the shape. The page is ready to publish.",
+    "takeaway": "You don't fix a vague prompt by rewording it. You fix it by adding what the AI can't know."
+  },
+  "samples": [
+    { "input": { "mode": "fix", "text": "Write a services page." }, "expect": "vague" },
+    { "input": { "mode": "fix", "text": "You are a web copywriter. Write a services page for Bram's Plumbing in Utrecht. Make it friendly." }, "expect": "passable" },
+    { "input": { "mode": "fix", "text": "You are a web copywriter. Write a Services page for Bram's Plumbing, a local plumber in Utrecht. Services: emergency repairs 24/7, boiler installation and servicing, leak detection, bathroom renovations. Tone: trustworthy and clear. Shape: a short intro, then one section per service, about 150 words." }, "expect": "excellent" },
+    { "input": { "mode": "fix", "text": "You are a web copywriter. Write a Services page for Bram's Plumbing, a local plumber in Utrecht. Services: emergency repairs 24/7, boiler installation and servicing, leak detection, bathroom renovations. Tone: trustworthy and clear. Shape: a short intro, then one section per service, about 150 words. Don't invent prices." }, "expect": "excellent" },
+    { "input": { "mode": "fix", "text": "You are a web copywriter. Write a Services page for Bram's Plumbing, a local plumber in Utrecht: emergency repairs 24/7, boilers, leak detection, bathrooms. Make it trustworthy, short and very detailed." }, "expect": "passable" }
+  ],
+  "reviewed": "2026-10-06"
+}

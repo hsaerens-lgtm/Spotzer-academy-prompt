@@ -15,8 +15,12 @@ export function Hud() {
   const readingMode = useApp((s) => s.readingMode)
   const webglOk = useApp((s) => s.webgl === 'ok')
   const expandOpen = useApp((s) => s.expandOpen)
+  const zone = useApp((s) => s.zone)
   const { setSound, setLang, setReadingMode } = appStore.getState()
   const seenCount = content.topics.filter((topic) => seen.includes(topic.id)).length
+
+  // The workshop's fake PC has its own taskbar (sound, back to the office).
+  if (zone === 'workshop') return null
 
   return (
     <header className="hud panel" inert={expandOpen}>

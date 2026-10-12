@@ -339,3 +339,38 @@ describe('time of day', () => {
     expect(s().decorReady).toBe(false)
   })
 })
+
+describe('workshop', () => {
+  it('keeps the workshop route and ignores an identical one', () => {
+    const { s, store } = setup()
+    const listener = vi.fn()
+    store.subscribe(listener)
+    s().setWorkshopRoute({ mission: 'a', app: null })
+    s().setWorkshopRoute({ mission: 'a', app: null })
+    expect(s().workshopRoute).toEqual({ mission: 'a', app: null })
+    expect(listener).toHaveBeenCalledTimes(1)
+  })
+
+  it('saves a passed mission once and flags the workshop done', () => {
+    const { s, storage } = setup()
+    const setItem = vi.spyOn(storage, 'setItem')
+    s().passWorkshopMission('a', 'Prompt A', ['a'])
+    s().passWorkshopMission('a', 'Prompt A', ['a'])
+    expect(setItem.mock.calls.filter(([key]) => key === PROGRESS_KEY)).toHaveLength(1)
+    expect(s().progress).toMatchObject({ workshopDone: true, workshop: { passed: ['a'] } })
+  })
+
+  it('clears saved prompts', () => {
+    const { s } = setup()
+    s().passWorkshopMission('a', 'Prompt A', ['a', 'b'])
+    s().clearWorkshopPrompts()
+    expect(s().progress.workshop).toEqual({ passed: ['a'], prompts: {} })
+  })
+
+  // Review focus 5: storage unavailable.
+  it('records passes in memory when storage is unavailable', () => {
+    const store = createAppStore({ getTopic: () => undefined, storage: null })
+    store.getState().passWorkshopMission('a', 'Prompt A', ['a', 'b'])
+    expect(store.getState().progress.workshop?.passed).toEqual(['a'])
+  })
+})

@@ -1,8 +1,9 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { getContent } from '../content/load'
 import { appStore } from '../core/store'
 import { resetAppStore } from '../test/resetAppStore'
+import { MISSION_IDS } from '../test/workshopStore'
 import { Hud } from '../ui/Hud'
 import { App } from './App'
 import { ZoneOverlayHost } from './ZoneOverlayHost'
@@ -54,6 +55,18 @@ test('zone buttons fade to the workshop and the dungeon', async () => {
   await renderApp()
   await userEvent.click(screen.getByRole('button', { name: 'Prompt workshop' }))
   expect(appStore.getState().transition).toEqual({ to: 'workshop', via: null, stage: 'fade' })
+})
+
+// The same label as the welcome bar's button: the passed missions that still exist, once there is one.
+test('the workshop button counts the passed missions, as in the office', async () => {
+  resetAppStore({ webgl: 'unavailable' })
+  const progress = appStore.getState().progress
+  appStore.setState({ progress: { ...progress, workshop: { passed: ['retired-mission'], prompts: {} } } })
+  await renderApp()
+  const main = within(screen.getByRole('main', { name: 'Reading mode' }))
+  expect(main.getByRole('button', { name: 'Prompt workshop' })).toBeInTheDocument()
+  act(() => appStore.getState().passWorkshopMission('delayed-website', 'Prompt', MISSION_IDS))
+  expect(main.getByRole('button', { name: 'Prompt workshop · 1/6' })).toBeInTheDocument()
 })
 
 // The expanded view sits outside the scrolling <main> so it stays fixed over the page, like in the 3D office.

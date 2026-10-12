@@ -9,6 +9,9 @@ import {
   markSeen,
   saveProgress,
   saveSettings,
+  withMissionPassed,
+  withoutWorkshopPrompts,
+  workshopProgress,
 } from './progress'
 
 describe('progress', () => {
@@ -71,6 +74,71 @@ describe('progress', () => {
     expect(once.topicsSeen).toEqual(['tokens'])
     expect(markSeen(once, 'tokens', 'basics')).toBe(once)
     expect(markSeen(once, 'tokens', 'deeper').deeperSeen).toEqual(['tokens'])
+  })
+})
+
+describe('workshop progress', () => {
+  // Review focus 5: progress written by the office version has no workshop key.
+  it('progress from the office version still loads', () => {
+    const storage = memoryStorage()
+    storage.setItem(PROGRESS_KEY, JSON.stringify({ ...emptyProgress(), topicsSeen: ['tokens'] }))
+    const progress = loadProgress(storage)
+    expect(progress.topicsSeen).toEqual(['tokens'])
+    expect(workshopProgress(progress)).toEqual({ passed: [], prompts: {} })
+  })
+
+  // A broken workshop part (hand-edited, or written by a buggy version) costs the workshop part only, never the office's.
+  it('a malformed workshop value is dropped, and the rest of the progress kept', () => {
+    const storage = memoryStorage()
+    const saved = { ...emptyProgress(), topicsSeen: ['tokens'], deeperSeen: ['llm'], firstVisitDone: true }
+    storage.setItem(PROGRESS_KEY, JSON.stringify({ ...saved, workshop: 42 }))
+    const progress = loadProgress(storage)
+    expect(progress).toEqual(saved)
+    expect(progress.workshop).toBeUndefined()
+    expect(workshopProgress(progress)).toEqual({ passed: [], prompts: {} })
+    // Saved again, the broken value is gone.
+    saveProgress(progress, storage)
+    expect(JSON.parse(storage.getItem(PROGRESS_KEY)!)).toEqual(saved)
+  })
+
+  it('records a passed mission and its prompt, and flags the workshop done once every known mission is passed', () => {
+    const one = withMissionPassed(emptyProgress(), 'a', 'Prompt A', ['a', 'b'])
+    expect(one.workshop).toEqual({ passed: ['a'], prompts: { a: 'Prompt A' } })
+    expect(one.workshopDone).toBe(false)
+    const two = withMissionPassed(one, 'b', 'Prompt B', ['a', 'b'])
+    expect(two.workshopDone).toBe(true)
+  })
+
+  // Spec 4.6: a mission removed or renamed since leaves its id in the saved progress. It must never count towards
+  // workshopDone, a flag that is saved for good and that the dungeon (sub-project 3) relies on.
+  it('an unknown id in the saved progress never counts towards the workshop being done', () => {
+    const known = ['a', 'b', 'c', 'd', 'e', 'f']
+    const storage = memoryStorage()
+    const saved = { ...emptyProgress(), workshop: { passed: ['retired-mission'], prompts: { 'retired-mission': 'Old' } } }
+    storage.setItem(PROGRESS_KEY, JSON.stringify(saved))
+    let progress = loadProgress(storage)
+    for (const id of known.slice(0, 5)) progress = withMissionPassed(progress, id, `Prompt ${id}`, known)
+    expect(progress.workshop?.passed).toHaveLength(6)
+    expect(progress.workshopDone).toBe(false)
+    progress = withMissionPassed(progress, 'f', 'Prompt f', known)
+    expect(progress.workshopDone).toBe(true)
+  })
+
+  it('without any known mission the workshop is never done', () => {
+    expect(withMissionPassed(emptyProgress(), 'a', 'Prompt A', []).workshopDone).toBe(false)
+  })
+
+  it('passing the same mission with the same prompt changes nothing; a new prompt replaces the old one', () => {
+    const one = withMissionPassed(emptyProgress(), 'a', 'Prompt A', ['a', 'b'])
+    expect(withMissionPassed(one, 'a', 'Prompt A', ['a', 'b'])).toBe(one)
+    expect(withMissionPassed(one, 'a', 'Better A', ['a', 'b']).workshop).toEqual({ passed: ['a'], prompts: { a: 'Better A' } })
+  })
+
+  it('clearing prompts keeps the passed missions', () => {
+    const one = withMissionPassed(emptyProgress(), 'a', 'Prompt A', ['a', 'b'])
+    expect(withoutWorkshopPrompts(one).workshop).toEqual({ passed: ['a'], prompts: {} })
+    const empty = emptyProgress()
+    expect(withoutWorkshopPrompts(empty)).toBe(empty)
   })
 })
 

@@ -1,11 +1,15 @@
 import { createSound, installSoundUnlock, shouldBlip } from './sound'
 
+/** Records the scheduled automation so tests can check what a sound actually plays. */
 class FakeParam {
   value = 0
-  setValueAtTime() {
+  calls: Array<['set' | 'ramp', number, number]> = []
+  setValueAtTime(value: number, time: number) {
+    this.calls.push(['set', value, time])
     return this
   }
-  exponentialRampToValueAtTime() {
+  exponentialRampToValueAtTime(value: number, time: number) {
+    this.calls.push(['ramp', value, time])
     return this
   }
 }
@@ -16,7 +20,8 @@ class FakeNode {
   disconnect() {}
 }
 class FakeOscillator extends FakeNode {
-  type = 'sine'
+  // Not the Web Audio default ('sine'), so a test can tell which waveform a sound sets.
+  type = 'triangle'
   frequency = new FakeParam()
   start = vi.fn()
   stop = vi.fn()
@@ -39,6 +44,7 @@ class FakeContext {
   sampleRate = 8000
   destination = new FakeNode()
   oscillators: FakeOscillator[] = []
+  gains: FakeGain[] = []
   sources: FakeSource[] = []
   createOscillator() {
     const oscillator = new FakeOscillator()
@@ -46,7 +52,9 @@ class FakeContext {
     return oscillator
   }
   createGain() {
-    return new FakeGain()
+    const gain = new FakeGain()
+    this.gains.push(gain)
+    return gain
   }
   createBiquadFilter() {
     return new FakeFilter()
@@ -125,10 +133,61 @@ test('a muted engine does not start the ambience on unlock', () => {
   expect(created[0].sources).toHaveLength(0)
 })
 
+test('a thud is a short low sound, only once unlocked and while sound is on', () => {
+  const engine = createSound(Ctor, () => 0.5)
+  engine.thud(0.5)
+  expect(created).toHaveLength(0)
+  engine.unlock()
+  engine.thud(0.5)
+  expect(created[0].oscillators).toHaveLength(1)
+  const [knock] = created[0].oscillators
+  expect(knock.type).toBe('sine')
+  // A low knock that falls from 140 Hz to 48 Hz, over a quarter of a second at most.
+  expect(knock.frequency.calls).toEqual([
+    ['set', 140, 0],
+    ['ramp', 48, 0.18],
+  ])
+  expect(knock.start).toHaveBeenCalledWith(0)
+  expect(knock.stop).toHaveBeenCalledWith(0.24)
+  engine.setEnabled(false)
+  engine.thud(1)
+  expect(created[0].oscillators).toHaveLength(1)
+})
+
+test('a harder thud is louder and fades out; the intensity is clamped to 0..1', () => {
+  const engine = createSound(Ctor, () => 0.5)
+  engine.unlock()
+  const levelOf = (intensity: number) => {
+    const before = created[0].gains.length
+    engine.thud(intensity)
+    const [envelope] = created[0].gains.slice(before)
+    expect(envelope.gain.calls[1]).toEqual(['ramp', 0.0001, 0.22])
+    return envelope.gain.calls[0][1]
+  }
+  expect(levelOf(0)).toBeCloseTo(0.02)
+  expect(levelOf(0.5)).toBeCloseTo(0.07)
+  expect(levelOf(1)).toBeCloseTo(0.12)
+  expect(levelOf(7)).toBeCloseTo(0.12)
+  expect(levelOf(-3)).toBeCloseTo(0.02)
+})
+
+test('a thud with an unusable intensity still schedules a valid, quiet envelope', () => {
+  const engine = createSound(Ctor, () => 0.5)
+  engine.unlock()
+  engine.thud(Number.NaN) // real Web Audio throws on setValueAtTime(NaN)
+  const [envelope] = created[0].gains.slice(1) // the first gain belongs to the room tone
+  expect(envelope.gain.calls).toEqual([
+    ['set', 0.02, 0],
+    ['ramp', 0.0001, 0.22],
+  ])
+  expect(created[0].oscillators).toHaveLength(1)
+})
+
 test('works without Web Audio', () => {
   const engine = createSound(undefined)
   expect(() => {
     engine.unlock()
+    engine.thud(1)
     engine.blip('a', 0)
     engine.setEnabled(false)
   }).not.toThrow()
@@ -136,7 +195,7 @@ test('works without Web Audio', () => {
 })
 
 test('the first pointer or key press unlocks the audio once', () => {
-  const engine = { unlocked: false, unlock: vi.fn(), setEnabled: vi.fn(), blip: vi.fn() }
+  const engine = { unlocked: false, unlock: vi.fn(), setEnabled: vi.fn(), blip: vi.fn(), thud: vi.fn() }
   installSoundUnlock(engine)
   window.dispatchEvent(new Event('pointerdown'))
   window.dispatchEvent(new Event('keydown'))

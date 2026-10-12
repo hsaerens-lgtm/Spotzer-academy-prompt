@@ -19,6 +19,7 @@
     "clickableHint": "Psst – the laptop and the old console are clickable too.",
     "learn": "Learn the basics",
     "workshop": "Prompt workshop",
+    "workshopProgress": "Prompt workshop · {{done}}/{{total}}",
     "dungeon": "The dungeon",
     "pickTopic": "Pick a topic to start."
   },
@@ -47,10 +48,6 @@
   "zones": {
     "soonLabel": "Coming soon",
     "back": "Back to the office",
-    "workshop": {
-      "title": "Prompt Workshop",
-      "soon": "Ada is still setting up the workshop. Come back soon to build your first prompt."
-    },
     "dungeon": {
       "title": "The Dungeon",
       "soon": "The dungeon gates are still locked. Come back soon to test what you've learned."
@@ -75,5 +72,126 @@
   "crt": {
     "title": "The Dungeon",
     "pressStart": "Press start"
+  },
+  "workshop": {
+    "windows": {
+      "missions": "MISSIONS.EXE",
+      "studio": "PROMPT_STUDIO.EXE — MISSION {{number}}",
+      "builder": "BUILDER.EXE",
+      "output": "AI_OUTPUT.TXT",
+      "prompts": "MY_PROMPTS.TXT",
+      "corrector": "CORRECTOR.EXE"
+    },
+    "desktop": { "label": "Workshop desktop", "missions": "Missions", "prompts": "My prompts", "corrector": "Corrector" },
+    "taskbar": {
+      "label": "Taskbar",
+      "start": "ATHENA",
+      "menu": "Athena menu",
+      "back": "Back to the office",
+      "counter": "{{passed}}/{{total}} missions",
+      "sound": "Sound"
+    },
+    "levels": { "1": "Level 1 · Build with blocks", "2": "Level 2 · Write it freely", "3": "Level 3 · Fix the prompt" },
+    "missions": { "listLabel": "Missions", "startHere": "Start here", "passed": "passed", "counter": "{{passed}}/{{total}}" },
+    "studio": {
+      "situation": "The situation",
+      "goal": "Your goal",
+      "build": "Build & test",
+      "copy": "Copy my prompt",
+      "copied": "Copied",
+      "copyFallback": "Your prompt is selected below: press Ctrl+C to copy it.",
+      "reset": "Reset",
+      "addBlock": "Add a block:",
+      "freeLabel": "Your prompt",
+      "blockLabel": "{{label}} block",
+      "shortcut": "Ctrl+Enter"
+    },
+    "materials": { "stone": "stone", "wood": "wood", "cardboard": "cardboard", "hole": "a hole", "cracked": "cracked" },
+    "materialBadge": { "stone": "STONE", "wood": "WOOD", "cardboard": "CARDBOARD", "hole": "HOLE", "cracked": "CRACKED" },
+    "output": {
+      "empty": "Press Build & test to see what the AI would write.",
+      "reading": "The AI is reading your building…",
+      "tier": { "vague": "COLLAPSED · VAGUE", "passable": "LEANING · PASSABLE", "excellent": "HOLDS · EXCELLENT" },
+      "before": "Before",
+      "after": "After",
+      "compare": "Before / After"
+    },
+    "builder": {
+      "empty": "Your building will appear here after Build & test.",
+      "loading": "Loading the builder…",
+      "unavailable": "The 3D builder isn't available here, so here's the plan view.",
+      "skip": "Skip",
+      "resetView": "Reset view",
+      "stability": "Stability",
+      "outcome": { "holds": "The building holds.", "leans": "The building leans.", "collapses": "The building collapses." },
+      "reading": "AI READING…",
+      "aiBlock": "AI",
+      "planLabel": "Plan view of your building, from the roof down"
+    },
+    "ada": {
+      "name": "Ada",
+      "tipPrefix": "It looks like you're writing a prompt!",
+      "hole": "There's a hole in the building: the {{label}} block is missing.",
+      "weak": "The {{label}} block is only {{material}}.",
+      "cracked": "The {{label}} block cracked.",
+      "sorry": "Sorry, I missed it! I was looking for something like \"{{example}}\".",
+      "bonus": "Bonus points: your extra blocks reinforce the building.",
+      "allDone": "All six missions done! When you're ready, the old console in the office will test what you've learned.",
+      "notNow": "Not now",
+      "edit": "Edit my prompt",
+      "alreadyThere": "It's already there",
+      "next": "Next mission",
+      "close": "Close"
+    },
+    "prompts": {
+      "empty": "Your passed prompts will appear here. Finish a mission to save one.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "clear": "Clear my prompts",
+      "confirm": "Clear every saved prompt? Your passed missions stay ticked.",
+      "confirmYes": "Yes, clear",
+      "cancel": "Cancel"
+    },
+    "corrector": {
+      "intro": "Paste any prompt and I'll ask a real AI to inspect your building.",
+      "promptLabel": "Paste or write any prompt",
+      "purposeLabel": "What is it for? (optional)",
+      "count": "{{count}}/{{max}}",
+      "warning": "Don't paste confidential client information or personal data: this text is sent to OpenAI.",
+      "check": "Check my prompt",
+      "checking": "Asking the AI to inspect your building…",
+      "offline": "The corrector is offline.",
+      "offlineHelp": "It needs the workshop server with an OpenAI key. The missions still work without it.",
+      "builderEmpty": "Your building will appear here after Check my prompt.",
+      "builderOffline": "The corrector is offline, so there is no building to inspect.",
+      "outputOffline": "The corrector is offline, so there is nothing to compare yet.",
+      "score": "{{score}}/100",
+      "verdict": { "holds": "Holds", "leans": "Leans", "collapses": "Collapses" },
+      "good": "What holds",
+      "missing": "What's missing",
+      "quote": "From your prompt",
+      "cracks": "Cracks",
+      "improved": "Improved prompt",
+      "changes": "What changed",
+      "copy": "Copy",
+      "copied": "Copied",
+      "copyFallback": "The improved prompt is selected below. Press Ctrl+C to copy it.",
+      "runBoth": "Run both",
+      "running": "Running both prompts…",
+      "ran": "Both answers are ready, side by side.",
+      "yours": "With your prompt",
+      "improvedAnswer": "With the improved prompt",
+      "truncated": "The answer was cut short at the length limit.",
+      "runError": "Something went wrong while running the prompts. Try again.",
+      "tryAgain": "Try again",
+      "stale": "Edited since this check. Check your prompt again to update the report and run both.",
+      "errors": {
+        "invalid": "That prompt can't be checked. Check its length and try again.",
+        "rate": "You've reached the corrector's limit for now. Try again in a minute.",
+        "timeout": "The AI took too long to answer. Try again.",
+        "unavailable": "The AI isn't reachable right now. Try again in a moment.",
+        "error": "Something went wrong with the check. Try again."
+      }
+    }
   }
 }

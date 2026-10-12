@@ -1,0 +1,70 @@
+{
+  "id": "newsletter",
+  "level": 3,
+  "mode": "fix",
+  "title": "The too-long newsletter",
+  "situation": "The agency's monthly newsletter goes to small-business clients. This month there is one big news item: clients can now add online booking to their website. The current prompt produced a 900-word wall of text nobody will read.",
+  "goal": "Fix the prompt so the newsletter is short, clear and gets clients to try online booking.",
+  "starter": "Write our monthly newsletter about everything that happened this month at the agency, all the news, updates, tips and anything else that might be interesting.",
+  "blocks": {
+    "role": {
+      "required": true,
+      "details": [
+        { "id": "role-job", "label": "Who the AI should be", "patterns": ["copywriter", "email marketer", "newsletter writer", "content writer", "marketing", "you are", "act as"], "hint": "Who should the AI be? An email copywriter who writes for busy readers." }
+      ]
+    },
+    "task": {
+      "required": true,
+      "details": [
+        { "id": "task-newsletter", "label": "The newsletter email", "patterns": ["newsletter", "email"], "hint": "What should it write? The monthly newsletter email." }
+      ]
+    },
+    "context": {
+      "required": true,
+      "details": [
+        { "id": "audience", "label": "Who reads it", "patterns": ["small business*", "small-business", "clients", "customers", "shop owners"], "hint": "Who reads it? Busy small-business owners." },
+        { "id": "news", "label": "The one big news item", "patterns": ["online booking", "booking"], "hint": "What's the one big news item? Online booking for their website." }
+      ]
+    },
+    "format": {
+      "required": true,
+      "details": [
+        { "id": "length", "label": "A length limit", "patterns": ["words", "short", "brief", "concise", "under", "maximum", "max"], "hint": "How long? Give a limit, like under 150 words." },
+        { "id": "structure", "label": "A clear structure", "patterns": ["subject line", "subject", "headline", "call to action", "button", "one message", "single message", "bullet*"], "hint": "What shape? A subject line, one clear message and a call to action." }
+      ]
+    },
+    "example": {
+      "required": false,
+      "details": [
+        { "id": "example", "label": "An example to follow", "patterns": ["for example", "e.g.", "like this", "here is an example", "such as"], "hint": "Bonus: paste a newsletter you liked, so the AI can follow its rhythm." }
+      ]
+    },
+    "constraint": {
+      "required": false,
+      "details": [
+        { "id": "constraint", "label": "A rule to respect", "patterns": ["don't", "do not", "avoid", "no more than", "never", "must not", "without"], "hint": "Bonus: add a rule, like don't list other news." }
+      ]
+    }
+  },
+  "conflicts": [
+    { "id": "scope-clash", "block": "format", "a": ["short", "brief", "concise", "under"], "b": ["everything", "all the news", "all news"], "explain": "Short, but covering everything? The roof cracks. One message is enough." }
+  ],
+  "answers": {
+    "vague": "Dear valued clients,\n\nWhat a month it has been at the agency! In this newsletter we want to share all of our news, updates and tips with you. First of all, our team has been busy with many exciting projects. We also attended several events and learned a lot. In addition, we have been working on new features, improvements and changes across our platform. We also have some tips about websites, social media, search engines, photos, colours, fonts and much more. Furthermore, we would like to remind you about our services and our support team, who are always happy to help...",
+    "passable": "Subject: News from your web agency\n\nHello,\n\nThis month we launched online booking for websites, and we also have some updates and tips. Online booking lets your customers book appointments on your site. Read on for more news from our team.",
+    "excellent": "Subject: Let customers book you online, in two clicks\n\nHi there,\n\nYour customers can now book appointments straight from your website, day or night. No more phone tag, and fewer no-shows thanks to automatic reminders.\n\nTurning it on takes five minutes from your editor.\n\n[Add online booking to my site]\n\nThe web team"
+  },
+  "ada": {
+    "intro": "Level 3 again: this prompt asked for everything, so the AI wrote everything. Can you fix it?",
+    "success": "It holds, and it's short. One reader, one message, one button: that's a newsletter people actually read.",
+    "takeaway": "Ask for everything and you get a wall of text. Ask for one message, a reader and a length."
+  },
+  "samples": [
+    { "input": { "mode": "fix", "text": "Write our monthly newsletter about everything that happened this month at the agency, all the news, updates, tips and anything else that might be interesting." }, "expect": "vague" },
+    { "input": { "mode": "fix", "text": "You are an email copywriter. Write our monthly newsletter for small business clients about online booking. Keep it short." }, "expect": "passable" },
+    { "input": { "mode": "fix", "text": "You are an email copywriter. Write our monthly newsletter for small-business clients. One message only: they can now add online booking to their website. Keep it under 150 words, with a subject line and a call to action button." }, "expect": "excellent" },
+    { "input": { "mode": "fix", "text": "You are an email copywriter. Write our monthly newsletter for small-business clients. One message only: they can now add online booking to their website. Keep it under 150 words, with a subject line and a call to action button. Don't list other news." }, "expect": "excellent" },
+    { "input": { "mode": "fix", "text": "You are an email copywriter. Write our monthly newsletter for small business clients about online booking and everything else. Keep it short, with a subject line." }, "expect": "passable" }
+  ],
+  "reviewed": "2026-10-06"
+}

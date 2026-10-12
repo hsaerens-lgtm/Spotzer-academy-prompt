@@ -5,6 +5,7 @@ import { Button } from '../ui/Button'
 import { DialogueBox } from '../ui/DialogueBox'
 import { ExpandOverlay } from '../ui/ExpandOverlay'
 import { TopicMenu } from '../ui/TopicMenu'
+import { useWorkshopLabel } from '../ui/useWorkshopLabel'
 import { FitScreen } from '../visuals/FitScreen'
 import { ScreenContent } from '../visuals/ScreenContent'
 import './reading.css'
@@ -15,6 +16,7 @@ export function ReadingMode() {
   const webglLost = useApp((s) => s.webglLost)
   const expandOpen = useApp((s) => s.expandOpen)
   const requestZone = useApp((s) => s.requestZone)
+  const workshopLabel = useWorkshopLabel()
   const screen = useScreenRef()
 
   return (
@@ -30,7 +32,7 @@ export function ReadingMode() {
             <TopicMenu embedded />
             <div className="reading__zones">
               <Button variant="ghost" onClick={() => requestZone('workshop')}>
-                {t('welcome.workshop')}
+                {workshopLabel}
               </Button>
               <Button variant="ghost" onClick={() => requestZone('dungeon')}>
                 {t('welcome.dungeon')}

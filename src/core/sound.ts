@@ -3,6 +3,8 @@ export interface SoundEngine {
   unlock(): void
   setEnabled(on: boolean): void
   blip(char: string, index: number): void
+  /** A short low knock (0 to 1): blocks landing in the workshop builder. */
+  thud(intensity: number): void
 }
 
 export const BASE_PITCH = 620
@@ -90,6 +92,23 @@ export function createSound(
       oscillator.connect(gain).connect(ctx.destination)
       oscillator.start(now)
       oscillator.stop(now + 0.07)
+    },
+    thud(intensity) {
+      if (!ctx || !enabled) return
+      const now = ctx.currentTime
+      // Web Audio throws on a NaN or infinite value, and the builder calls this from a physics callback.
+      const strength = Number.isFinite(intensity) ? Math.min(1, Math.max(0, intensity)) : 0
+      const level = 0.02 + 0.1 * strength
+      const oscillator = ctx.createOscillator()
+      const gain = ctx.createGain()
+      oscillator.type = 'sine'
+      oscillator.frequency.setValueAtTime(140, now)
+      oscillator.frequency.exponentialRampToValueAtTime(48, now + 0.18)
+      gain.gain.setValueAtTime(level, now)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22)
+      oscillator.connect(gain).connect(ctx.destination)
+      oscillator.start(now)
+      oscillator.stop(now + 0.24)
     },
   }
 }

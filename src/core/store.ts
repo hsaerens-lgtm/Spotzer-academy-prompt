@@ -11,6 +11,8 @@ import {
   markSeen,
   saveProgress,
   saveSettings,
+  withMissionPassed,
+  withoutWorkshopPrompts,
   type Progress,
   type Settings,
   type StorageLike,
@@ -20,6 +22,11 @@ export type ZoneId = 'office' | 'workshop' | 'dungeon'
 export const ZONES: readonly ZoneId[] = ['office', 'workshop', 'dungeon']
 export type Via = 'laptop' | 'tv'
 export type HoverTarget = 'laptop' | 'tv' | 'ada'
+export type WorkshopApp = 'corrector' | 'prompts'
+export interface WorkshopRoute {
+  mission: string | null
+  app: WorkshopApp | null
+}
 
 export interface Transition {
   to: ZoneId
@@ -51,6 +58,7 @@ export interface AppState {
   phaseTransition: PhaseTransition | null
   /** The decor stage (plants, books, frames, pendants) has loaded, or given up on what failed. */
   decorReady: boolean
+  workshopRoute: WorkshopRoute
 
   requestZone: (to: ZoneId, via?: Via) => void
   transitionStep: () => void
@@ -78,6 +86,10 @@ export interface AppState {
   setPhase: (phase: Phase) => void
   finishPhaseTransition: () => void
   setDecorReady: (ready: boolean) => void
+  setWorkshopRoute: (route: WorkshopRoute) => void
+  /** `knownIds`: the workshop's real missions, so a saved id of a removed mission never makes the workshop "done". */
+  passWorkshopMission: (id: string, prompt: string, knownIds: readonly string[]) => void
+  clearWorkshopPrompts: () => void
 }
 
 export interface StoreDeps {
@@ -133,6 +145,7 @@ export function createAppStore(deps: StoreDeps): StoreApi<AppState> {
       phase: deps.initialPhase ?? 'day',
       phaseTransition: null,
       decorReady: false,
+      workshopRoute: { mission: null, app: null },
 
       requestZone: (to, via) => {
         const s = get()
@@ -219,6 +232,13 @@ export function createAppStore(deps: StoreDeps): StoreApi<AppState> {
         if (get().phaseTransition) set({ phaseTransition: null })
       },
       setDecorReady: (ready) => set({ decorReady: ready }),
+      setWorkshopRoute: (route) => {
+        const current = get().workshopRoute
+        if (current.mission === route.mission && current.app === route.app) return
+        set({ workshopRoute: route })
+      },
+      passWorkshopMission: (id, prompt, knownIds) => setProgress(withMissionPassed(get().progress, id, prompt, knownIds)),
+      clearWorkshopPrompts: () => setProgress(withoutWorkshopPrompts(get().progress)),
     }
   })
 }
