@@ -66,7 +66,7 @@ Open http://localhost:5173/?tune (development only). Pick an object, drag it, ed
 
 ## 3D assets (CC0)
 
-Every texture and model comes from Poly Haven or ambientCG (CC0) and is served by the site from `public/assets/`: nothing is fetched from a CDN at run time. `scripts/assets/manifest.json` lists each asset: id, source, API URL, licence, resolution, use and loading stage (`base` for the first image, `decor` after it).
+Every texture and model comes from Poly Haven or ambientCG (CC0) and is served by the site from `public/assets/`: nothing is fetched from a CDN at run time. `scripts/assets/manifest.json` lists each asset: id, source, API URL, licence, texture size (`resolution` for a texture, `textureSize` for a model), use and loading stage (`base` for the first image, `decor` after it).
 
 ```bash
 npm run assets:fetch   # downloads the listed sources into assets-src/ (ignored by git), checking sizes and checksums
@@ -93,7 +93,7 @@ npm run perf -- --out docs/evidence/office/perf.md
 
 The first command saves the overview and the presentation view in each phase (Chromium in a real window on the GPU, 1600 x 900). The last two measure the production build in each phase (frames per second, office shown, decor loaded, quality tier) and write `docs/evidence/office/perf.md`. Both open browser windows: leave the machine alone while they run. `shots.mjs` uses the dev server on port 5199 (set `E2E_PORT` to change it, as for `npm run e2e`) and `perf.mjs` serves `dist/` with `vite preview` on port 4173; each starts its server when nothing answers there and stops it at the end.
 
-The six `phase-*.png` screenshots are the look evidence: rendered on the GPU, with the whole decor loaded. The numbered screenshots (`01-overview.png` to `14-small-reading.png`) come from `npm run e2e`, which renders with Chromium's software rasterizer (SwiftShader): there the office runs on the `low` tier at 0.35 of the pixel ratio (`SOFTWARE_DPR`), and it leaves out the park across the street, the sideboard's two cabinets, its lamp and the vase on it, so that the journeys stay within their time limits. In the presentation views (`02-presentation.png`, `12-small-presentation.png`), thin orange lines from the slat wall cross the wall-screen picture: a depth artefact of the software rasterizer at that pixel ratio, absent from the GPU screenshots.
+The six `phase-*.png` screenshots are the look evidence: rendered on the GPU, with the whole decor loaded. The numbered screenshots (`01-overview.png` to `14-small-reading.png`) come from `npm run e2e`, which renders with Chromium's software rasterizer (SwiftShader): there the office runs on the `low` tier at a pixel ratio of 0.35 (`SOFTWARE_DPR`), and it leaves out the park across the street, the sideboard's two cabinets, its lamp and the vase on it, so that the journeys stay within their time limits. In the presentation views (`02-presentation.png`, `12-small-presentation.png`), thin orange lines from the slat wall cross the wall-screen picture: a depth artefact of the software rasterizer at that pixel ratio, absent from the GPU screenshots.
 
 ## Project docs
 
