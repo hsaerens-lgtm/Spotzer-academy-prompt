@@ -1,5 +1,6 @@
+import { FLOOR_LAMP } from '../../three/props/FloorLamp'
 import { layout, layoutVersion } from './layout'
-import { applyTransform, isTuneEnabled, layoutSnapshot } from './tune'
+import { TUNABLE, applyTransform, isTuneEnabled, layoutSnapshot, linkedLights } from './tune'
 
 test('tuning is only available in development with ?tune', () => {
   expect(isTuneEnabled('?tune', true)).toBe(true)
@@ -22,4 +23,19 @@ test('the snapshot is plain JSON with every tunable section', () => {
   const snapshot = layoutSnapshot()
   expect(Object.keys(snapshot)).toEqual(['rail', 'flights', 'objects', 'screen', 'ada', 'lights'])
   expect(JSON.parse(JSON.stringify(snapshot))).toEqual(snapshot)
+})
+
+// The floor lamp's light shines from the centre of its shade (floorLamp.test.ts): the panel moves both at once.
+test('moving the floor lamp moves its light with it, still at the centre of the shade', () => {
+  expect(TUNABLE).toContain('floorLamp')
+  const [x, y, z] = layout.objects.floorLamp.position
+  applyTransform('floorLamp', [x + 0.5, y, z - 0.25], 0)
+  expect(layout.objects.floorLamp.position).toEqual([x + 0.5, y, z - 0.25])
+  const light = layout.lights.floorLamp.position
+  expect(light[0]).toBeCloseTo(x + 0.5)
+  expect(light[1]).toBeCloseTo(y + FLOOR_LAMP.top - FLOOR_LAMP.shadeHeight / 2)
+  expect(light[2]).toBeCloseTo(z - 0.25)
+  // TuneMode moves the scene light named here to that position.
+  expect(linkedLights('floorLamp')).toEqual([{ name: 'floor-lamp-light', position: light }])
+  expect(linkedLights('laptop')).toEqual([])
 })

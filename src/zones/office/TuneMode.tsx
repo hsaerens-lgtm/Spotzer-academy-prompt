@@ -4,7 +4,7 @@ import { button, useControls } from 'leva'
 import { useEffect, useState } from 'react'
 import type { Object3D } from 'three'
 import { bumpLayout, layout, type Vec3 } from './layout'
-import { TUNABLE, applyTransform, layoutSnapshot, type Tunable } from './tune'
+import { TUNABLE, applyTransform, layoutSnapshot, linkedLights, type Tunable } from './tune'
 
 type XYZ = { x: number; y: number; z: number }
 const toXYZ = ([x, y, z]: Vec3): XYZ => ({ x, y, z })
@@ -55,7 +55,10 @@ export default function TuneMode() {
       mode={mode as 'translate' | 'rotate'}
       showX={mode === 'translate'}
       showZ={mode === 'translate'}
-      onObjectChange={() => applyTransform(object as Tunable, target.position.toArray() as Vec3, target.rotation.y)}
+      onObjectChange={() => {
+        applyTransform(object as Tunable, target.position.toArray() as Vec3, target.rotation.y)
+        for (const light of linkedLights(object as Tunable)) scene.getObjectByName(light.name)?.position.set(...light.position)
+      }}
     />
   )
 }
