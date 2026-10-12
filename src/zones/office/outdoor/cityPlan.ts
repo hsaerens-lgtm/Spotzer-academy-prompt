@@ -3,15 +3,15 @@
  * The plan of the city seen through the glazing: the office is on the eighth floor of a building on a tree-lined
  * street, with a park across it and the city beyond. Where the buildings stand, how tall, in which style, with their
  * rooftop plant and the beacons of the towers. Pure (no three.js): the same seed gives the same city on every run.
+ * The street itself, at the foot of the building, is below every camera's sightline and is not built.
  */
 
 /** Horn.os coordinates (its window wall is x = -2.3); the outdoor group is moved by originX so that wall lands on ours (x = -5). */
 export const OUTDOOR = {
   originX: -2.7,
   groundY: -24, // the office is on the eighth floor
-  streetX: -13, // centre line of the street, parallel to the facade
   park: { x0: -19, x1: -62 }, // a park across the street, then the city
-  domeRadius: 400,
+  domeRadius: 600, // holds the farthest building (about 575 m): the dome is drawn after the city, depth tested
   fogNear: 60,
   fogFar: 420,
   cloudWrap: 280,

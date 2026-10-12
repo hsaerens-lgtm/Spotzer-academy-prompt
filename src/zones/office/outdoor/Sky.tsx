@@ -2,6 +2,7 @@
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo } from 'react'
 import { BackSide, Mesh, ShaderMaterial, SphereGeometry, Vector3 } from 'three'
+import { appStore } from '../../../core/store'
 import { useLightingApplier } from '../lighting/live'
 import { PRESETS, SUN_TARGET } from '../lighting/presets'
 import { OUTDOOR } from './cityPlan'
@@ -22,7 +23,9 @@ function buildSky() {
   const material = new ShaderMaterial({ uniforms, side: BackSide, depthWrite: false, vertexShader: SKY_VERTEX, fragmentShader: SKY_FRAGMENT })
   const mesh = new Mesh(new SphereGeometry(OUTDOOR.domeRadius, 48, 24), material)
   mesh.name = 'sky'
-  mesh.renderOrder = -100 // drawn first, behind everything
+  // Drawn after the opaque objects (renderOrder 0): the depth test discards the sky behind the room and the city, and
+  // the transparent glazing and clouds still composite over it. The dome holds the whole city (cityPlan.test.ts).
+  mesh.renderOrder = 100
   return { mesh, uniforms }
 }
 
@@ -40,7 +43,8 @@ export function Sky() {
     u.uStars.value = p.stars
   })
   useFrame(({ clock }) => {
-    sky.uniforms.uTime.value = clock.elapsedTime
+    // The stars stop twinkling when the user asks for reduced motion.
+    if (!appStore.getState().reducedMotion) sky.uniforms.uTime.value = clock.elapsedTime
   })
   return <primitive object={sky.mesh} />
 }

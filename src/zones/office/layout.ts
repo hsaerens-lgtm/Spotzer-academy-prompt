@@ -20,7 +20,7 @@ export const ROOM = { width: 10, depth: 12, height: 3.2, x0: -5, x1: 5, z0: -6, 
  * walls show their thickness at the edge of the glazing.
  */
 export const WALL_T = 0.2
-/** The office camera. `far` holds the 400 m sky dome and the city around it (outdoor/cityPlan.ts). */
+/** The office camera. `far` holds the 600 m sky dome and the city inside it (outdoor/cityPlan.ts). */
 export const CAMERA = { fov: 45, near: 0.1, far: 1000 } as const
 /** Floor-to-ceiling glazing: the left facade, and its return on the back wall behind Ada. */
 export const GLAZING = {

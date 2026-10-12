@@ -19,9 +19,6 @@ export const tints = {
     glass: ['#3a4550', '#2e3a44', '#55606a', '#44505a'],
     concrete: ['#b8b4ac', '#a9a59e', '#c6c1b8', '#9d9a94'],
     plaster: ['#e8e0d0', '#f0ead8', '#d9cdb5', '#e6d6c0', '#d8dcd6'],
-    roofUnit: '#9a9da0', waterTank: '#6d5a48', grass: '#6a8a4a', paving: '#8f8a82', asphalt: '#3a3c3f', gravel: '#c2b59c',
-    trunk: '#5a4a3c', kerb: '#b8b3aa', hedge: '#3f5f32', laneMark: '#dedbd2', lampPole: '#2a2c2e', lampGlow: '#ffc47a',
-    carBodies: ['#2c3e50', '#c0392b', '#ecf0f1', '#7f8c8d', '#1e1e1e', '#2e86c1', '#d4ac0d'], carCabin: '#1c2228',
-    headlight: '#fff4dc', taillight: '#ff2a1a', bird: '#2a2c30',
+    roofUnit: '#9a9da0', waterTank: '#6d5a48', grass: '#6a8a4a', gravel: '#c2b59c', trunk: '#5a4a3c', bird: '#2a2c30',
   },
 } as const

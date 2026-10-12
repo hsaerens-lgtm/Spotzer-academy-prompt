@@ -1,9 +1,9 @@
 // Ported from Horn.os (owner's project): js/scene/city.js
 /*
  * GLSL of the outdoor: the sky dome (gradient, sun, stars), the facades drawn in the shader (four styles, windows
- * that light up at night each on its own clock, shopfronts, fog) and the additive lights (tower beacons, street lamp
- * glows, car lights). The dome and the facades include three's tone mapping and colour space chunks, so they follow
- * the exposure of the phase like the room does.
+ * that light up at night each on its own clock, shopfronts, fog) and the additive tower beacons. The dome and the
+ * facades include three's tone mapping and colour space chunks, so they follow the exposure of the phase like the
+ * room does.
  */
 
 export const SKY_VERTEX = /* glsl */ `
@@ -162,28 +162,3 @@ export const BEACON_FRAGMENT = /* glsl */ `
     float d = length(gl_PointCoord - 0.5);
     gl_FragColor = vec4(1.0, 0.15, 0.1, vA * smoothstep(0.5, 0.0, d));
   }`
-
-export const LAMP_GLOW_VERTEX = /* glsl */ `
-  uniform float uSize;
-  void main() {
-    vec4 mv = modelViewMatrix * vec4(position, 1.0);
-    gl_PointSize = uSize / -mv.z;
-    gl_Position = projectionMatrix * mv;
-  }`
-
-export const LAMP_GLOW_FRAGMENT = /* glsl */ `
-  uniform float uOn;
-  uniform vec3 uColor;
-  void main() {
-    float d = length(gl_PointCoord - 0.5);
-    float a = smoothstep(0.5, 0.0, d);
-    gl_FragColor = vec4(uColor, uOn * a * a);
-  }`
-
-export const CAR_LIGHT_VERTEX = /* glsl */ `
-  void main() { gl_Position = projectionMatrix * viewMatrix * modelMatrix * instanceMatrix * vec4(position, 1.0); }`
-
-export const CAR_LIGHT_FRAGMENT = /* glsl */ `
-  uniform vec3 uColor;
-  uniform float uNight;
-  void main() { gl_FragColor = vec4(uColor * (0.4 + 2.2 * uNight), 1.0); }`

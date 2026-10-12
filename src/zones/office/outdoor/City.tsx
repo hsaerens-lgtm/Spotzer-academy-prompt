@@ -19,6 +19,7 @@ import {
   Vector3,
 } from 'three'
 import { useQualitySettings } from '../../../app/quality'
+import { appStore } from '../../../core/store'
 import { tints } from '../../../three/tints'
 import { useLightingApplier } from '../lighting/live'
 import { PRESETS, SUN_TARGET } from '../lighting/presets'
@@ -109,6 +110,7 @@ function buildCity() {
       fragmentShader: BEACON_FRAGMENT,
     }),
   )
+  beaconPoints.name = 'beacons'
   beaconPoints.frustumCulled = false
 
   const group = new Group()
@@ -117,7 +119,10 @@ function buildCity() {
   return { group, uniforms, beaconUniforms }
 }
 
-/** The city: instanced buildings whose windows light up at night, each on its own clock (frozen on the low tier). */
+/**
+ * The city: instanced buildings whose windows light up at night, each on its own clock (frozen on the low tier and
+ * under reduced motion), and the blinking beacons of the towers (still under reduced motion).
+ */
 export function City() {
   const settings = useQualitySettings()
   const city = useMemo(buildCity, [])
@@ -134,6 +139,8 @@ export function City() {
     city.beaconUniforms.uNight.value = p.night
   })
   useFrame(({ clock }) => {
+    // Window clocks and beacons stand still when the user asks for reduced motion; the low tier freezes the windows.
+    if (appStore.getState().reducedMotion) return
     if (settings.animateCityWindows) city.uniforms.uTime.value = clock.elapsedTime
     city.beaconUniforms.uTime.value = clock.elapsedTime
   })

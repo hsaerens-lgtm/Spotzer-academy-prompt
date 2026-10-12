@@ -1,5 +1,14 @@
 // Ported from Horn.os (owner's project): js/scene/city.js (canvasTexture)
-import { CanvasTexture, RepeatWrapping, SRGBColorSpace, type Material, type Mesh, type Object3D, type Texture } from 'three'
+import {
+  CanvasTexture,
+  RepeatWrapping,
+  SRGBColorSpace,
+  type InstancedMesh,
+  type Material,
+  type Mesh,
+  type Object3D,
+  type Texture,
+} from 'three'
 
 /*
  * GPU resources of the outdoor, which is built outside React (like Horn.os) and rendered as <primitive> objects:
@@ -30,12 +39,17 @@ export function canvasTexture(
   return texture
 }
 
-/** Disposes every geometry, material and material texture under `root`, each once. */
+/**
+ * Disposes every geometry, material and material texture under `root`, each once, and every instanced mesh (which
+ * frees its instance matrix and colour buffers on the GPU).
+ */
 export function disposeTree(root: Object3D): void {
   const geometries = new Set<{ dispose: () => void }>()
   const materials = new Set<Material>()
+  const instanced: InstancedMesh[] = []
   root.traverse((object) => {
     const mesh = object as Partial<Mesh>
+    if ((object as Partial<InstancedMesh>).isInstancedMesh) instanced.push(object as InstancedMesh)
     if (mesh.geometry) geometries.add(mesh.geometry)
     const list = Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : []
     for (const material of list) materials.add(material)
@@ -45,4 +59,5 @@ export function disposeTree(root: Object3D): void {
     material.dispose()
   }
   for (const geometry of geometries) geometry.dispose()
+  for (const mesh of instanced) mesh.dispose()
 }

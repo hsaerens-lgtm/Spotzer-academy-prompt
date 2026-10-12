@@ -29,7 +29,7 @@ export interface Preset {
   sunDisc: Color
   sunSize: number
   stars: number
-  /** 0..1: city windows, street lamps, car lights. */
+  /** 0..1: lit city windows and shopfronts, tower beacons; birds fly below 0.6. */
   night: number
   cityAmbient: Color
   cloudColor: Color

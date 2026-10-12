@@ -44,10 +44,17 @@ test('the sky dome fits inside the camera far plane', () => {
   }
 })
 
-test('the street lies far below the office floor', () => {
+test('the dome holds the whole city, so it can be drawn after it with the depth test on', () => {
+  // The dome is centred on the outdoor group's origin, at the height of the office floor (y = 0).
+  for (const b of buildingPlan()) {
+    const height = Math.max(Math.abs(OUTDOOR.groundY), Math.abs(OUTDOOR.groundY + b.h))
+    expect(Math.hypot(Math.abs(b.x) + b.w / 2, Math.abs(b.z) + b.d / 2, height)).toBeLessThan(OUTDOOR.domeRadius)
+  }
+})
+
+test('the ground lies far below the office floor, the park beyond the facade', () => {
   expect(OUTDOOR.groundY).toBeLessThanOrEqual(-20) // eighth floor
-  // The near pavement (8.5 m from the centre line) stays outside the facade, and the park is across the street.
-  expect(OUTDOOR.streetX + OUTDOOR.originX + 8.5).toBeLessThan(GLAZING.side.x)
-  expect(OUTDOOR.park.x0).toBeLessThan(OUTDOOR.streetX)
+  // Between the facade and the park runs Horn.os' street, out of every camera's view and not built.
+  expect(OUTDOOR.park.x0 + OUTDOOR.originX).toBeLessThan(GLAZING.side.x)
   expect(OUTDOOR.park.x1).toBeLessThan(OUTDOOR.park.x0)
 })
