@@ -33,13 +33,15 @@ const holds = (reason: Exemption | undefined, material: Material) =>
   reason !== undefined && (reason !== 'emissive' || emitsLight(material))
 
 /**
- * A colour map and at least one surface map (normal or roughness). A metal's base colour is its reflectance, set by
- * its tint, so a metalness map (the ARM map of a metal set) stands in for the colour map: a metal without one is
- * textured when it has a metalness map and a surface map.
+ * With a colour map: at least one surface map (normal or roughness). Without one: a metalness map and a normal map. A
+ * metal's base colour is its reflectance, set by its tint, so its texture is the normal map plus the ARM map. The
+ * roughness and metalness maps are one texture (the ARM map of pbrMaterial, the metallic-roughness map of a glTF), so
+ * without a colour map the roughness map cannot be the second map: it would let any colourless ARM-only material through.
  */
 export function isTextured(material: Material): boolean {
   const maps = material as Material & { map?: unknown; metalnessMap?: unknown; normalMap?: unknown; roughnessMap?: unknown }
-  return Boolean(maps.map || maps.metalnessMap) && Boolean(maps.normalMap || maps.roughnessMap)
+  if (maps.map) return Boolean(maps.normalMap || maps.roughnessMap)
+  return Boolean(maps.metalnessMap && maps.normalMap)
 }
 
 /**

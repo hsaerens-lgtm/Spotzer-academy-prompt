@@ -58,7 +58,10 @@ function Arm() {
   )
 }
 
-/** The five-square mark on the chest: lime and mint glow; the "ink" squares stay dark on the white shell, as before. */
+/**
+ * The five-square mark on the chest: lime and mint glow; the "ink" squares stay dark on the white shell, as before.
+ * The 6 mm ink tiles receive shadows but do not cast: casting from tiles flush with the body is invisible and risks acne.
+ */
 function ChestLogo() {
   const m = useMaterials()
   const byColor = { lime: m.logoLime, mint: m.logoMint, ink: m.consoleDark }

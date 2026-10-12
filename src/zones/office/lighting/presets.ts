@@ -77,7 +77,7 @@ const V = (x: number, y: number, z: number) => new Vector3(x, y, z)
 export const PRESETS: Record<Phase, Preset> = {
   day: {
     sunColor: C('#fff0d8'), sunIntensity: 8, sunPosition: V(-10.86, 6.13, 1.26),
-    hemiSky: C('#dfe9f5'), hemiGround: C('#b89c7c'), hemiIntensity: 0.5,
+    hemiSky: C('#dfe9f5'), hemiGround: C('#b89c7c'), hemiIntensity: 0.85,
     environment: 0.32, windowColor: C('#e4eefc'), windowIntensity: 2.6,
     ceiling: 0, bulb: 0, lampIntensity: 0, sign: 0.4, screenGlow: 0.35, exposure: 1.0,
     skyTop: C('#4f8fd6'), skyHorizon: C('#d6e4ee'), sunDisc: C('#fff4de'), sunSize: 1,

@@ -44,6 +44,20 @@ test('a metal textured by its metalness map needs no colour map', () => {
   expect(untexturedMeshes(root)).toEqual(['base/plate#flat'])
 })
 
+// In pbrMaterial and in GLTFLoader the roughness and metalness maps are one texture (the ARM / metallic-roughness map):
+// without a colour map, a surface map that is not the normal map must not let a colourless ARM-only material through.
+test('without a colour map, a metal needs a normal map besides its ARM texture', () => {
+  const arm = new Texture()
+  const armOnly = new MeshStandardMaterial({ name: 'armOnly', metalnessMap: arm, roughnessMap: arm })
+  expect(isTextured(armOnly)).toBe(false)
+  const root = named(new Group(), 'base')
+  root.add(named(new Mesh(box, armOnly), 'plate'))
+  expect(untexturedMeshes(root)).toEqual(['base/plate#armOnly'])
+  // With the normal map it passes, and with a colour map the old rule (normal or roughness) still holds.
+  expect(isTextured(new MeshStandardMaterial({ metalnessMap: arm, roughnessMap: arm, normalMap: new Texture() }))).toBe(true)
+  expect(isTextured(new MeshStandardMaterial({ map: new Texture(), roughnessMap: arm, metalnessMap: arm }))).toBe(true)
+})
+
 test('an untextured mesh is reported with its path', () => {
   const root = named(new Group(), 'base')
   const table = named(new Group(), 'table')
