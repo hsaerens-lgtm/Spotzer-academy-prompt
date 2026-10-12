@@ -13,7 +13,7 @@ test('the hands show 14:00, 19:30 and 23:00', () => {
   expect(night.hour).toBeCloseTo((11 * Math.PI) / 6)
   expect(night.minute).toBeCloseTo(0)
   // The second hand does not run: it is parked at 20 s, where it covers neither the minute hand nor the hour hand (below).
-  expect([day.second, sunset.second, night.second]).toEqual([(2 * Math.PI) / 3, (2 * Math.PI) / 3, (2 * Math.PI) / 3])
+  for (const second of [day.second, sunset.second, night.second]) expect(second).toBeCloseTo((2 * Math.PI) / 3, 12)
   // Halfway from night to day the clock passes 03:30 (clockMinutes 210): hour hand past 3, minute hand on 6.
   expect(handAngles(210).hour).toBeCloseTo(3.5 * (Math.PI / 6))
   expect(handAngles(210).minute).toBeCloseTo(Math.PI)

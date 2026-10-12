@@ -4,9 +4,9 @@ import { fileURLToPath } from 'node:url'
 import { NodeIO } from '@gltf-transform/core'
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions'
 import { MeshoptDecoder } from 'meshoptimizer'
-import { BufferAttribute, BufferGeometry, Group, Mesh, MeshBasicMaterial, type Object3D } from 'three'
+import { BufferAttribute, BufferGeometry, Group, Mesh, MeshBasicMaterial, Vector3, type Object3D } from 'three'
 import { MODEL_PARTS } from '../../three/assets'
-import { CASE_RING_FROM, caseRing, isClockCase } from './clockHands'
+import { CASE_RING_FROM, caseRing, isClockCase } from './clockCase'
 
 /*
  * The wall clock's hover outline is a ring round its case, and nothing else. The clock model is one mesh for the case and
@@ -49,6 +49,32 @@ async function clockScene(): Promise<Group> {
 }
 
 const materialName = (mesh: Mesh) => (mesh.material as MeshBasicMaterial).name
+const radiusOf = (geometry: BufferGeometry, vertex: number) => {
+  const position = geometry.getAttribute('position')
+  return Math.hypot(position.getX(vertex), position.getY(vertex))
+}
+
+/**
+ * The bezel's inner wall, measured on the case mesh: the farthest vertex from the axis of the triangles that face the
+ * axis and lie wholly in the front half of the case (the dial's rim and the bezel standing in front of the dial). The
+ * back of the case also has a wall facing the axis, the skirt round the hollow behind the dial: it spans the back half.
+ */
+function bezelInnerWall(geometry: BufferGeometry): number {
+  const position = geometry.getAttribute('position')
+  const index = geometry.getIndex()!
+  const at = (vertex: number) => new Vector3().fromBufferAttribute(position, vertex)
+  let depth = 0
+  for (let v = 0; v < position.count; v++) depth = Math.max(depth, position.getZ(v))
+  let wall = 0
+  for (let t = 0; t < index.count; t += 3) {
+    const [a, b, c] = [at(index.getX(t)), at(index.getX(t + 1)), at(index.getX(t + 2))]
+    if (Math.min(a.z, b.z, c.z) < depth / 2) continue
+    const normal = new Vector3().subVectors(c, b).cross(new Vector3().subVectors(a, b)).normalize()
+    const centre = new Vector3().add(a).add(b).add(c).divideScalar(3).setZ(0).normalize()
+    if (normal.dot(centre) < -0.5) wall = Math.max(wall, ...[0, 1, 2].map((k) => radiusOf(geometry, index.getX(t + k))))
+  }
+  return wall
+}
 const vertexCount = (mesh: Mesh) => mesh.geometry.getAttribute('position').count
 
 async function clockMeshes(): Promise<Mesh[]> {
@@ -81,9 +107,7 @@ test('the outline ring is the outer shell of the case: the bezel and the back, n
   const position = ring.getAttribute('position')
   const index = ring.getIndex()!
   const radius = (i: number) => Math.hypot(position.getX(i), position.getY(i))
-  // Every triangle of the ring lies wholly outside CASE_RING_FROM (the inner wall of the bezel stands at 0.14 to 0.145 m).
-  expect(CASE_RING_FROM).toBeGreaterThan(0.145)
-  expect(CASE_RING_FROM).toBeLessThan(0.15)
+  // Every triangle of the ring lies wholly outside CASE_RING_FROM, which sits just outside the bezel's inner wall (below).
   for (let t = 0; t < index.count; t += 3) {
     for (let k = 0; k < 3; k++) expect(radius(index.getX(t + k))).toBeGreaterThanOrEqual(CASE_RING_FROM)
   }
@@ -97,4 +121,32 @@ test('the outline ring is the outer shell of the case: the bezel and the back, n
   expect(Math.max(...used.map((i) => position.getZ(i)))).toBeGreaterThan(0.03)
   // Its vertices are the case's own (same positions), so the outline lands on the case and needs no placing of its own.
   expect(position).toBe(source.getAttribute('position'))
+})
+
+test('the ring starts just outside the inner wall of the bezel, before the outer shell, both measured on the model', async () => {
+  const [body] = (await clockMeshes()).filter(isClockCase)
+  const wall = bezelInnerWall(body.geometry)
+  // The wall rises from the rim of the dial (14 cm from the axis) to the front of the bezel.
+  expect(wall).toBeGreaterThan(0.13)
+  expect(CASE_RING_FROM).toBeGreaterThan(wall)
+  expect(CASE_RING_FROM - wall).toBeLessThan(0.005)
+  // The first vertex out from the wall starts the outer shell: the ring must not cut into it.
+  const radii = Array.from({ length: body.geometry.getAttribute('position').count }, (_, v) => radiusOf(body.geometry, v))
+  const shell = Math.min(...radii.filter((r) => r > wall))
+  expect(CASE_RING_FROM).toBeLessThan(shell)
+})
+
+// A model without an index (none in the office) must not throw in the middle of a render: the outline rings the whole
+// case. drei's Outlines rewrites the normals of a geometry without an index and disposes it on unhover: a copy, then.
+test('a case without an index gets the outline of the whole case, from a copy of its geometry', () => {
+  const source = new BufferGeometry()
+  source.setAttribute('position', new BufferAttribute(new Float32Array([0, 0, 0, 0.16, 0, 0, 0, 0.16, 0, 0.1, 0.1, 0.03]), 3))
+  source.setAttribute('normal', new BufferAttribute(new Float32Array(12).fill(1), 3))
+  const ring = caseRing(source)
+  expect(ring).not.toBe(source)
+  expect(ring.getIndex()).toBeNull()
+  for (const name of ['position', 'normal']) {
+    expect(ring.getAttribute(name), name).not.toBe(source.getAttribute(name))
+    expect(Array.from(ring.getAttribute(name).array), name).toEqual(Array.from(source.getAttribute(name).array))
+  }
 })
