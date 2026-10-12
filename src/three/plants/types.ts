@@ -8,7 +8,7 @@ export type PlantKind = 'monstera' | 'palm' | 'fern' | 'pothos' | 'succulent' | 
 export type PotGlaze = 'terracotta' | 'cream' | 'slate' | 'brass' | 'none'
 export type HangingGlaze = 'white' | 'terracotta' | 'sage' | 'charcoal'
 
-/** A plant in its pot. position: bottom centre of the pot; r, h: pot radius and height; sway: amplitude in radians (0 = still); fall: direction of trailing vines (radians about y). */
+/** A plant in its pot. position: bottom centre of the pot; r, h: pot radius and height; sway: amplitude in radians (0 = still); fall: direction of trailing vines (radians about y); reach: how far from the pot's axis the vines travel along fall before they hang (pothos on an edge, see plantGeometry.ts). */
 export interface PlantPlacement {
   kind: PlantKind
   position: Vec3
@@ -19,6 +19,7 @@ export interface PlantPlacement {
   seed: number
   sway: number
   fall?: number
+  reach?: number
 }
 
 /** A plant hanging from the ceiling. position: the hook; vines and length in metres; drop: cord length below the hook. */

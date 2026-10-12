@@ -37,8 +37,8 @@ test('banquette plants keep their leaves inside the glazing', () => {
       .map((vase) => ({ ...vase.plant, pot: 'none' as const, position: vasePlantPosition(vase) })),
   ]
   expect(onBanquette).toHaveLength(6)
-  for (const { kind, position, r, h, pot, scale, seed, fall } of onBanquette) {
-    const { canopy } = plantGeometry(kind, { r, h, pot, scale, seed, fall })
+  for (const { kind, position, r, h, pot, scale, seed, fall, reach } of onBanquette) {
+    const { canopy } = plantGeometry(kind, { r, h, pot, scale, seed, fall, reach })
     canopy.computeBoundingBox()
     expect(position[0] + canopy.boundingBox!.min.x, `${kind} at z ${position[2]}`).toBeGreaterThan(frame)
   }

@@ -122,3 +122,53 @@ test('every plant material is textured', () => {
   expect(m.canopy).toMatchObject({ vertexColors: true, side: DoubleSide, roughness: 0.68, envMapIntensity: ENV_MAP_INTENSITY.plant })
   expect(m.pots.brass.metalness).toBe(0.7)
 })
+
+// Task 14 fix: a pothos on the edge of a bench or a board must hang past that edge, not through it.
+test('pothos vines travel out to their reach before they hang', () => {
+  const h = 0.12
+  // A leaf reaches back toward the pot by its length (0.057 at most) and a vine wobbles 0.012 sideways.
+  const LEAF_AND_WOBBLE = 0.057 + 0.012
+  for (const reach of [0.15, 0.2]) {
+    for (const fall of [0, Math.PI / 2, Math.PI, -Math.PI / 2]) {
+      for (const seed of [31, 53, 71]) {
+        const { canopy } = plantGeometry('pothos', { r: 0.1, h, pot: 'terracotta', scale: 1, seed, fall, reach })
+        const position = canopy.getAttribute('position')
+        let hanging = 0
+        for (let i = 0; i < position.count; i++) {
+          // Well under the rim there are only vines: all of them stand out past the reach along `fall`.
+          if (position.getY(i) >= h * 0.96 - 0.1) continue
+          hanging++
+          const along = position.getX(i) * Math.sin(fall) + position.getZ(i) * Math.cos(fall)
+          expect(along, `reach ${reach}, fall ${fall.toFixed(2)}, seed ${seed}`).toBeGreaterThanOrEqual(reach - LEAF_AND_WOBBLE - 1e-9)
+        }
+        expect(hanging).toBeGreaterThan(100)
+      }
+    }
+  }
+  // Without it the vines spill 6-13 cm and fall: some hang closer than that.
+  const { canopy } = plantGeometry('pothos', { r: 0.1, h, pot: 'terracotta', scale: 1, seed: 31, fall: 0 })
+  const position = canopy.getAttribute('position')
+  const close = Array.from({ length: position.count }, (_, i) => i).filter((i) => position.getY(i) < h * 0.96 - 0.1 && position.getZ(i) < 0.2 - 0.069)
+  expect(close.length).toBeGreaterThan(0)
+})
+
+test('the reach option changes only a pothos, and a plant without it is the plant it always was', () => {
+  const fern = { r: 0.13, h: 0.16, pot: 'slate' as const, scale: 0.95, seed: 23 }
+  expect(positions(plantGeometry('fern', { ...fern, reach: 0.3 }).canopy)).toEqual(positions(plantGeometry('fern', fern).canopy))
+  const monstera = { r: 0.16, h: 0.22, pot: 'cream' as const, scale: 0.7, seed: 11 }
+  expect(positions(plantGeometry('monstera', { ...monstera, reach: 0.3 }).canopy)).toEqual(positions(plantGeometry('monstera', monstera).canopy))
+  // A pothos without a reach: the vertices of Task 13's generator (vertex count, sum and weighted sum of the positions).
+  const checksum = (geometry: BufferGeometry) => {
+    const array = geometry.getAttribute('position').array
+    let sum = 0
+    let weighted = 0
+    for (let i = 0; i < array.length; i++) {
+      sum += array[i]
+      weighted += array[i] * ((i % 7) + 1)
+    }
+    return [geometry.getAttribute('position').count, +sum.toFixed(6), +weighted.toFixed(6)]
+  }
+  expect(checksum(plantGeometry('pothos', { r: 0.08, h: 0.1, pot: 'none', scale: 0.8, seed: 71, fall: 0 }).canopy)).toEqual([5409, -508.177998, -2034.70432])
+  expect(checksum(plantGeometry('monstera', monstera).canopy)).toEqual([2622, 1165.534446, 4655.964181])
+  expect(checksum(plantGeometry('fern', fern).canopy)).toEqual([10260, 1870.98557, 7484.032436])
+})

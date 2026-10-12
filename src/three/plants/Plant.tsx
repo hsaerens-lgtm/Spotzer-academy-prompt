@@ -10,8 +10,8 @@ import type { PlantPlacement } from './types'
  * (quality tier and reduced motion) and the placement asks for it (`sway` > 0); the sway's phase is the seed.
  */
 export function Plant({ placement, animate, name }: { placement: PlantPlacement; animate: boolean; name?: string }) {
-  const { kind, position, pot, r, h, scale, seed, sway, fall } = placement
-  const geometry = useMemo(() => plantGeometry(kind, { r, h, pot, scale, seed, fall }), [kind, r, h, pot, scale, seed, fall])
+  const { kind, position, pot, r, h, scale, seed, sway, fall, reach } = placement
+  const geometry = useMemo(() => plantGeometry(kind, { r, h, pot, scale, seed, fall, reach }), [kind, r, h, pot, scale, seed, fall, reach])
   const materials = plantMaterials()
   const canopy = useRef<Group>(null)
   useSway(canopy, sway, seed, animate && sway > 0)

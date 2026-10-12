@@ -121,11 +121,13 @@ export const layout = {
       { kind: 'monstera', position: [-4.705, 0.42, -3.0], pot: 'cream', r: 0.16, h: 0.22, scale: 0.7, seed: 11, sway: 0.006 },
       { kind: 'fern', position: [-4.67, 0.42, -1.2], pot: 'slate', r: 0.13, h: 0.16, scale: 0.95, seed: 23, sway: 0.008 },
       { kind: 'succulent', position: [-4.755, 0.42, -0.4], pot: 'terracotta', r: 0.06, h: 0.07, scale: 1, seed: 9, sway: 0 },
-      { kind: 'pothos', position: [-4.755, 0.42, 0.5], pot: 'terracotta', r: 0.1, h: 0.12, scale: 1, seed: 31, sway: 0.01, fall: Math.PI / 2 },
+      // the pothos stands at the front edge of the bench (rim 3 mm inside it) and its vines hang past that edge (reach)
+      { kind: 'pothos', position: [-4.64, 0.42, 0.5], pot: 'terracotta', r: 0.1, h: 0.12, scale: 1, seed: 31, sway: 0.01, fall: Math.PI / 2, reach: 0.18 },
       // the palm left its old place, where it hid part of the retro corner from the overview
       { kind: 'palm', position: [4.45, 0, -2.9], pot: 'slate', r: 0.2, h: 0.32, scale: 0.9, seed: 41, sway: 0.006 },
       { kind: 'herb', position: [3.45, 1.775, -5.87], pot: 'terracotta', r: 0.06, h: 0.08, scale: 1, seed: 47, sway: 0 },
-      { kind: 'pothos', position: [4.5, 1.775, -5.87], pot: 'cream', r: 0.07, h: 0.09, scale: 0.8, seed: 53, sway: 0.008, fall: 0 },
+      // the pothos stands at the front edge of the high board, at its right end; its vines hang past the edge, in front of the end of the lower row
+      { kind: 'pothos', position: [4.57, 1.775, -5.83], pot: 'cream', r: 0.07, h: 0.09, scale: 0.8, seed: 53, sway: 0.008, fall: 0, reach: 0.14 },
     ] as PlantPlacement[],
     hangingPlants: [
       { position: [-4.25, 3.2, -3.8], seed: 3, glaze: 'white', vines: 11, length: 0.9, drop: 0.55 },

@@ -6,6 +6,7 @@ import { appStore } from '../../../core/store'
 import { isClockDeprecation, mountR3F, type TestRoot } from '../../../test/r3fRoot'
 import { resetAppStore } from '../../../test/resetAppStore'
 import { GLASS_MATERIAL, MODEL_PARTS, modelUrl } from '../../../three/assets'
+import { isTextured } from '../../../three/audit'
 import { meshesOf } from '../../../three/gltf'
 import { useMaterials } from '../../../three/materials'
 import { glbModels } from '../../../three/objects'
@@ -227,8 +228,28 @@ test('the pachira stands in its enlarged clay planter, the tree 1.55 m tall from
   const box = new Box3().setFromObject(tree)
   expect(box.min.y).toBeCloseTo(PACHIRA.base, 6)
   expect(box.max.y - box.min.y).toBeCloseTo(PACHIRA.height, 6)
+  // The tree model is moved so that its trunk, not its whole box, is centred on the planter.
+  expect(tree.children[0].position.toArray()).toEqual([PACHIRA.offset[0], 0, PACHIRA.offset[1]])
   // The potted plant keeps its own pot and its model's size.
   expect(named(state.scene, 'pottedPlant').children).toHaveLength(1)
+})
+
+// The clay planter has no soil of its own: a dark disc just under its rim, the trunk's base at its top.
+test('the pachira is seated in a soil disc in its planter', async () => {
+  const { state } = await mountDecor()
+  const pachira = named(state.scene, 'pachira')
+  const soil = named(state.scene, 'pachira-soil') as Mesh
+  expect(soil.isMesh).toBe(true)
+  expect(isInside(soil, pachira)).toBe(true)
+  const box = new Box3().setFromObject(soil)
+  expect(box.max.y).toBeCloseTo(PACHIRA.base, 6)
+  expect(box.max.y - box.min.y).toBeCloseTo(PACHIRA.soil.thickness, 6)
+  expect(box.max.x - box.min.x).toBeCloseTo(2 * PACHIRA.soil.radius, 2)
+  const material = soil.material as MeshStandardMaterial
+  expect(material.color.getHexString()).toBe(tints.soil.slice(1))
+  // The audit rule: a colour map and a roughness map.
+  expect(isTextured(material)).toBe(true)
+  expect([soil.castShadow, soil.receiveShadow]).toEqual([true, true])
 })
 
 /** What sways, with its amplitude and phase: a generated plant, a vase plant, a hanging plant and the two large plants. */

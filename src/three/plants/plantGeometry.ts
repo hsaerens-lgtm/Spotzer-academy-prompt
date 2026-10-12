@@ -32,6 +32,13 @@ export interface PlantOptions {
   seed: number
   /** Pothos only: direction (radians about +y, 0 = +z) the vines spill toward; random directions when omitted. */
   fall?: number
+  /**
+   * Pothos with a `fall` only, for one that stands near the edge of its bench or board: how far from the pot's axis, in
+   * metres (not scaled), the vines travel along `fall` before they hang. They get there within the first third of their
+   * length, fanned narrower, so they hang past the edge instead of through it. Other plants ignore it; vines without it
+   * spill 6 to 13 cm x scale and fall.
+   */
+  reach?: number
 }
 
 /** Horn.os' LCG: numbers in [0, 1), the same sequence for the same seed. */
@@ -48,16 +55,29 @@ const cache = new Map<string, PlantGeometry>()
 
 /** One plant standing on the origin (bottom of the pot). Cached by its arguments, never disposed: placements share it. */
 export function plantGeometry(kind: PlantKind, options: PlantOptions): PlantGeometry {
-  const { r, h, pot, scale, seed, fall } = options
-  const key = JSON.stringify([kind, r, h, pot, scale, seed, fall ?? null])
+  const { r, h, pot, scale, seed, fall, reach } = options
+  const key = JSON.stringify([kind, r, h, pot, scale, seed, fall ?? null, reach ?? null])
   const cached = cache.get(key)
   if (cached) return cached
-  const built = buildPlant(kind, r, h, pot, scale, seed, fall ?? null)
+  const built = buildPlant(kind, r, h, pot, scale, seed, fall ?? null, reach ?? null)
   cache.set(key, built)
   return built
 }
 
-function buildPlant(kind: PlantKind, r: number, h: number, pot: PotGlaze, scale: number, seed: number, fall: number | null): PlantGeometry {
+/** With a reach, the share of its length a vine takes to travel it, and how wide the vines fan about `fall` (radians). */
+const REACH_BY = 0.3
+const REACH_FAN = 1.2
+
+function buildPlant(
+  kind: PlantKind,
+  r: number,
+  h: number,
+  pot: PotGlaze,
+  scale: number,
+  seed: number,
+  fall: number | null,
+  vineReach: number | null,
+): PlantGeometry {
   const rand = seeded(seed)
   const greens = tints.leafGreens.map((colour) => new Color(colour))
   const stem = new Color(tints.stem)
@@ -155,17 +175,21 @@ function buildPlant(kind: PlantKind, r: number, h: number, pot: PotGlaze, scale:
     const vines = 3 + Math.floor(rand() * 2)
     for (let v = 0; v < vines; v++) {
       // `fall` aims them: loose vines on a shelf hang straight through the shelf behind them.
-      const yaw = fall === null ? rand() * Math.PI * 2 : fall + (rand() - 0.5) * 1.7
+      const reaching = fall !== null && vineReach !== null
+      const yaw = fall === null ? rand() * Math.PI * 2 : fall + (rand() - 0.5) * (reaching ? REACH_FAN : 1.7)
       const drop = (0.35 + rand() * 0.25) * scale
-      const out = (0.06 + rand() * 0.07) * scale
+      // With a reach, every vine gets as far along `fall` as asked, whichever way it fans.
+      const out = reaching ? vineReach / Math.cos(yaw - fall) : (0.06 + rand() * 0.07) * scale
+      if (reaching) rand() // the draw it replaces: every later draw stays what it is without a reach
       let previous = new Vector3(0, base, 0)
       for (let k = 1; k <= 9; k++) {
         const t = k / 9
-        // Out fast, then straight down: gravity takes over within a hand's width.
+        // Out fast, then straight down: gravity takes over within a hand's width (with a reach: within a third of the vine).
+        const travel = reaching ? Math.pow(Math.min(1, t / REACH_BY), 0.5) : Math.pow(t, 0.4)
         const p = new Vector3(
-          Math.sin(yaw) * out * Math.pow(t, 0.4) + Math.sin(t * 7 + v) * 0.012 * scale,
+          Math.sin(yaw) * out * travel + Math.sin(t * 7 + v) * 0.012 * scale,
           base - drop * t * t,
-          Math.cos(yaw) * out * Math.pow(t, 0.4) + Math.cos(t * 6 + v) * 0.012 * scale,
+          Math.cos(yaw) * out * travel + Math.cos(t * 6 + v) * 0.012 * scale,
         )
         stemPart(previous.x, previous.y, previous.z, p.x, p.y, p.z, 0.0035 * scale)
         const leaf = (0.035 + rand() * 0.022) * scale
