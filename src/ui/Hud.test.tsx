@@ -73,11 +73,14 @@ test('the Time of day button only shows in the 3D office', () => {
   const hidden: [string, Partial<AppState>][] = [
     ['reading mode', { readingMode: true }],
     ['no WebGL', { webgl: 'unavailable' }],
-    ['another zone', { zone: 'workshop' }],
+    // The dungeon, not the workshop: the workshop has no HUD at all, so it would not test the zone check.
+    ['another zone', { zone: 'dungeon' }],
   ]
   for (const [name, overrides] of hidden) {
     resetAppStore(overrides)
     const { unmount } = render(<Hud />)
+    // The HUD is there, without the button.
+    expect(screen.getByRole('banner'), name).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Time of day' }), name).not.toBeInTheDocument()
     unmount()
   }

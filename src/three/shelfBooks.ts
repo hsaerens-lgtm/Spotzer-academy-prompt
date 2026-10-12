@@ -196,15 +196,11 @@ function paintPages(g: CanvasRenderingContext2D, x0: number, y0: number, tone: s
   g.fillRect(x0, y0, ATLAS.cellWidth, ATLAS.cellHeight)
 }
 
-let atlas: CanvasTexture | null = null
-
-/** Every spine and page edge in one sRGB texture (2048 x 2048). Painted once, on first use (needs the DOM). */
-export function bookAtlasTexture(): CanvasTexture {
-  if (atlas) return atlas
-  const canvas = document.createElement('canvas')
-  canvas.width = ATLAS.cols * ATLAS.cellWidth
-  canvas.height = ATLAS.rows * ATLAS.cellHeight
-  const g = canvas.getContext('2d')!
+/**
+ * Paints every cell of the atlas into `g` (2048 x 2048 px): the spines, then the page edges in the last three cells. The
+ * same on every run (one seed); shapes and colours only, never text (books.test.ts records what it draws).
+ */
+export function paintBookAtlas(g: CanvasRenderingContext2D): void {
   const rand = seeded(ATLAS_SEED)
   for (let i = 0; i < CELLS; i++) {
     const x0 = (i % ATLAS.cols) * ATLAS.cellWidth
@@ -213,6 +209,17 @@ export function bookAtlasTexture(): CanvasTexture {
     if (page >= 0) paintPages(g, x0, y0, tints.bookPages[page], rand)
     else paintSpine(g, x0, y0, spineDesign(i, ATLAS_SEED), rand)
   }
+}
+
+let atlas: CanvasTexture | null = null
+
+/** Every spine and page edge in one sRGB texture (2048 x 2048). Painted once, on first use (needs the DOM). */
+export function bookAtlasTexture(): CanvasTexture {
+  if (atlas) return atlas
+  const canvas = document.createElement('canvas')
+  canvas.width = ATLAS.cols * ATLAS.cellWidth
+  canvas.height = ATLAS.rows * ATLAS.cellHeight
+  paintBookAtlas(canvas.getContext('2d')!)
   atlas = new CanvasTexture(canvas)
   atlas.colorSpace = SRGBColorSpace
   atlas.anisotropy = 8

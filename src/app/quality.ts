@@ -40,8 +40,8 @@ export function isSoftwareRenderer(renderer: string): boolean {
 
 /**
  * True once Stage has found a software rasterizer: the office then hides what costs the most per frame and no journey
- * needs (the park, Task 8; the sideboard and its lamp, Task 11). Never true on a GPU: the spec's tier table applies
- * unchanged on the reference PC.
+ * needs: the whole park (Task 8), the sideboard set, its two cabinets and its lamp (Task 11), and the vase standing on
+ * it (Task 14). Never true on a GPU: the spec's tier table applies unchanged on the reference PC.
  */
 export const SoftwareRendererContext = createContext(false)
 
@@ -78,15 +78,20 @@ export function dprFor(quality: Quality): number | [number, number] {
 }
 
 /**
- * The bounds of drei's PerformanceMonitor, [lower, upper] in frames per second, for the display's refresh rate (drei
- * takes the highest rate it has measured). It steps the tier down when 8 of its last 10 quarter-second samples are under
- * the lower bound, and up when 8 are at or over the upper one.
- * - Up to 100 Hz, drei's own [40, 60]: the display caps the rate at 60, so a machine that holds it stays where it is.
+ * The bounds of drei's PerformanceMonitor, [lower, upper] in frames per second, for the display's refresh rate: drei
+ * takes the highest rate it has measured in a quarter-second sample, and never lowers it. After every 10 samples it
+ * steps the tier down when 8 of them are under the lower bound, and up when 8 are at or over the upper one.
+ * - Up to 100 Hz, drei's own [40, 60], on a 60 Hz display as on a 61 to 100 Hz one: a machine that holds the spec's
+ *   60 fps is never under 40, so it keeps its tier, and one that a dip has stepped down steps back up at 60.
  * - Faster displays: drei's [60, 100] stepped a machine at the spec's 60 fps down (its samples read 56 to 64), medium
  *   then ran over 100 and stepped back up, until the fourth change settled it on low (Task 14b, the presentation view on
  *   the reference PC's 240 Hz display). The tier steps down under 50 only, and back up at 125: 2.5 times the lower bound,
- *   more than the 2.25 times the pixels that high draws over medium, so a step down is not undone into the same
- *   slowdown.
+ *   more than the 2.25 times the pixels that high draws over medium. Only the pixel ratio is counted (high also has more
+ *   lights and a larger shadow map): a machine just under 50 on high is unlikely to reach 125 on medium, not proven
+ *   never to, and if it flip-flops, reduceQuality settles it on low.
+ * - The price on a fast display: once one sample has run over 100 fps, drei counts the display as fast for good, and a
+ *   single sustained dip (8 samples of 10 under 50, a long shader compile for example) steps the tier down for the rest
+ *   of the session, since a machine that runs medium under 125 fps never steps back up.
  */
 export function qualityBounds(refreshRate: number): [number, number] {
   return refreshRate > 100 ? [50, 125] : [40, 60]

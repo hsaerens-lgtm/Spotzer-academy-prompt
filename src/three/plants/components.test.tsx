@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { Group, Mesh, type Material, type Object3D } from 'three'
 import { isClockDeprecation, mountR3F, type TestRoot } from '../../test/r3fRoot'
 import { Books } from '../Books'
+import { booksMaterial } from '../shelfBooks'
 import { HANGING_SWAY, HangingPlant } from './HangingPlant'
 import { Plant } from './Plant'
 import { plantMaterials } from './plantMaterials'
@@ -81,10 +82,18 @@ test('a plant sways only when it is animated and asks for it', async () => {
   await root.render(<Plant placement={plant} animate={false} />)
   await root.frame()
   expect([sway.rotation.x, sway.rotation.z]).toEqual([0, 0])
-  // A placement without sway never moves, animated or not.
+  // A placement without sway, animated, is not swayed at all (the `sway > 0` guard): from a swayed state, one frame
+  // stands it straight, and the frames after it leave its rotation alone (a zero-amplitude sway would set it each frame).
+  await root.render(<Plant placement={plant} animate />)
+  await root.frame()
+  expect(Math.abs(sway.rotation.z)).toBeGreaterThan(0.01)
   await root.render(<Plant placement={{ ...plant, sway: 0 }} animate />)
   await root.frame()
   expect([sway.rotation.x, sway.rotation.z]).toEqual([0, 0])
+  const rotate = vi.spyOn(sway.quaternion, 'setFromEuler')
+  await root.frame()
+  await root.frame()
+  expect(rotate).not.toHaveBeenCalled()
 })
 
 // The low tier, reduced motion and sway-free placements: a frame costs nothing once the plant stands straight.
@@ -131,6 +140,8 @@ test('a shelf of books is one mesh that casts and receives, its geometry release
   expect(mesh.name).toBe('books')
   expect(mesh.geometry.getAttribute('position').count).toBeGreaterThan(1000)
   expect([mesh.castShadow, mesh.receiveShadow]).toEqual([true, true])
+  // The one shared atlas material of every shelf (a plain stand-in here: jsdom cannot paint the atlas).
+  expect(mesh.material).toBe(booksMaterial())
   const dispose = vi.spyOn(mesh.geometry, 'dispose')
   await root.unmount()
   roots.splice(roots.indexOf(root), 1)

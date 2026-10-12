@@ -1,5 +1,5 @@
 import { Box3, Color, DoubleSide, type BufferGeometry } from 'three'
-import { SIZES } from '../../zones/office/footprints'
+import { SIZES, TRAILING } from '../../zones/office/footprints'
 import { layout } from '../../zones/office/layout'
 import { isTextured } from '../audit'
 import { ENV_MAP_INTENSITY } from '../materials'
@@ -8,8 +8,6 @@ import { plantGeometry, type PlantGeometry } from './plantGeometry'
 import { plantMaterials } from './plantMaterials'
 import type { PlantKind } from './types'
 
-/** zones/office/footprints.ts: pothos vines may hang this far (x scale) below the pot (`below` of boxFor). */
-const BELOW: Partial<Record<PlantKind, number>> = { pothos: 0.6 }
 const KINDS: PlantKind[] = ['monstera', 'palm', 'fern', 'pothos', 'succulent', 'herb']
 
 const positions = (geometry: BufferGeometry) => Array.from(geometry.getAttribute('position').array)
@@ -43,7 +41,8 @@ test('each kind stays within its footprint', () => {
   // Every plant of the layout, with its own seed and 24 others: the footprints keep the laptop and the retro corner clear.
   for (const [index, placement] of layout.objects.plants.entries()) {
     const [w, h, d] = SIZES[placement.kind].map((n) => n * placement.scale)
-    const below = (BELOW[placement.kind] ?? 0) * placement.scale
+    // Trailing vines may hang below the pot as far as the footprint allows (TRAILING), times the plant's scale.
+    const below = (TRAILING[placement.kind] ?? 0) * placement.scale
     for (const seed of [placement.seed, ...Array.from({ length: 24 }, (_, i) => i + 1)]) {
       const box = bounds(plantGeometry(placement.kind, { ...placement, seed }))
       const label = `plant-${index} (${placement.kind}) seed ${seed}`

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { Box3, Color } from 'three'
 import { SHELVES, layout } from '../zones/office/layout'
-import { ATLAS, ATLAS_SEED, BOOK_SHELF_DEPTH, INK_CONTRAST, SPINE_CELLS, shelfBooksGeometry, spineDesign } from './shelfBooks'
+import { ATLAS, ATLAS_SEED, BOOK_SHELF_DEPTH, INK_CONTRAST, SPINE_CELLS, paintBookAtlas, shelfBooksGeometry, spineDesign } from './shelfBooks'
 import { tints } from './tints'
 
 const luminance = (colour: string) => {
@@ -70,4 +70,50 @@ test('spine designs use the palette and carry no text', () => {
   // The atlas painter never draws letters (spec: no procedural texture carries text).
   const source = readFileSync(fileURLToPath(new URL('./shelfBooks.ts', import.meta.url)), 'utf8')
   expect(source).not.toMatch(/fillText|strokeText|measureText|\.font\s*=/)
+})
+
+/** The gradients of a recording context: inert, and one object, so two recordings compare equal. */
+const GRADIENT = { addColorStop: () => {} }
+
+/**
+ * A 2D context that records what the painters do with it, for a test without a canvas (jsdom and Node have none):
+ * every method called, with its arguments, and every property set.
+ */
+function recordingContext() {
+  const calls: { name: string; args: unknown[] }[] = []
+  const state: Record<string, unknown> = {}
+  const context = new Proxy(state, {
+    get: (target, name) => {
+      if (typeof name !== 'string') return undefined
+      if (name in target) return target[name]
+      return (...args: unknown[]) => {
+        calls.push({ name, args })
+        return name.startsWith('create') ? GRADIENT : undefined
+      }
+    },
+    set: (target, name, value) => {
+      target[String(name)] = value
+      calls.push({ name: `set ${String(name)}`, args: [value] })
+      return true
+    },
+  })
+  return { context: context as unknown as CanvasRenderingContext2D, calls }
+}
+
+test('the atlas painters fill every spine cell and never write text', () => {
+  const { context, calls } = recordingContext()
+  paintBookAtlas(context)
+  const used = new Set(calls.map((call) => call.name))
+  for (const text of ['fillText', 'strokeText', 'measureText', 'set font']) expect(used.has(text), text).toBe(false)
+  // Each cell is first filled whole, in its cover colour (or its paper tone): all 125 spines, then the 3 page edges.
+  const cells = calls
+    .filter(({ name, args }) => name === 'fillRect' && args[2] === ATLAS.cellWidth && args[3] === ATLAS.cellHeight)
+    .map(({ args }) => ((args[1] as number) / ATLAS.cellHeight) * ATLAS.cols + (args[0] as number) / ATLAS.cellWidth)
+  const spines = Array.from({ length: SPINE_CELLS }, (_, i) => i)
+  expect(spines.filter((cell) => !cells.includes(cell))).toEqual([])
+  expect(new Set(cells).size).toBe(ATLAS.cols * ATLAS.rows)
+  // The same on every run: one seed decides.
+  const again = recordingContext()
+  paintBookAtlas(again.context)
+  expect(again.calls).toEqual(calls)
 })

@@ -109,9 +109,10 @@ test('on a fast display, a machine under 45 fps still steps down', () => {
   for (const refresh of FAST_DISPLAYS) expect(qualityBounds(refresh)[0], `${refresh} Hz`).toBeGreaterThanOrEqual(45)
 })
 
-test('a step down on a fast display is not undone into the same slowdown', () => {
-  // The high tier draws (1.5 / 1)^2 = 2.25 times the pixels of medium, with more lights and a larger shadow map: a
-  // machine just under the lower bound on high must not reach the upper bound on medium.
+test('on a fast display, stepping back up asks for more than the pixel ratio a step down saves', () => {
+  // The high tier draws (1.5 / 1)^2 = 2.25 times the pixels of medium (and adds lights and a larger shadow map, not
+  // counted here): from the pixel ratio alone, a machine just under the lower bound on high stays under the upper bound
+  // on medium.
   const [, highDpr] = QUALITY_SETTINGS.high.dpr as [number, number]
   const pixels = (highDpr / (QUALITY_SETTINGS.medium.dpr as number)) ** 2
   for (const refresh of FAST_DISPLAYS) {
@@ -122,4 +123,13 @@ test('a step down on a fast display is not undone into the same slowdown', () =>
 
 test("a 60 Hz display keeps drei's bounds", () => {
   expect(qualityBounds(60)).toEqual([40, 60])
+})
+
+test("the bounds: [50, 125] above 100 Hz, drei's [40, 60] up to 100 Hz included", () => {
+  for (const refresh of FAST_DISPLAYS) expect(qualityBounds(refresh), `${refresh} Hz`).toEqual([50, 125])
+  // Displays from 61 to 100 Hz keep drei's bounds too: they are not capped at 60, but are not fast either.
+  for (const refresh of [30, 59, 60, 61, 75, 90, 99]) expect(qualityBounds(refresh), `${refresh} Hz`).toEqual([40, 60])
+  // The boundary, as drei measures it (whole frames per second): 100 is not fast, 101 is.
+  expect(qualityBounds(100)).toEqual([40, 60])
+  expect(qualityBounds(101)).toEqual([50, 125])
 })

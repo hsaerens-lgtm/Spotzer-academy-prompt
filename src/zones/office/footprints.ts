@@ -50,8 +50,8 @@ export const SIZES: Record<string, Vec3> = {
   herb: [0.25, 0.25, 0.25],
 }
 
-/** How far a plant's trailing vines hang below the base of its pot. */
-const TRAILING: Partial<Record<PlantKind, number>> = { pothos: 0.6 }
+/** How far a plant's trailing vines hang below the base of its pot (plant.test.ts holds the generated plants to it). */
+export const TRAILING: Partial<Record<PlantKind, number>> = { pothos: 0.6 }
 
 /** World box of an object: x and z swap when it is turned a quarter; `below` extends the box downward (hanging plants, trailing vines). */
 export function boxFor(name: string, placement: Placement, size: Vec3, options: { below?: number } = {}): Box {
