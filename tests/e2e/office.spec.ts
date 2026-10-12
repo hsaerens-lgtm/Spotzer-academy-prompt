@@ -6,7 +6,7 @@ const EVIDENCE = 'docs/evidence/office'
 async function openOffice(page: Page, hash = '') {
   // A hash-only change would not reload the page: go through a blank page to start fresh.
   await page.goto('about:blank')
-  await page.goto(`/${hash}`)
+  await page.goto(`/?phase=day${hash}`)
   await page.waitForFunction(() => window.__academy?.state().sceneReady === true, undefined, { timeout: 60_000 })
 }
 
