@@ -1,8 +1,8 @@
 import { useThree } from '@react-three/fiber'
 import { Suspense, useEffect, useLayoutEffect, useRef, type ReactNode, type RefObject } from 'react'
 import type { Group } from 'three'
-import { compileAhead } from '../../../app/SceneReadySignal'
 import { appStore } from '../../../core/store'
+import { compileAhead } from '../../../three/compile'
 
 /**
  * Hides the decor group until its shaders are compiled against the live scene (lights and environment included), then

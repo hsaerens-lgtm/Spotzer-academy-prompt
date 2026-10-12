@@ -90,6 +90,26 @@ test('a failed compilation still shows the decor', async () => {
   expect(warnings).toEqual([['Decor shaders did not compile ahead of time.', failure]])
 })
 
+// The stage leaves the page while the decor compiles (reading mode, Task 12): nothing of the old canvas may land later.
+test('unmounted while its shaders compile, the decor is neither shown nor ready', async () => {
+  const compile = deferred()
+  const compileAsync = vi.fn(() => compile.promise)
+  const root = await mount(
+    <DecorStage>
+      <mesh name="poster" geometry={box} />
+    </DecorStage>,
+    { compileAsync },
+  )
+  const decor = named(root.state.scene, 'decor')
+  await vi.waitFor(() => expect(compileAsync).toHaveBeenCalled())
+  await root.unmount()
+  compile.resolve()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  expect(decor.visible).toBe(false)
+  expect(appStore.getState().decorReady).toBe(false)
+  expect(warnings).toEqual([])
+})
+
 const pending = new Promise<never>(() => {})
 function StillLoading(): null {
   use(pending)

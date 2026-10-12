@@ -13,10 +13,12 @@ import { SceneReadySignal } from './SceneReadySignal'
 
 extend({ Group, Mesh })
 
+let warnings: unknown[][]
 beforeEach(() => {
   resetAppStore()
+  warnings = []
   vi.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => {
-    if (!isClockDeprecation(args)) throw new Error(`unexpected warning: ${String(args[0])}`)
+    if (!isClockDeprecation(args)) warnings.push(args)
   })
 })
 const roots: TestRoot[] = []
@@ -69,14 +71,31 @@ test('the base shows once every shader is compiled, and sceneReady waits for one
   // ...and the frame after it sets sceneReady.
   await root.frame()
   expect(appStore.getState().sceneReady).toBe(true)
+  expect(warnings).toEqual([])
 })
 
-test('a failed compilation still shows the office', async () => {
-  const { root, base } = await mount(() => Promise.reject(new Error('program not valid')))
+test('a failed compilation still shows the office, and says so in development', async () => {
+  const failure = new Error('program not valid')
+  const { root, base } = await mount(() => Promise.reject(failure))
   await vi.waitFor(() => expect(base.visible).toBe(true))
   await root.frame()
   await root.frame()
   expect(appStore.getState().sceneReady).toBe(true)
+  expect(warnings).toEqual([['Office shaders did not compile ahead of time.', failure]])
+})
+
+// The stage leaves the page while the office compiles (reading mode, Task 12): nothing of the old canvas may land later.
+test('unmounted while the shaders compile, it neither shows the base nor sets sceneReady', async () => {
+  let compiled!: () => void
+  const done = new Promise<void>((resolve) => (compiled = resolve))
+  const { root, compileAsync, base } = await mount(() => done)
+  await vi.waitFor(() => expect(compileAsync).toHaveBeenCalled())
+  await root.unmount()
+  compiled()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  expect(base.visible).toBe(false)
+  expect(appStore.getState().sceneReady).toBe(false)
+  expect(warnings).toEqual([])
 })
 
 // SwiftShader (the e2e browser) and Safari have no KHR_parallel_shader_compile: compileAsync would compile at once
@@ -95,4 +114,5 @@ test('without parallel shader compilation, the programs compile at once, with no
   await root.frame()
   await root.frame()
   expect(appStore.getState().sceneReady).toBe(true)
+  expect(warnings).toEqual([])
 })

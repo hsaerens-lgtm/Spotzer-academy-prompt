@@ -1,6 +1,6 @@
 import { PerformanceMonitor } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import { Suspense, lazy, useReducer, useState } from 'react'
+import { Suspense, lazy, useEffect, useReducer, useState } from 'react'
 import { appStore, useApp } from '../core/store'
 import { CAMERA, layout } from '../zones/office/layout'
 import { OfficeScene } from '../zones/office/OfficeScene'
@@ -28,6 +28,16 @@ export function Stage() {
   const decorReady = useApp((s) => s.decorReady)
   const [quality, dispatchQuality] = useReducer(reduceQuality, INITIAL_QUALITY)
   const [software, setSoftware] = useState(false)
+  // The canvas leaves the page (reading mode, WebGL lost): the next one compiles every shader again, so both loading
+  // stages start over and the loading screen covers the office until it is ready (SceneReadySignal, DecorStage).
+  useEffect(
+    () => () => {
+      const { setSceneReady, setDecorReady } = appStore.getState()
+      setSceneReady(false)
+      setDecorReady(false)
+    },
+    [],
+  )
   return (
     <div
       className="stage"
