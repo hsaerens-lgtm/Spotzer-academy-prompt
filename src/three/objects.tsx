@@ -5,6 +5,7 @@ import type { Object3D } from 'three'
 import { cloneModel, meshesOf, normaliseModel, prepareModel, scaleToHeight } from './gltf'
 import { HoverOutline } from './interactive'
 import { CrtTv } from './props/CrtTv'
+import { FloorLamp } from './props/FloorLamp'
 import { Lamp } from './props/Lamp'
 import { Laptop } from './props/Laptop'
 import { LogoCubes } from './props/LogoCubes'
@@ -20,12 +21,14 @@ import type { ObjectProps } from './types'
 export type ObjectName =
   | 'table' | 'laptop' | 'retroConsole' | 'sofa' | 'logoCubes' | 'lamp' | 'microphone' // procedural (existing)
   | 'tvStand' | 'shelves' // procedural, Task 10
+  | 'floorLamp' // procedural, Task 10b
   | 'sideboard' | 'crtTv' // procedural until Task 11, then GLB
 
 /** Every object name, in the order of the union (objects.test.ts checks that they match). */
 export const OBJECT_NAMES = [
   'table', 'laptop', 'retroConsole', 'sofa', 'logoCubes', 'lamp', 'microphone',
   'tvStand', 'shelves',
+  'floorLamp',
   'sideboard', 'crtTv',
 ] as const satisfies readonly ObjectName[]
 
@@ -46,6 +49,7 @@ const procedural: Partial<Record<ObjectName, ComponentType<ObjectProps>>> = {
   microphone: Microphone,
   tvStand: TvStand,
   shelves: Shelves,
+  floorLamp: FloorLamp,
   sideboard: Sideboard,
   crtTv: CrtTv,
 }

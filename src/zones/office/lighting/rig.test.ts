@@ -1,9 +1,9 @@
-import { OrthographicCamera, RectAreaLight, Vector3 } from 'three'
+import { Color, OrthographicCamera, RectAreaLight, Vector3 } from 'three'
 import { QUALITY_SETTINGS, type Quality } from '../../../app/quality'
 import { PHASES } from '../../../core/phase'
 import { GLAZING, ROOM, WALL_T, layout } from '../layout'
 import { PRESETS, SUN_TARGET, mixPreset } from './presets'
-import { RIG, crtGlowCandela, rigLights } from './rig'
+import { RIG, crtGlowCandela, floorLampCandela, rigLights } from './rig'
 
 /** Sun positions of the three phases and of the blends each transition passes through. */
 function sunPositions(): { label: string; position: Vector3 }[] {
@@ -14,7 +14,7 @@ function sunPositions(): { label: string; position: Vector3 }[] {
 }
 
 const names = (quality: Quality) => rigLights(QUALITY_SETTINGS[quality]).map((light) => light.name)
-const ALWAYS = ['sun', 'sky-fill', 'window-light', 'lamp-light', 'screen-glow', 'crt-glow']
+const ALWAYS = ['sun', 'sky-fill', 'window-light', 'lamp-light', 'screen-glow', 'crt-glow', 'floor-lamp-light']
 
 test('every preset sends the sun through the glazing', () => {
   for (const { label, position } of sunPositions()) {
@@ -88,6 +88,7 @@ test('the light count never depends on the phase', () => {
   expect(PRESETS.day.ceiling).toBe(0)
   for (const quality of ['high', 'medium', 'low'] as const) {
     expect(names(quality), quality).toContain('lamp-light')
+    expect(names(quality), quality).toContain('floor-lamp-light')
     expect(rigLights(QUALITY_SETTINGS[quality])).toEqual(rigLights({ ...QUALITY_SETTINGS[quality] }))
   }
   expect(names('high')).toContain('pendant-light')
@@ -121,4 +122,36 @@ test('the CRT glow is dark by day and strongest at night', () => {
   expect(RIG.crtGlow.candela).toBeLessThanOrEqual(8)
   // During a transition it follows the blend of the night factor.
   expect(crtGlowCandela(mixPreset(PRESETS.sunset, PRESETS.night, 0.5))).toBeCloseTo(((PRESETS.sunset.night + 1) / 2) * RIG.crtGlow.candela)
+})
+
+// Task 10b: the floor lamp beside the sofa follows the sideboard lamp's level (preset lampIntensity), with no constant term.
+test('the floor lamp is dark by day, lit at sunset and brightest at night', () => {
+  expect(floorLampCandela(PRESETS.day)).toBe(0)
+  expect(floorLampCandela(PRESETS.sunset)).toBeGreaterThan(0)
+  expect(floorLampCandela(PRESETS.night)).toBeGreaterThan(floorLampCandela(PRESETS.sunset))
+  for (const phase of PHASES) expect(floorLampCandela(PRESETS[phase]), phase).toBeCloseTo(RIG.floorLamp.k * PRESETS[phase].lampIntensity)
+  // During a transition it follows the blend.
+  const half = (PRESETS.sunset.lampIntensity + PRESETS.night.lampIntensity) / 2
+  expect(floorLampCandela(mixPreset(PRESETS.sunset, PRESETS.night, 0.5))).toBeCloseTo(RIG.floorLamp.k * half)
+})
+
+test('the floor lamp light is a warm point light on every tier, within reach of the sofa and the wall by the TV', () => {
+  for (const quality of ['high', 'medium', 'low'] as const) {
+    const lights = rigLights(QUALITY_SETTINGS[quality]).filter((light) => light.name === 'floor-lamp-light')
+    expect(lights, quality).toEqual([{ name: 'floor-lamp-light', kind: 'point' }])
+  }
+  // Warm, in the family of the sideboard lamp.
+  const colour = new Color(RIG.floorLamp.colour)
+  expect(colour.r).toBeGreaterThan(colour.g)
+  expect(colour.g).toBeGreaterThan(colour.b)
+  const hue = (hex: string) => new Color(hex).getHSL({ h: 0, s: 0, l: 0 }).h
+  expect(Math.abs(hue(RIG.floorLamp.colour) - hue(RIG.lamp.colour))).toBeLessThan(0.03)
+  expect(RIG.floorLamp.decay).toBe(2)
+  // The sofa seats (about 0.5 m up) and the right wall above the TV are inside its distance.
+  const light = new Vector3(...layout.lights.floorLamp.position)
+  const [sofaX, , sofaZ] = layout.objects.sofa.position
+  const tvZ = layout.objects.tv.position[2]
+  for (const point of [new Vector3(sofaX, 0.5, sofaZ), new Vector3(ROOM.x1, 1.3, tvZ)]) {
+    expect(light.distanceTo(point), point.toArray().join(', ')).toBeLessThan(RIG.floorLamp.distance)
+  }
 })

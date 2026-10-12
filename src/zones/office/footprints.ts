@@ -25,7 +25,10 @@ export const SIZES: Record<string, Vec3> = {
   tv: [0.4, 0.42, 0.36],
   retroConsole: [0.62, 0.08, 0.3],
   sofa: [2.0, 0.8, 0.9],
-  logo: [0.9, 1.116, 0.12], // the backlit sign of Task 10 (plate around the 0.72 x 0.936 m mark), centred vertically on its position
+  floorLamp: [0.4, 1.55, 0.4], // FloorLamp: the 0.4 m drum shade on top, 1.55 m high (floorLamp.test.ts measures it)
+  // The backlit sign of Task 10: its plate around the 0.72 x 0.936 m mark, and the 10 cm cubes of the mark in front.
+  // Centred vertically on its position; its depth runs forward from it (LogoCubes builds it from local z 0).
+  logo: [0.9, 1.116, 0.1],
   clock: [0.33, 0.33, 0.05],
   cabinet: [1.15, 1.89, 0.5],
   coffeeTable: [0.6, 0.39, 1.21],
@@ -69,11 +72,15 @@ export function sceneBoxes(): Box[] {
   const boxes: Box[] = [boxFor('table', o.table, SIZES.table)]
   o.chairs.forEach((chair, i) => boxes.push(boxFor(`chair-${i}`, chair, SIZES.chair)))
   o.microphones.forEach((mic, i) => boxes.push(boxFor(`microphone-${i}`, mic, SIZES.microphone)))
-  for (const name of ['sideboard', 'lamp', 'laptop', 'tvStand', 'tv', 'retroConsole', 'sofa'] as const) {
+  for (const name of ['sideboard', 'lamp', 'laptop', 'tvStand', 'tv', 'retroConsole', 'sofa', 'floorLamp'] as const) {
     boxes.push(boxFor(name, o[name], SIZES[name]))
   }
+  // The sign: half its height below its position, half its depth in front of it (along its front, +z turned by rotationY).
   const [lx, ly, lz] = o.logo.position
-  boxes.push(boxFor('logo', { position: [lx, ly - SIZES.logo[1] / 2, lz], rotationY: o.logo.rotationY }, SIZES.logo))
+  const [, height, depth] = SIZES.logo
+  const turn = o.logo.rotationY ?? 0
+  const centre: Vec3 = [lx + (Math.sin(turn) * depth) / 2, ly - height / 2, lz + (Math.cos(turn) * depth) / 2]
+  boxes.push(boxFor('logo', { position: centre, rotationY: turn }, SIZES.logo))
   for (const name of ['clock', 'cabinet', 'coffeeTable', 'shelves'] as const) boxes.push(boxFor(name, o[name], SIZES[name]))
   o.pendants.forEach((pendant, i) => boxes.push(boxFor(`pendant-${i}`, pendant, SIZES.pendant)))
   o.frames.forEach((frame, i) => boxes.push(boxFor(`frame-${i}`, frame, SIZES.frame)))

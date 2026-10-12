@@ -17,6 +17,9 @@ export const RIG = {
   screenGlow: { colour: '#9fb8c8', distance: 4, decay: 2 },
   // The retro TV's picture lighting the lounge corner (no shadow), in screenGlow's colour: see crtGlowCandela.
   crtGlow: { candela: 7, angle: 1.0, penumbra: 1, distance: 4, decay: 2 },
+  // The floor lamp beside the sofa (no shadow), from the centre of its shade: candela = k x lampIntensity, see floorLampCandela.
+  // k tuned on the night overview (Task 10b): lounge wall by the TV 7.3 -> about 26 luma, sofa seats about 67, no hot spot.
+  floorLamp: { colour: '#ffcf96', distance: 5, decay: 2, k: 1.5 },
   emissivePeak: 2.5,
   environment: {
     resolution: 256,
@@ -40,6 +43,14 @@ export function crtGlowCandela(preset: Pick<Preset, 'night'>): number {
 }
 
 /**
+ * The floor lamp follows the sideboard lamp's level (Task 10b): off by day, on at sunset, brightest at night. Its drum
+ * shade glows through the shared lampShade material (emissive.ts), on the same level.
+ */
+export function floorLampCandela(preset: Pick<Preset, 'lampIntensity'>): number {
+  return RIG.floorLamp.k * preset.lampIntensity
+}
+
+/**
  * The lights of a quality tier, by scene name. The list never depends on the phase: a light that a phase switches
  * off stays mounted at intensity 0, because a change in the number of lights recompiles every material.
  */
@@ -51,6 +62,7 @@ export function rigLights(settings: QualitySettings): { name: string; kind: RigL
     { name: 'lamp-light', kind: 'spot' },
     { name: 'screen-glow', kind: 'point' },
     { name: 'crt-glow', kind: 'spot' },
+    { name: 'floor-lamp-light', kind: 'point' },
   ]
   if (settings.accentLights) {
     CEILING_LINES.forEach((_, i) => lights.push({ name: `ceiling-light-${i}`, kind: 'rectArea' }))

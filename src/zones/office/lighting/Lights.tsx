@@ -4,7 +4,7 @@ import type { QualitySettings } from '../../../app/quality'
 import { CEILING_LINES, layout } from '../layout'
 import { useLightingApplier } from './live'
 import { SUN_TARGET } from './presets'
-import { RIG, crtGlowCandela, rigLights } from './rig'
+import { RIG, crtGlowCandela, floorLampCandela, rigLights } from './rig'
 
 let areaLightTables: Promise<void> | null = null
 
@@ -37,6 +37,7 @@ export function Lights({ settings }: { settings: QualitySettings }) {
   const lamp = useRef<SpotLight>(null)
   const glow = useRef<PointLight>(null)
   const crt = useRef<SpotLight>(null)
+  const floorLamp = useRef<PointLight>(null)
   const pendant = useRef<PointLight>(null)
   const ceiling = useRef<(RectAreaLight | null)[]>([])
   const sunTarget = useMemo(() => new Object3D(), [])
@@ -82,6 +83,7 @@ export function Lights({ settings }: { settings: QualitySettings }) {
     if (lamp.current) lamp.current.intensity = p.lampIntensity
     if (glow.current) glow.current.intensity = p.screenGlow
     if (crt.current) crt.current.intensity = crtGlowCandela(p)
+    if (floorLamp.current) floorLamp.current.intensity = floorLampCandela(p)
     for (const light of ceiling.current) if (light) light.intensity = RIG.ceilingLines.nits * p.ceiling
     if (pendant.current) pendant.current.intensity = RIG.pendant.candela * p.ceiling
   })
@@ -126,6 +128,17 @@ export function Lights({ settings }: { settings: QualitySettings }) {
         penumbra={RIG.crtGlow.penumbra}
         distance={RIG.crtGlow.distance}
         decay={RIG.crtGlow.decay}
+        intensity={0}
+      />
+    ),
+    'floor-lamp-light': (
+      <pointLight
+        ref={floorLamp}
+        name="floor-lamp-light"
+        position={layout.lights.floorLamp.position}
+        color={RIG.floorLamp.colour}
+        distance={RIG.floorLamp.distance}
+        decay={RIG.floorLamp.decay}
         intensity={0}
       />
     ),

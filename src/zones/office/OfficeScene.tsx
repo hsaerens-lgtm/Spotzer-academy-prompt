@@ -24,7 +24,7 @@ export function OfficeScene() {
   const settings = useQualitySettings()
   const materials = useMaterials()
   useEmissiveLevels(materials)
-  const { table, chairs, microphones, sideboard, lamp, laptop, tvStand, tv, retroConsole, sofa, logo, shelves } = layout.objects
+  const { table, chairs, microphones, sideboard, lamp, laptop, tvStand, tv, retroConsole, sofa, floorLamp, logo, shelves } = layout.objects
   return (
     <>
       <color attach="background" args={[brand.ink]} />
@@ -52,6 +52,7 @@ export function OfficeScene() {
         <SceneObject object="retroConsole" name="retroConsole" position={retroConsole.position} rotation-y={retroConsole.rotationY} />
       </Interactive>
       <SceneObject object="sofa" name="sofa" position={sofa.position} rotation-y={sofa.rotationY} />
+      <SceneObject object="floorLamp" name="floorLamp" position={floorLamp.position} rotation-y={floorLamp.rotationY} />
       <SceneObject object="logoCubes" name="logo" position={logo.position} rotation-y={logo.rotationY} />
       <SceneObject object="shelves" name="shelves" position={shelves.position} rotation-y={shelves.rotationY} />
       <WallScreen3D />

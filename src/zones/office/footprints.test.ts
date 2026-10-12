@@ -32,6 +32,17 @@ test('hanging boxes extend below their hook', () => {
   expect((logo.min[1] + logo.max[1]) / 2).toBeCloseTo(layout.objects.logo.position[1])
 })
 
+// Task 10 review: LogoCubes builds the sign from local z 0 forward (a 1 cm plate, the 10 cm cubes of the mark).
+test('the sign box is its real volume: from its position forward, centred on it across the wall', () => {
+  const logo = named('logo')
+  const [x, y, z] = layout.objects.logo.position
+  expect(SIZES.logo).toEqual([0.9, 1.116, 0.1])
+  expect(logo.min[2]).toBeCloseTo(z)
+  expect(logo.max[2]).toBeCloseTo(z + SIZES.logo[2])
+  expect((logo.min[0] + logo.max[0]) / 2).toBeCloseTo(x)
+  expect((logo.min[1] + logo.max[1]) / 2).toBeCloseTo(y)
+})
+
 test('segmentHitsBox finds crossings and misses', () => {
   const unit: Box = { name: 'unit', min: [0, 0, 0], max: [1, 1, 1] }
   expect(segmentHitsBox([-1, 0.5, 0.5], [2, 0.5, 0.5], unit)).toBe(true) // straight through

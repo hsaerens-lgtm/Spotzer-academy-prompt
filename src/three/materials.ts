@@ -118,10 +118,12 @@ export function buildMaterials(sets: TextureSets) {
     screenOff: markExempt(new MeshStandardMaterial({ name: 'screenOff', color: brand.ink, roughness: 0.3, metalness: 0.1 }), 'screen'),
     limeGlow: glow('limeGlow', brand.lime, 0.8),
     mintGlow: glow('mintGlow', brand.mint, 0.6),
-    // Logo, sign and ceiling lights: their emissive intensity follows the time of day (lighting/emissive.ts, Task 7).
+    // Logo, sign and ceiling lights: their emissive intensity follows the time of day (lighting/emissive.ts, Task 7),
+    // except the ink squares of the mark: a faint constant glow, set here only (light on the wall by day, dark
+    // against the lit plate at night).
     logoLime: glow('logoLime', brand.lime, 0.4),
     logoMint: glow('logoMint', brand.mint, 0.4),
-    logoInk: glow('logoInk', brand.onDark, 0.2),
+    logoInk: glow('logoInk', brand.onDark, 0.1),
     signBack: markExempt(
       new MeshStandardMaterial({ name: 'signBack', color: brand.surface1, emissive: brand.onDark, emissiveIntensity: 0 }),
       'emissive',

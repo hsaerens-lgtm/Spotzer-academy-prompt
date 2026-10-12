@@ -116,7 +116,8 @@ test('glass is transparent and marked as glass', () => {
     expect(m[key].userData.auditExempt, key).toBe('emissive')
   }
   expect([m.signBack.emissiveIntensity, m.ceilingStrip.emissiveIntensity, m.lampShade.emissiveIntensity]).toEqual([0, 0, 0])
-  expect([m.limeGlow.emissiveIntensity, m.mintGlow.emissiveIntensity, m.logoInk.emissiveIntensity]).toEqual([0.8, 0.6, 0.2])
+  // The ink squares of the sign glow faintly and constantly: built at 0.1, which no applier changes (lighting/emissive.ts).
+  expect([m.limeGlow.emissiveIntensity, m.mintGlow.emissiveIntensity, m.logoInk.emissiveIntensity]).toEqual([0.8, 0.6, 0.1])
   expect(m.porcelain).toMatchObject({ roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.08 })
 })
 

@@ -2,7 +2,7 @@ import { CRT_SCREEN } from '../../three/assets'
 import { PARALLAX, makeRail } from './camera/railMath'
 import { SIZES, sceneBoxes, segmentHitsBox, type Box } from './footprints'
 import { SCREEN_BANDS, glazingFraction, projectBox, projectPoint } from './framing'
-import { GLAZING, ROOM, SLAT_WALL, TABLE, chairRing, layout, tableHalfWidthAt, type Pose, type Vec3 } from './layout'
+import { CAMERA, GLAZING, ROOM, SLAT_WALL, TABLE, chairRing, layout, tableHalfWidthAt, type Pose, type Vec3 } from './layout'
 import { SCREEN_PX, screenDistanceFactor } from './WallScreen3D'
 
 /*
@@ -43,6 +43,11 @@ const union = (name: string, a: Box, b: Box): Box => ({
 /** Names of the boxes, other than `allowed`, that the segment a -> b touches. */
 const blockers = (a: Vec3, b: Vec3, allowed: string[]) =>
   boxes.filter((box) => !allowed.includes(box.name) && segmentHitsBox(a, b, box)).map((box) => box.name)
+/** Whether two boxes share some volume (faces that only touch do not count). */
+const overlap = (a: Box, b: Box) => [0, 1, 2].every((k) => Math.min(a.max[k], b.max[k]) - Math.max(a.min[k], b.min[k]) > 1e-9)
+/** Names of the other boxes that share some volume with `box`. */
+const clashes = (box: Box) => boxes.filter((other) => other !== box && overlap(other, box)).map((other) => other.name)
+const grown = (box: Box, by: number): Box => ({ name: box.name, min: box.min.map((v) => v - by) as Vec3, max: box.max.map((v) => v + by) as Vec3 })
 const overview = (): Pose => layout.rail[0]
 /** The retro corner: the TV and the console together. */
 const retroCorner = () => union('retroCorner', named('tv'), named('retroConsole'))
@@ -137,6 +142,50 @@ test('the clock hangs on the back wall, clear of the screen frame and the logo',
   expect(clock.min[0]).toBeGreaterThan(frameRight)
   expect(clock.max[0]).toBeLessThan(logo.min[0])
   expect(clock.max[1]).toBeLessThan(ROOM.height)
+})
+
+// Task 10 review: the sign is built from its position forward (LogoCubes), so its position is the back of its plate.
+test('the sign hangs on the back wall, its plate a few millimetres off the plaster', () => {
+  const logo = named('logo')
+  expect(logo.min[2]).toBeCloseTo(layout.objects.logo.position[2])
+  expect(logo.min[2] - ROOM.z0).toBeGreaterThan(0.001) // no z-fighting with the wall
+  expect(logo.min[2] - ROOM.z0).toBeLessThanOrEqual(0.01) // not floating in front of it
+  expect(clashes(logo)).toEqual([])
+  // Clear of the wall screen and its frame, where drei's occlusion leaves the DOM page showing through the canvas.
+  const frameRight = layout.screen.position[0] + (layout.screen.size[0] + 0.03) / 2
+  expect(logo.min[0]).toBeGreaterThan(frameRight)
+})
+
+// Task 10b: the floor lamp of the lounge corner.
+test('the floor lamp stands on the floor beside the sofa, clear of every other object', () => {
+  const lamp = named('floorLamp')
+  const sofa = named('sofa')
+  expect(lamp.min[1]).toBeCloseTo(0)
+  expect(clashes(lamp)).toEqual([])
+  // Beside the sofa: at most 40 cm from it across the floor.
+  const gap = Math.max(...[0, 2].map((k) => Math.max(sofa.min[k] - lamp.max[k], lamp.min[k] - sofa.max[k])))
+  expect(gap).toBeGreaterThan(0)
+  expect(gap).toBeLessThanOrEqual(0.4)
+})
+
+test('the floor lamp hides neither the TV, the console nor the laptop from the overview, and shows in it', () => {
+  const lamp = named('floorLamp')
+  for (const name of ['tv', 'retroConsole', 'laptop']) {
+    expect(segmentHitsBox(overview().position, centre(named(name)), lamp), name).toBe(false)
+  }
+  expectInFrame(projectPoint(overview(), WIDE, layout.lights.floorLamp.position), [0.05, 0.95], [hudBottom, panelTop], 'floor lamp shade')
+})
+
+test('the flight to the TV never passes through the floor lamp', () => {
+  // The camera flies straight from wherever it is on the rail (CameraRig, lerpPose); its near plane stays out of the lamp too.
+  const lamp = grown(named('floorLamp'), CAMERA.near)
+  const sample = makeRail(layout.rail)
+  const { position, target } = layout.flights.tv
+  for (let i = 0; i <= 20; i++) {
+    const from = sample(i / 20).position.toArray() as Vec3
+    expect(segmentHitsBox(from, position, lamp), `from the rail at ${i / 20}`).toBe(false)
+  }
+  expect(segmentHitsBox(position, target, lamp)).toBe(false)
 })
 
 test('every object stays inside the room', () => {

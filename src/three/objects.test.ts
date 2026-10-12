@@ -15,6 +15,12 @@ test('every object name has a source', () => {
   expect(hasSource('sofa', {})).toBe(true)
 })
 
+test('the floor lamp of the lounge corner is drawn in code', () => {
+  expect(OBJECT_NAMES).toContain('floorLamp')
+  expect(resolveObject('floorLamp')).toEqual({ kind: 'procedural' })
+  expect(hasSource('floorLamp', {})).toBe(true)
+})
+
 test('declared models live under assets/models', () => {
   const catalogue = (Object.keys(MODELS) as ModelId[]).map(modelUrl)
   for (const [name, url] of Object.entries(glbModels)) {
