@@ -72,19 +72,17 @@ Identiques à la spec 1 : usage interne, PC uniquement, anglais d'abord (multili
 
 Fond `ink` avec trame de points. Fenêtres **fixes** (pas de glisser-déposer), chrome rétro : barre de titre lime (`PROMPT_STUDIO.EXE — MISSION 1`) ou gris-bleu pour les fenêtres secondaires, bordures biseautées, police VT323 pour le chrome.
 
-Disposition (1600 × 900, mode compact jusqu'à 1280 × 600) :
+Disposition (1600 × 900, mode compact jusqu'à 1280 × 600), en deux colonnes depuis l'allègement du 2026-10-13 (le studio à gauche, le résultat à droite ; plus d'icônes du bureau ni de colonne des missions) :
 
 | Zone | Contenu |
 |---|---|
-| Icônes du bureau (gauche) | Missions · My prompts · Corrector |
-| `MISSIONS.EXE` (colonne gauche) | 3 niveaux × 2 missions, coches lime pour les missions réussies, badge « Start here » sur la première non réussie de l'ordre conseillé |
-| `PROMPT_STUDIO.EXE` (centre) | La situation, puis l'éditeur (blocs ou texte libre), boutons **Build & test** (`Ctrl+Entrée`) et **Copy my prompt** |
-| `BUILDER.EXE` (droite, haut) | Le chantier 3D (§3.5), jauge de stabilité, boutons Skip / Reset view |
-| `AI_OUTPUT.TXT` (droite, bas) | La réponse simulée et son niveau (`HOLDS · EXCELLENT`, `LEANING · PASSABLE`, `COLLAPSED · VAGUE`) ; bascule **Before / After** après réussite |
+| `PROMPT_STUDIO.EXE` (gauche) | Bouton **All missions 2/6** dans la barre de titre : la liste des missions (3 niveaux × 2 missions, coches lime pour les missions réussies, badge « Start here » sur la première non réussie de l'ordre conseillé) se déroule par-dessus le studio et se referme au choix d'une mission, avec Échap ou par un clic ailleurs. Puis la situation, l'éditeur (blocs ou texte libre), boutons **Build & test** (`Ctrl+Entrée`) et **Copy my prompt** |
+| `BUILDER.EXE` (droite, haut) | Le chantier 3D (§3.5), jauge de stabilité, boutons Skip / Reset view ; occupe toute la hauteur au-dessus d'Ada tant qu'aucun test n'a été lancé |
+| `AI_OUTPUT.TXT` (droite, milieu) | Apparaît avec le premier résultat (dès l'ouverture en niveau 3) : la réponse simulée et son niveau (`HOLDS · EXCELLENT`, `LEANING · PASSABLE`, `COLLAPSED · VAGUE`) ; bascule **Before / After** après réussite |
 | Ada (coin bas droit) | Bulle de commentaire + boutons contextuels |
 | Barre des tâches | Bouton `■ ATHENA` (menu : Missions, My prompts, Corrector, Back to the office), onglets des fenêtres, Sound, ← Back to the office, compteur `2/6` |
 
-`MY_PROMPTS.TXT` et `CORRECTOR.EXE` s'ouvrent à la place des fenêtres centre + droite et se referment pour revenir aux missions.
+`MY_PROMPTS.TXT` et `CORRECTOR.EXE` s'ouvrent depuis la barre des tâches à la place de la vue des missions (`MY_PROMPTS.TXT` sur toute la largeur, `CORRECTOR.EXE` dans la colonne du studio avec son propre chantier et sa propre sortie) ; l'onglet Missions y ramène.
 
 ### 3.3 Ada en 2D
 

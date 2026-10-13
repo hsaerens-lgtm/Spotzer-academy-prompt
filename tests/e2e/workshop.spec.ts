@@ -8,7 +8,7 @@ async function openWorkshop(page: Page, query = '') {
   // A hash-only change would not reload the page: go through a blank page to start fresh.
   await page.goto('about:blank')
   await page.goto(`/#/workshop${query}`)
-  await expect(page.getByRole('region', { name: 'MISSIONS.EXE' })).toBeVisible({ timeout: 60_000 })
+  await expect(page.getByRole('navigation', { name: 'Taskbar' })).toBeVisible({ timeout: 60_000 })
 }
 
 async function openOffice(page: Page) {
@@ -35,7 +35,7 @@ async function adaDone(page: Page) {
   await expect(page.locator('.ws-bubble__untyped')).toHaveCount(0, { timeout: 15_000 })
 }
 
-/** Where the focus is: its area (a window's title, Ada, the taskbar or the desktop icons) and the control's name. */
+/** Where the focus is: its area (a window's title, Ada or the taskbar) and the control's name. */
 const focusStop = (page: Page) =>
   page.evaluate(() => {
     const element = document.activeElement
@@ -105,7 +105,7 @@ async function simulateServer(page: Page, online: boolean) {
 test('from the office laptop to a passed first mission, and back with the counter', async ({ page }) => {
   await openOffice(page)
   await page.getByRole('button', { name: 'Prompt workshop' }).click()
-  await expect(page.getByRole('region', { name: 'MISSIONS.EXE' })).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('region', { name: STUDIO_1 })).toBeVisible({ timeout: 30_000 })
 
   await fill(page, 'Role block', 'An account manager at a web agency')
   await fill(page, 'Task block', 'Write an email to the client')
@@ -121,7 +121,12 @@ test('from the office laptop to a passed first mission, and back with the counte
   await fill(page, 'Format block', 'Friendly and apologetic, under 120 words')
   await buildAndWait(page, 'HOLDS \u00B7 EXCELLENT')
   await expect(page.getByRole('navigation', { name: 'Taskbar' }).getByText('1/6 missions')).toBeVisible()
+  // The studio's mission picker counts it too, and ticks it in its list.
+  const picker = page.getByRole('region', { name: STUDIO_1 }).getByRole('button', { name: 'All missions 1/6' })
+  await picker.click()
   await expect(page.getByRole('navigation', { name: 'Missions' }).getByRole('button', { name: 'The delayed website (passed)' })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('navigation', { name: 'Missions' })).toHaveCount(0)
   expect((await state(page)).progress.workshop?.passed).toEqual(['delayed-website'])
   await adaDone(page)
   await page.screenshot({ path: `${EVIDENCE}/02-mission-holds.png` })
@@ -153,10 +158,11 @@ test('the browser history: one entry into the workshop, none inside it, Back lan
   const before = await entries()
 
   await page.getByRole('button', { name: 'Prompt workshop' }).click()
-  await expect(page.getByRole('region', { name: 'MISSIONS.EXE' })).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('region', { name: STUDIO_1 })).toBeVisible({ timeout: 30_000 })
   await expect(page).toHaveURL(/#\/workshop\?mission=delayed-website$/)
   expect(await entries()).toBe(before + 1)
 
+  await page.getByRole('region', { name: STUDIO_1 }).getByRole('button', { name: /All missions/ }).click()
   await page.getByRole('navigation', { name: 'Missions' }).getByRole('button', { name: 'A post for a florist' }).click()
   await expect(page).toHaveURL(/#\/workshop\?mission=florist-post$/)
   const taskbar = page.getByRole('navigation', { name: 'Taskbar' })
@@ -254,7 +260,7 @@ test('without WebGL the workshop shows the plan view', async ({ page }) => {
   })
   await page.goto('/')
   await page.getByRole('button', { name: 'Prompt workshop' }).click()
-  await expect(page.getByRole('region', { name: 'MISSIONS.EXE' })).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('region', { name: STUDIO_1 })).toBeVisible({ timeout: 30_000 })
   await fill(page, 'Task block', 'Write an email')
   await page.getByRole('button', { name: 'Build & test' }).click()
   await expect(page.getByRole('list', { name: /Plan view/ })).toBeVisible()
@@ -268,7 +274,7 @@ test('from reading mode the workshop builds in plan view', async ({ page }) => {
   await page.getByRole('button', { name: 'Reading mode' }).click()
   await expect(page.getByRole('main', { name: 'Reading mode' })).toBeVisible()
   await page.getByRole('button', { name: 'Prompt workshop' }).click()
-  await expect(page.getByRole('region', { name: 'MISSIONS.EXE' })).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('region', { name: STUDIO_1 })).toBeVisible({ timeout: 30_000 })
   await fill(page, 'Task block', 'Write an email')
   await page.getByRole('button', { name: 'Build & test' }).click()
   const builder = page.getByRole('region', { name: 'BUILDER.EXE' })
@@ -283,8 +289,8 @@ test('a whole mission works from the keyboard alone, and its results are announc
   const announcer = page.getByTestId('workshop-announcer')
   await openWorkshop(page)
 
-  // From the start of the page to the first block: the desktop icons, the missions, then the editor.
-  expect(await tabTo(page, 'Role block')).toEqual(['Workshop desktop', 'MISSIONS.EXE', STUDIO_1])
+  // From the start of the page to the first block: the studio's mission picker, then the editor.
+  expect(await tabTo(page, 'Role block')).toEqual([STUDIO_1])
   await page.keyboard.press('Tab')
   await page.keyboard.type('Write an email')
   await page.keyboard.press('Control+Enter')
@@ -361,7 +367,7 @@ test.describe('smallest supported viewport (1280 x 600)', () => {
     await buildAndWait(page, 'COLLAPSED \u00B7 VAGUE')
     await adaDone(page)
     await page.screenshot({ path: `${EVIDENCE}/07-small-screen.png` })
-    for (const name of ['MISSIONS.EXE', STUDIO_1, 'BUILDER.EXE', 'AI_OUTPUT.TXT']) {
+    for (const name of [STUDIO_1, 'BUILDER.EXE', 'AI_OUTPUT.TXT']) {
       const box = await page.getByRole('region', { name }).boundingBox()
       expect(box && box.y + box.height).toBeLessThanOrEqual(600)
     }
@@ -407,7 +413,7 @@ test.describe('all six missions passed, smallest supported viewport (1280 x 600)
   test('Ada says it all, in full', async ({ page }) => {
     await passLastMission(page)
     await page.screenshot({ path: `${EVIDENCE}/11-small-all-done.png` })
-    for (const name of ['MISSIONS.EXE', 'PROMPT_STUDIO.EXE \u2014 MISSION 5', 'BUILDER.EXE', 'AI_OUTPUT.TXT']) {
+    for (const name of ['PROMPT_STUDIO.EXE \u2014 MISSION 5', 'BUILDER.EXE', 'AI_OUTPUT.TXT']) {
       const box = await page.getByRole('region', { name }).boundingBox()
       expect(box && box.y + box.height).toBeLessThanOrEqual(600)
     }
@@ -428,7 +434,7 @@ async function passWithBonus(page: Page) {
   await adaDone(page)
   expect(await bubble.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(0)
   const viewport = page.viewportSize()!
-  const windows = ['MISSIONS.EXE', 'PROMPT_STUDIO.EXE — MISSION 5', 'BUILDER.EXE', 'AI_OUTPUT.TXT'].map((name) => page.getByRole('region', { name }))
+  const windows = ['PROMPT_STUDIO.EXE — MISSION 5', 'BUILDER.EXE', 'AI_OUTPUT.TXT'].map((name) => page.getByRole('region', { name }))
   for (const area of [...windows, ada]) {
     const box = (await area.boundingBox())!
     expect(box.y + box.height).toBeLessThanOrEqual(viewport.height)

@@ -39,9 +39,11 @@ export interface MissionsViewProps {
   renderBuilder: (props: BuilderSlotProps) => ReactNode
   /** Opened by "Next mission": the button that had the focus went away, so the first editor takes it. */
   focusOnOpen?: boolean
+  /** The mission picker, in the studio's title bar (the desktop owns the list of missions). */
+  picker?: ReactNode
 }
 
-export function MissionsView({ missionId, onNextMission, renderBuilder, focusOnOpen = false }: MissionsViewProps) {
+export function MissionsView({ missionId, onNextMission, renderBuilder, focusOnOpen = false, picker }: MissionsViewProps) {
   const { t } = useTranslation()
   const store = useWorkshopStore()
   const content = useWorkshop((s) => s.content)
@@ -160,7 +162,6 @@ export function MissionsView({ missionId, onNextMission, renderBuilder, focusOnO
   // The compare toggle keeps one label; aria-pressed carries its state.
   const actionLabel = (action: AdaAction) => t(action === 'compare' ? 'workshop.output.compare' : `workshop.ada.${action}`)
 
-  // The mission list is the workshop's (it stays on screen in every program), so this view starts at the studio.
   return (
     <>
       <PromptStudio
@@ -177,6 +178,7 @@ export function MissionsView({ missionId, onNextMission, renderBuilder, focusOnO
         onReset={() => store.getState().resetDraft(missionId)}
         revealed={revealed}
         reading={reading}
+        tools={picker}
       />
       {/* A fix mission's starter (attempt 0) is not the learner's test: its building is already standing, collapsed (spec 3.6). */}
       {renderBuilder({
@@ -188,14 +190,17 @@ export function MissionsView({ missionId, onNextMission, renderBuilder, focusOnO
         onBlockClick,
         onReading: setReading,
       })}
-      <AiOutput
-        className="ws-area-output"
-        mission={mission}
-        session={session}
-        revealed={revealed}
-        compare={compare && canCompare}
-        labels={content.labels}
-      />
+      {/* Nothing to read before the first test: the builder then has the right-hand column to itself. */}
+      {attempt && (
+        <AiOutput
+          className="ws-area-output"
+          mission={mission}
+          session={session}
+          revealed={revealed}
+          compare={compare && canCompare}
+          labels={content.labels}
+        />
+      )}
       <AdaBubble
         text={message.text === dismissed ? null : message.text}
         mood={message.mood}

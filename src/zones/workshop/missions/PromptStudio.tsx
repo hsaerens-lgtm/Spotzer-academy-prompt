@@ -1,4 +1,4 @@
-import { useImperativeHandle, useRef, type KeyboardEvent, type Ref } from 'react'
+import { useImperativeHandle, useRef, type KeyboardEvent, type ReactNode, type Ref } from 'react'
 import { useTranslation } from 'react-i18next'
 import { assemblePrompt, blockResult, isBlank } from '../../../workshop/engine/evaluate'
 import type { Span } from '../../../workshop/engine/text'
@@ -31,10 +31,12 @@ export interface PromptStudioProps {
   revealed: boolean
   /** The structural block the AI is reading in the builder right now. */
   reading?: CoreBlock | null
+  /** Controls in the title bar: the mission picker. */
+  tools?: ReactNode
 }
 
 export function PromptStudio(props: PromptStudioProps) {
-  const { ref, className, mission, number, session, labels, onBlock, onAddBlock, onText, onTest, onReset, revealed, reading = null } = props
+  const { ref, className, mission, number, session, labels, onBlock, onAddBlock, onText, onTest, onReset, revealed, reading = null, tools } = props
   const { t } = useTranslation()
   const fields = useRef(new Map<BlockType, HTMLTextAreaElement>())
   const text = useRef<HTMLTextAreaElement>(null)
@@ -75,7 +77,7 @@ export function PromptStudio(props: PromptStudioProps) {
   }
 
   return (
-    <Window title={t('workshop.windows.studio', { number })} variant="primary" className={className}>
+    <Window title={t('workshop.windows.studio', { number })} variant="primary" className={className} tools={tools}>
       <div className="ws-brief">
         <h3 className="ws-brief__title">{t('workshop.studio.situation')}</h3>
         <p className="ws-brief__text">{mission.situation}</p>

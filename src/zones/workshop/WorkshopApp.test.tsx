@@ -12,6 +12,15 @@ async function renderApp() {
   return act(async () => render(<WorkshopApp />))
 }
 
+/** The studio's "All missions" button, which opens the mission list. */
+const picker = () => within(screen.getByRole('region', { name: /PROMPT_STUDIO\.EXE/ })).getByRole('button', { name: /All missions/ })
+
+/** Opens the mission picker and picks a mission from it. */
+async function pickMission(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
+  await user.click(picker())
+  await user.click(within(screen.getByRole('navigation', { name: 'Missions' })).getByRole('button', { name }))
+}
+
 beforeEach(() => {
   resetAppStore({ zone: 'workshop', webgl: 'unavailable', reducedMotion: true })
   resetWorkshopStore()
@@ -21,9 +30,12 @@ afterEach(() => vi.unstubAllGlobals())
 
 test('opens on the suggested mission and writes it into the route', async () => {
   await renderApp()
-  expect(screen.getByRole('region', { name: 'MISSIONS.EXE' })).toBeInTheDocument()
   expect(screen.getByRole('region', { name: 'PROMPT_STUDIO.EXE \u2014 MISSION 1' })).toBeInTheDocument()
   expect(appStore.getState().workshopRoute).toEqual({ mission: 'delayed-website', app: null })
+  // The missions wait behind the studio's picker; no desktop icons repeat the taskbar.
+  expect(picker()).toHaveAttribute('aria-expanded', 'false')
+  expect(screen.queryByRole('navigation', { name: 'Missions' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('group', { name: 'Workshop desktop' })).not.toBeInTheDocument()
 })
 
 test('an unknown mission in the URL falls back to the suggested one', async () => {
@@ -37,9 +49,9 @@ test('an unknown mission in the URL falls back to the suggested one', async () =
 test('the mission list and the programs drive the route', async () => {
   const user = userEvent.setup()
   await renderApp()
-  await user.click(within(screen.getByRole('navigation', { name: 'Missions' })).getByRole('button', { name: /The vague Services page/ }))
+  await pickMission(user, /The vague Services page/)
   expect(appStore.getState().workshopRoute).toEqual({ mission: 'plumber-services', app: null })
-  await user.click(within(screen.getByRole('group', { name: 'Workshop desktop' })).getByRole('button', { name: 'Corrector' }))
+  await user.click(within(screen.getByRole('navigation', { name: 'Taskbar' })).getByRole('button', { name: 'Corrector' }))
   expect(appStore.getState().workshopRoute).toEqual({ mission: 'plumber-services', app: 'corrector' })
   expect(await screen.findByText('The corrector is offline.')).toBeInTheDocument()
   await user.click(within(screen.getByRole('navigation', { name: 'Taskbar' })).getByRole('button', { name: 'My prompts' }))
@@ -79,36 +91,59 @@ const missionList = () => within(screen.getByRole('navigation', { name: 'Mission
 const ada = () => within(screen.getByRole('complementary', { name: 'Ada' }))
 
 test('the list marks the current, the passed and the suggested missions', async () => {
+  const user = userEvent.setup()
   appStore.getState().passWorkshopMission('delayed-website', 'Prompt', MISSION_IDS)
   appStore.getState().setWorkshopRoute({ mission: 'florist-post', app: null })
   await renderApp()
+  expect(picker()).toHaveAccessibleName('All missions 1/6')
+  await user.click(picker())
   expect(missionList().getByRole('button', { name: /A post for a florist/ })).toHaveAttribute('aria-current', 'true')
   expect(missionList().getByRole('button', { name: /The delayed website \(passed\)/ })).toBeInTheDocument()
   expect(missionList().getByRole('button', { name: /Meeting notes for your manager.*Start here/ })).toBeInTheDocument()
 })
 
-// Spec 3.2: My prompts and the corrector open in place of the centre and right windows; the mission list stays.
-test('the mission list stays in every program, and a mission picked from it keeps the focus', async () => {
+// The missions open from the studio's title bar, over the studio, and close again without losing the focus.
+test('the mission picker opens over the studio, closes with Escape or a click elsewhere, and keeps the focus', async () => {
   const user = userEvent.setup()
   await renderApp()
-  const desktop = within(screen.getByRole('group', { name: 'Workshop desktop' }))
-  await user.click(desktop.getByRole('button', { name: 'My prompts' }))
-  expect(screen.getByRole('region', { name: 'MY_PROMPTS.TXT' })).toBeInTheDocument()
-  expect(screen.getByRole('region', { name: 'MISSIONS.EXE' })).toBeInTheDocument()
-  expect(screen.queryByRole('region', { name: /PROMPT_STUDIO\.EXE/ })).not.toBeInTheDocument()
-  await user.click(desktop.getByRole('button', { name: 'Corrector' }))
-  expect(await screen.findByText('The corrector is offline.')).toBeInTheDocument()
-  expect(screen.getByRole('region', { name: 'MISSIONS.EXE' })).toBeInTheDocument()
+  await user.click(picker())
+  expect(picker()).toHaveAttribute('aria-expanded', 'true')
+  // The current mission takes the focus.
+  expect(missionList().getByRole('button', { name: /The delayed website/ })).toHaveFocus()
+  await user.keyboard('{Escape}')
+  expect(screen.queryByRole('navigation', { name: 'Missions' })).not.toBeInTheDocument()
+  expect(picker()).toHaveFocus()
+  // Escape closed the picker only: Ada's bubble is still there.
+  expect(ada().getByText(/First mission: a client email with bad news/, { selector: '.sr-only' })).toBeInTheDocument()
 
-  const florist = missionList().getByRole('button', { name: /A post for a florist/ })
-  await user.click(florist)
+  await user.click(picker())
+  await user.click(document.body)
+  expect(screen.queryByRole('navigation', { name: 'Missions' })).not.toBeInTheDocument()
+
+  await pickMission(user, /A post for a florist/)
   expect(appStore.getState().workshopRoute).toEqual({ mission: 'florist-post', app: null })
   expect(screen.getByRole('region', { name: 'PROMPT_STUDIO.EXE \u2014 MISSION 3' })).toBeInTheDocument()
-  expect(florist).toHaveFocus()
-  const meeting = missionList().getByRole('button', { name: /Meeting notes for your manager/ })
-  await user.click(meeting)
-  expect(screen.getByRole('region', { name: 'PROMPT_STUDIO.EXE \u2014 MISSION 2' })).toBeInTheDocument()
-  expect(meeting).toHaveFocus()
+  expect(screen.queryByRole('navigation', { name: 'Missions' })).not.toBeInTheDocument()
+  // The new mission's studio has its own picker: the focus lands on it, as it was on the old one.
+  expect(picker()).toHaveFocus()
+  // The same mission again opens nothing new.
+  await pickMission(user, /A post for a florist/)
+  expect(screen.getByRole('region', { name: 'PROMPT_STUDIO.EXE \u2014 MISSION 3' })).toBeInTheDocument()
+  expect(picker()).toHaveFocus()
+})
+
+// Spec 3.2: My prompts and the corrector open in place of the missions view, without the mission picker.
+test('My prompts and the corrector open from the taskbar, without the mission picker', async () => {
+  const user = userEvent.setup()
+  await renderApp()
+  const bar = within(screen.getByRole('navigation', { name: 'Taskbar' }))
+  await user.click(bar.getByRole('button', { name: 'My prompts' }))
+  expect(screen.getByRole('region', { name: 'MY_PROMPTS.TXT' })).toBeInTheDocument()
+  expect(screen.queryByRole('region', { name: /PROMPT_STUDIO\.EXE/ })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /All missions/ })).not.toBeInTheDocument()
+  await user.click(bar.getByRole('button', { name: 'Corrector' }))
+  expect(await screen.findByText('The corrector is offline.')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /All missions/ })).not.toBeInTheDocument()
 })
 
 // Task 9 note: each mission gets a fresh view, so what Ada said about one mission never follows to the next.
@@ -129,7 +164,7 @@ test('a mission opened from the list starts with its own Ada', async () => {
   await user.click(screen.getByRole('button', { name: 'Build & test' }))
   await user.click(ada().getByRole('button', { name: "It's already there" }))
   expect(ada().getByText(/Sorry, I missed it!/, { selector: '.sr-only' })).toBeInTheDocument()
-  await user.click(missionList().getByRole('button', { name: /Meeting notes for your manager/ }))
+  await pickMission(user, /Meeting notes for your manager/)
   expect(screen.getByRole('region', { name: 'PROMPT_STUDIO.EXE \u2014 MISSION 2' })).toBeInTheDocument()
   expect(ada().queryByText(/Sorry, I missed it!/, { selector: '.sr-only' })).not.toBeInTheDocument()
 })
@@ -165,8 +200,8 @@ test('switching missions or programs and coming back neither replays nor reports
     await waitFor(() => expect(getWorkshopStore().getState().announcement).toMatch(/^HOLDS \u00B7 EXCELLENT\./))
     const said = getWorkshopStore().getState().announcements
 
-    await user.click(missionList().getByRole('button', { name: /Meeting notes for your manager/ }))
-    await user.click(missionList().getByRole('button', { name: /The delayed website/ }))
+    await pickMission(user, /Meeting notes for your manager/)
+    await pickMission(user, /The delayed website/)
     expect(screen.getByText('HOLDS \u00B7 EXCELLENT')).toBeInTheDocument()
     const bar = within(screen.getByRole('navigation', { name: 'Taskbar' }))
     await user.click(bar.getByRole('button', { name: 'My prompts' }))
@@ -303,7 +338,7 @@ test('the corrector keeps its report across programs without announcing it again
 test('the corrector side windows speak about the corrector, offline too', async () => {
   const user = userEvent.setup()
   await renderApp()
-  await user.click(within(screen.getByRole('group', { name: 'Workshop desktop' })).getByRole('button', { name: 'Corrector' }))
+  await user.click(within(screen.getByRole('navigation', { name: 'Taskbar' })).getByRole('button', { name: 'Corrector' }))
   expect(await screen.findByText('The corrector is offline.')).toBeInTheDocument()
   expect(within(screen.getByRole('region', { name: 'BUILDER.EXE' })).getByText('The corrector is offline, so there is no building to inspect.')).toBeInTheDocument()
   expect(

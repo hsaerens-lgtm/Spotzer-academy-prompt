@@ -89,7 +89,7 @@ test('the real 3D laptop and the TV lead to their zones and back', async ({ page
   await expect(page.locator('.stage canvas')).toHaveCSS('position', 'absolute')
   await page.screenshot({ path: `${EVIDENCE}/03-hover-laptop.png` })
   await page.mouse.click(laptop!.x, laptop!.y)
-  await expect(page.getByRole('region', { name: 'MISSIONS.EXE' })).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('region', { name: /PROMPT_STUDIO\.EXE/ })).toBeVisible({ timeout: 30_000 })
   // The desktop fades in while Ada writes her first line: wait for both, so the picture is the same on every run.
   await expect(page.getByTestId('fader')).toHaveCSS('opacity', '0')
   await expect(page.locator('.ws-bubble__untyped')).toHaveCount(0)

@@ -31,9 +31,8 @@ export function AiOutput({ className, mission, session, revealed, compare, label
   const { first, last } = session
   return (
     <Window title={t('workshop.windows.output')} className={className}>
-      {!last ? (
-        <p className="ws-output__note">{t('workshop.output.empty')}</p>
-      ) : !revealed ? (
+      {/* The missions view opens this window with its first result. */}
+      {!last || !revealed ? (
         <p className="ws-output__note">{t('workshop.output.reading')}</p>
       ) : compare && first ? (
         <div className="ws-compare">

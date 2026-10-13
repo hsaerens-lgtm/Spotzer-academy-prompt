@@ -69,12 +69,23 @@ async function fillLetter(user: ReturnType<typeof userEvent.setup>, overrides: P
 beforeEach(() => resetAppStore({ reducedMotion: true }))
 afterEach(() => vi.useRealTimers())
 
-test('Ada introduces the mission and the output waits for a test', () => {
+test('Ada introduces the mission and the output window waits for a first test', async () => {
+  const user = userEvent.setup()
   renderView('delayed-website')
   expect(screen.getByRole('region', { name: 'PROMPT_STUDIO.EXE \u2014 MISSION 1' })).toBeInTheDocument()
   expect(adaSays(/First mission: a client email with bad news/)).toBeInTheDocument()
-  expect(screen.getByText('Press Build & test to see what the AI would write.')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Build & test' })).toBeDisabled()
+  // Nothing to read yet: no empty output window, the builder has the right-hand column to itself.
+  expect(screen.queryByRole('region', { name: 'AI_OUTPUT.TXT' })).not.toBeInTheDocument()
+  await fillLetter(user, { 'Context block': 'The website is late', 'Format block': 'Friendly' })
+  await user.click(screen.getByRole('button', { name: 'Build & test' }))
+  expect(within(screen.getByRole('region', { name: 'AI_OUTPUT.TXT' })).getByText('LEANING \u00b7 PASSABLE')).toBeInTheDocument()
+})
+
+// A fix mission opens on its starter's answer: the output window is there from the start (spec 3.6).
+test('a fix mission shows its starter answer at once', () => {
+  renderView('plumber-services')
+  expect(within(screen.getByRole('region', { name: 'AI_OUTPUT.TXT' })).getByText('COLLAPSED \u00b7 VAGUE')).toBeInTheDocument()
 })
 
 test('a thin context leans: passable answer, cardboard badge, Ada names the weak block', async () => {

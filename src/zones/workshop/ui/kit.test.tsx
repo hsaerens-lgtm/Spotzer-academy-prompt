@@ -7,7 +7,6 @@ import { WorkshopStoreProvider } from '../store'
 import { AdaBubble } from '../ada/AdaBubble'
 import { WorkshopAnnouncer } from '../WorkshopAnnouncer'
 import { BevelButton } from './BevelButton'
-import { DesktopIcons } from './DesktopIcons'
 import { Taskbar } from './Taskbar'
 import { Window } from './Window'
 
@@ -142,13 +141,6 @@ test('pressing the mouse inside the open menu keeps focus where it is, so the cl
   // Prevented default: Safari would otherwise blur the trigger first and close the menu before the click.
   expect(fireEvent.mouseDown(item)).toBe(false)
   expect(screen.getByRole('list', { name: 'Athena menu' })).toBeInTheDocument()
-})
-
-test('desktop icons open their program', async () => {
-  const onOpen = vi.fn()
-  render(<DesktopIcons onOpen={onOpen} />)
-  await userEvent.click(within(screen.getByRole('group', { name: 'Workshop desktop' })).getByRole('button', { name: 'Corrector' }))
-  expect(onOpen).toHaveBeenCalledWith('corrector')
 })
 
 test('the announcer is the workshop live region', () => {

@@ -80,14 +80,13 @@
   },
   "workshop": {
     "windows": {
-      "missions": "MISSIONS.EXE",
       "studio": "PROMPT_STUDIO.EXE — MISSION {{number}}",
       "builder": "BUILDER.EXE",
       "output": "AI_OUTPUT.TXT",
       "prompts": "MY_PROMPTS.TXT",
       "corrector": "CORRECTOR.EXE"
     },
-    "desktop": { "label": "Workshop desktop", "missions": "Missions", "prompts": "My prompts", "corrector": "Corrector" },
+    "desktop": { "missions": "Missions", "prompts": "My prompts", "corrector": "Corrector" },
     "taskbar": {
       "label": "Taskbar",
       "start": "ATHENA",
@@ -97,7 +96,7 @@
       "sound": "Sound"
     },
     "levels": { "1": "Level 1 · Build with blocks", "2": "Level 2 · Write it freely", "3": "Level 3 · Fix the prompt" },
-    "missions": { "listLabel": "Missions", "startHere": "Start here", "passed": "passed", "counter": "{{passed}}/{{total}}" },
+    "missions": { "pick": "All missions", "listLabel": "Missions", "startHere": "Start here", "passed": "passed", "counter": "{{passed}}/{{total}}" },
     "studio": {
       "situation": "The situation",
       "goal": "Your goal",
@@ -114,7 +113,6 @@
     "materials": { "stone": "stone", "wood": "wood", "cardboard": "cardboard", "hole": "a hole", "cracked": "cracked" },
     "materialBadge": { "stone": "STONE", "wood": "WOOD", "cardboard": "CARDBOARD", "hole": "HOLE", "cracked": "CRACKED" },
     "output": {
-      "empty": "Press Build & test to see what the AI would write.",
       "reading": "The AI is reading your building…",
       "tier": { "vague": "COLLAPSED · VAGUE", "passable": "LEANING · PASSABLE", "excellent": "HOLDS · EXCELLENT" },
       "before": "Before",

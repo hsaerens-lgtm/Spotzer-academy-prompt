@@ -26,7 +26,7 @@ test('shows the workshop and returns to the office', async () => {
   // findByRole's 1 s when the test files run in parallel. Wait for the import itself, then for the window.
   await loadZone('workshop')
   await renderApp()
-  expect(await screen.findByRole('region', { name: 'MISSIONS.EXE' })).toBeInTheDocument()
+  expect(await screen.findByRole('region', { name: /PROMPT_STUDIO\.EXE/ })).toBeInTheDocument()
   await userEvent.click(screen.getByRole('button', { name: 'Back to the office' }))
   await waitFor(() => expect(appStore.getState().zone).toBe('office'), { timeout: 2000 })
 })
