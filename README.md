@@ -95,6 +95,13 @@ The first command saves the overview and the presentation view in each phase (Ch
 
 The six `phase-*.png` screenshots are the look evidence: rendered on the GPU, with the whole decor loaded. The numbered screenshots (`01-overview.png` to `14-small-reading.png`) come from `npm run e2e`, which renders with Chromium's software rasterizer (SwiftShader): there the office runs on the `low` tier at a pixel ratio of 0.35 (`SOFTWARE_DPR`), and it leaves out the park across the street, the sideboard's two cabinets, its lamp and the vase on it, so that the journeys stay within their time limits. In the presentation views (`02-presentation.png`, `12-small-presentation.png`), thin orange lines from the slat wall cross the wall-screen picture: a depth artefact of the software rasterizer at that pixel ratio, absent from the GPU screenshots.
 
+## Hosting the built site
+
+`npm run build` writes a static site in `dist/` that works from any folder; every file is served from the same origin, with no CDN.
+- Vite's bundles in `dist/assets/` have a content hash in their name. The 3D files in `dist/assets/textures/` and `dist/assets/models/` do not. A "cache `/assets/*` forever" rule would keep old models after an asset update, so cache those two folders for a short time, or revalidate them.
+- A machine without a usable GPU (remote desktop, a blocklisted browser) gets the same software-rendering treatment as the e2e screenshots: the `low` tier, without the park and the sideboard set.
+- If a Content Security Policy is ever added, the meshopt decoder needs `'wasm-unsafe-eval'` in `script-src`, and textures embedded in a model need `blob:` in `img-src`.
+
 ## Project docs
 
 - Spec: `docs/superpowers/specs/2026-09-29-athena-prompt-academy-office-design.md`
