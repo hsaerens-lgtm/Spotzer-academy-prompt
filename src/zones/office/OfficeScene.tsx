@@ -4,10 +4,12 @@ import { useQualitySettings } from '../../app/quality'
 import { SceneReadySignal } from '../../app/SceneReadySignal'
 import { brand } from '../../core/brand'
 import { useApp } from '../../core/store'
+import { AssetBoundary } from '../../three/AssetBoundary'
 import { Interactive } from '../../three/interactive'
 import { useMaterials } from '../../three/materials'
 import { SceneObject } from '../../three/objects'
 import { ChairSet } from '../../three/props/ChairSet'
+import { Sofa } from '../../three/props/Sofa'
 import { AdaController } from './AdaController'
 import { useBaseModels } from './baseAssets'
 import { CameraRig } from './camera/CameraRig'
@@ -51,7 +53,14 @@ export function OfficeScene() {
         <Outdoor />
         <Room />
         <SceneObject object="table" name="table" position={table.position} />
-        <ChairSet placements={chairs} />
+        {/* Poly Haven's tufted leather chair at the eight places (CC0); the procedural chairs stand in if it cannot load. */}
+        <AssetBoundary name="chairs" fallback={<ChairSet placements={chairs} />}>
+          <group name="chairs">
+            {chairs.map((chair, index) => (
+              <SceneObject key={index} object="meetingChair" name={`chair-${index}`} position={chair.position} rotation-y={chair.rotationY} />
+            ))}
+          </group>
+        </AssetBoundary>
         {microphones.map((mic, index) => (
           <SceneObject key={index} object="microphone" name={`microphone-${index}`} position={mic.position} rotation-y={mic.rotationY} />
         ))}
@@ -65,7 +74,10 @@ export function OfficeScene() {
           <CrtScreen />
           <SceneObject object="retroConsole" name="retroConsole" position={retroConsole.position} rotation-y={retroConsole.rotationY} />
         </Interactive>
-        <SceneObject object="sofa" name="sofa" position={sofa.position} rotation-y={sofa.rotationY} />
+        {/* Wayfair's velvet sofa (CC BY 4.0); the procedural sofa stands in if its model cannot load. */}
+        <AssetBoundary name="sofa" fallback={<Sofa name="sofa" position={sofa.position} rotation-y={sofa.rotationY} />}>
+          <SceneObject object="sofa" name="sofa" position={sofa.position} rotation-y={sofa.rotationY} />
+        </AssetBoundary>
         <SceneObject object="floorLamp" name="floorLamp" position={floorLamp.position} rotation-y={floorLamp.rotationY} />
         <SceneObject object="logoCubes" name="logo" position={logo.position} rotation-y={logo.rotationY} />
         <SceneObject object="shelves" name="shelves" position={shelves.position} rotation-y={shelves.rotationY} />

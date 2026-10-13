@@ -24,6 +24,13 @@ test('without WebGL, the office opens in reading mode with the same content', as
   expect(screen.getByRole('button', { name: 'Click or press Space to continue' })).toBeInTheDocument()
 })
 
+// The CC BY 3D models of the office are credited in the site, in reading mode (public/assets/CREDITS.md lists every file).
+test('reading mode credits the 3D models', async () => {
+  resetAppStore({ webgl: 'unavailable' })
+  await renderApp()
+  expect(screen.getByText(/3D models: .* CC BY 4\.0/)).toBeInTheDocument()
+})
+
 // The announcer is mounted by <App /> for the office overlay and reading mode alike: it exists before any topic opens.
 test("Ada's lines are announced by one live region that existed before the topic opened", async () => {
   resetAppStore({ webgl: 'unavailable' })

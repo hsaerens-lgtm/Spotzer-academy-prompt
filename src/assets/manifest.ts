@@ -17,6 +17,9 @@ const common = {
   usage: z.string().min(1).max(120),
 }
 
+/** The licence of a model downloaded by hand from Sketchfab: CC BY 4.0, its author credited (CREDITS.md and the site). */
+export const ATTRIBUTION_LICENCE = 'CC-BY-4.0'
+
 export const textureEntrySchema = z
   .object({
     kind: z.literal('texture'),
@@ -43,11 +46,31 @@ export const modelEntrySchema = z
   })
   .strict()
 
-export const assetEntrySchema = z.discriminatedUnion('kind', [textureEntrySchema, modelEntrySchema])
+/**
+ * A model downloaded by hand (`npm run assets:import`) under CC BY 4.0, so its title and author are credited: from Sketchfab
+ * (source id: the model's uid) or Khronos's glTF Sample Assets (source id: its folder). Its api is its page.
+ */
+const attributedFields = {
+  ...common,
+  kind: z.literal('model'),
+  licence: z.literal(ATTRIBUTION_LICENCE),
+  title: z.string().min(1).max(80),
+  author: z.string().min(1).max(80),
+  textureSize: resolution,
+  quantize: z.boolean().default(true),
+}
+export const attributedModelEntrySchema = z.union([
+  z.object({ ...attributedFields, source: z.literal('sketchfab'), sourceId: z.string().regex(/^[0-9a-f]{32}$/) }).strict(),
+  z.object({ ...attributedFields, source: z.literal('khronos'), sourceId: z.string().regex(/^[A-Za-z0-9]+$/) }).strict(),
+])
+
+export const assetEntrySchema = z.union([textureEntrySchema, modelEntrySchema, attributedModelEntrySchema])
 
 const SOURCE_API = {
   polyhaven: (sourceId: string) => `https://api.polyhaven.com/files/${sourceId}`,
   ambientcg: (sourceId: string) => `https://ambientcg.com/api/v2/full_json?id=${sourceId}&include=downloadData`,
+  sketchfab: (sourceId: string) => `https://sketchfab.com/3d-models/${sourceId}`,
+  khronos: (sourceId: string) => `https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/${sourceId}`,
 } as const
 
 export const assetManifestSchema = z
@@ -58,7 +81,7 @@ export const assetManifestSchema = z
     manifest.assets.forEach((entry, index) => {
       if (seen.has(entry.id)) ctx.addIssue({ code: 'custom', path: ['assets', index, 'id'], message: `Duplicate asset id ${entry.id}` })
       seen.add(entry.id)
-      if (entry.id !== entry.sourceId.toLowerCase()) {
+      if (entry.licence === LICENCE && entry.id !== entry.sourceId.toLowerCase()) {
         ctx.addIssue({ code: 'custom', path: ['assets', index, 'id'], message: 'The id must be the source id in lower case' })
       }
       if (entry.api !== SOURCE_API[entry.source](entry.sourceId)) {

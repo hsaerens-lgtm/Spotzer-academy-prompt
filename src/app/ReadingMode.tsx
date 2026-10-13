@@ -38,6 +38,8 @@ export function ReadingMode() {
                 {t('welcome.dungeon')}
               </Button>
             </div>
+            {/* CC BY 4.0: the credit of the office's attributed 3D models (public/assets/CREDITS.md lists every file). */}
+            <p className="reading__credits">{t('credits.models')}</p>
           </aside>
           <section className="reading__main">
             {activeTopic ? (

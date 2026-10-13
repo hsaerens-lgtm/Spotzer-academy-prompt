@@ -16,7 +16,7 @@ export interface Box {
 /** Local size [width x, height y, depth z] of each kind of object: origin at the bottom centre, front +z (metres). */
 export const SIZES: Record<string, Vec3> = {
   table: [2.5, 0.75, 5.0],
-  chair: [0.66, 0.95, 0.66], // office chair: five-spoke base on casters, 0.95 m back (chairParts.test.ts measures it)
+  chair: [0.434, 0.975, 0.576], // dining_chair_02 as loaded (assets.test.ts measures it)
   microphone: [0.1, 0.42, 0.22],
   sideboard: [4.88, 0.68, 0.684],
   lamp: [0.28, 0.48, 0.28],
@@ -24,7 +24,7 @@ export const SIZES: Record<string, Vec3> = {
   tvStand: [1.7, 0.5, 0.5],
   tv: [0.4, 0.42, 0.36],
   retroConsole: [0.62, 0.08, 0.3],
-  sofa: [2.2, 0.78, 0.92], // low three-seater (Sofa.test.tsx measures it)
+  sofa: [2.19, 0.79, 1.02], // Glam Velvet Sofa as loaded (assets.test.ts measures it)
   floorLamp: [0.4, 1.55, 0.4], // FloorLamp: the 0.4 m drum shade on top, 1.55 m high (floorLamp.test.ts measures it)
   // The backlit sign of Task 10: its plate around the 0.72 x 0.936 m mark, and the 10 cm cubes of the mark in front.
   // Centred vertically on its position; its depth runs forward from it (LogoCubes builds it from local z 0).

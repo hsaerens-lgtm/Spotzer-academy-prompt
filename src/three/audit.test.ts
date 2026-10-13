@@ -58,6 +58,21 @@ test('without a colour map, a metal needs a normal map besides its ARM texture',
   expect(isTextured(new MeshStandardMaterial({ map: new Texture(), roughnessMap: arm, metalnessMap: arm }))).toBe(true)
 })
 
+// Spec criterion 1: "or a model with its own textures". A model's material (prepareModel marks it) counts as textured
+// with any texture of its own, such as a velvet sofa's normal and occlusion maps; a model material with none is reported.
+test("a model's material is textured by any texture of its own", () => {
+  const fromModel = (parameters: ConstructorParameters<typeof MeshStandardMaterial>[0]) => {
+    const material = new MeshStandardMaterial(parameters)
+    material.userData.prepared = true
+    return material
+  }
+  expect(isTextured(fromModel({ name: 'velvet', normalMap: new Texture(), aoMap: new Texture() }))).toBe(true)
+  expect(isTextured(fromModel({ name: 'legs', aoMap: new Texture() }))).toBe(true)
+  expect(isTextured(fromModel({ name: 'flat' }))).toBe(false)
+  // Built in code, an occlusion map alone is still not enough.
+  expect(isTextured(new MeshStandardMaterial({ aoMap: new Texture() }))).toBe(false)
+})
+
 test('an untextured mesh is reported with its path', () => {
   const root = named(new Group(), 'base')
   const table = named(new Group(), 'table')

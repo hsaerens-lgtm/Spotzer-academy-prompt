@@ -11,7 +11,7 @@ import { dedup, meshopt, prune, simplify, textureCompress, weld } from '@gltf-tr
 import { MeshoptDecoder, MeshoptEncoder, MeshoptSimplifier } from 'meshoptimizer'
 import sharp from 'sharp'
 import { ASSET_BUDGET, ASSETS_DIR, CREDITS_FILE, TEXTURE_MAPS, WEBP_QUALITY, modelFile, textureFile } from '../../src/assets/paths.ts'
-import { assertGltfUrisContained, assertSafeManifest, auditAssetFiles, formatMiB, glbExtensionsUsed, renderCredits } from './lib.mjs'
+import { ATTRIBUTED_SOURCES, assertGltfUrisContained, assertSafeManifest, auditAssetFiles, formatMiB, glbExtensionsUsed, glbJson, renderCredits } from './lib.mjs'
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url))
 const SOURCES = join(ROOT, 'assets-src')
@@ -115,10 +115,13 @@ async function modelIO() {
 
 async function buildModel(entry) {
   const io = await modelIO()
-  const gltf = source(entry, 'model.gltf')
-  // The loader opens every buffer and image URI the downloaded .gltf names: none may point outside the asset's own folder.
+  // A .glb imported by hand (a Khronos sample model) or a .gltf with its files (fetched, or a Sketchfab zip).
+  const binary = existsSync(join(SOURCES, entry.id, 'model.glb'))
+  const gltf = source(entry, binary ? 'model.glb' : 'model.gltf')
+  // The loader opens every buffer and image URI the downloaded glTF names: none may point outside the asset's own folder.
   try {
-    assertGltfUrisContained(JSON.parse(readFileSync(gltf, 'utf8')), dirname(gltf))
+    const json = binary ? glbJson(readFileSync(gltf)) : JSON.parse(readFileSync(gltf, 'utf8'))
+    assertGltfUrisContained(json, dirname(gltf))
   } catch (error) {
     throw new Error(`${entry.id}: ${error.message}`)
   }
@@ -126,6 +129,16 @@ async function buildModel(entry) {
   const root = document.getRoot()
   for (const extension of [...root.listExtensionsUsed()]) {
     if (DROPPED_EXTENSIONS.includes(extension.extensionName)) extension.dispose()
+  }
+  // No model brings its own light (the office's rig lights the room): drop the lights and the empty nodes that held them.
+  for (const node of [...root.listNodes()]) {
+    if (!node.getExtension('KHR_lights_punctual')) continue
+    node.setExtension('KHR_lights_punctual', null)
+    if (!node.getMesh() && node.listChildren().length === 0) node.dispose()
+  }
+  // A set of colour variants collapses to the default material of each mesh; prune() then drops the unused ones.
+  for (const extension of [...root.listExtensionsUsed()]) {
+    if (extension.extensionName === 'KHR_lights_punctual' || extension.extensionName === 'KHR_materials_variants') extension.dispose()
   }
   if (entry.variant) {
     for (const node of [...root.listNodes()]) {
@@ -187,7 +200,16 @@ try {
   if (missing.length > 0) throw new Error(`${missing[0]} is missing: run npm run assets:build without --only`)
 
   const rows = manifest.assets.flatMap((entry) =>
-    filesOf(entry).map((file) => ({ file, assetId: entry.id, source: entry.source, sourceId: entry.sourceId, stage: entry.stage, bytes: statSync(join(OUT, file)).size })),
+    filesOf(entry).map((file) => ({
+      file,
+      assetId: entry.id,
+      source: entry.source,
+      sourceId: entry.sourceId,
+      stage: entry.stage,
+      bytes: statSync(join(OUT, file)).size,
+      // A CC BY model (Sketchfab, Khronos) names its licence and author; the CC0 rows leave them to the default.
+      ...(ATTRIBUTED_SOURCES.includes(entry.source) ? { licence: entry.licence, author: entry.author } : {}),
+    })),
   )
   writeFileSync(join(OUT, CREDITS_FILE), renderCredits(rows))
 

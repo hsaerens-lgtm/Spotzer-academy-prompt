@@ -16,14 +16,55 @@ function edited(edit: (assets: Record<string, unknown>[]) => void) {
 
 test('the asset manifest is valid', () => {
   expect(assetManifestSchema.safeParse(raw()).success).toBe(true)
-  expect(manifest.assets).toHaveLength(21)
-  expect(manifest.assets.every((entry) => entry.licence === 'CC0-1.0')).toBe(true)
+  expect(manifest.assets).toHaveLength(23)
+  for (const entry of manifest.assets) expect(entry.licence).toBe('author' in entry ? 'CC-BY-4.0' : 'CC0-1.0')
+})
+
+// A model downloaded by hand from Sketchfab under CC BY 4.0: its author is credited (CREDITS.md and the site).
+const SKETCHFAB_SOFA = {
+  kind: 'model',
+  id: 'modern_sofa',
+  source: 'sketchfab',
+  sourceId: 'ac92f6e97eaa43c4ad6cb8f7c65ac43f',
+  api: 'https://sketchfab.com/3d-models/ac92f6e97eaa43c4ad6cb8f7c65ac43f',
+  licence: 'CC-BY-4.0',
+  author: '3dimentionalben',
+  title: 'Modern Sofa',
+  stage: 'base',
+  usage: 'Sofa of the lounge corner',
+  textureSize: 1024,
+}
+
+test('a Sketchfab model carries the CC BY licence, its author and title, and its page', () => {
+  expect(edited((assets) => assets.push({ ...SKETCHFAB_SOFA }))).toBe(true)
+  expect(edited((assets) => assets.push({ ...SKETCHFAB_SOFA, author: undefined }))).toBe(false)
+  expect(edited((assets) => assets.push({ ...SKETCHFAB_SOFA, title: '' }))).toBe(false)
+  expect(edited((assets) => assets.push({ ...SKETCHFAB_SOFA, licence: 'CC0-1.0' }))).toBe(false)
+  expect(edited((assets) => assets.push({ ...SKETCHFAB_SOFA, api: 'https://example.com/3d-models/ac92f6e97eaa43c4ad6cb8f7c65ac43f' }))).toBe(false)
+  // Poly Haven and ambientCG assets stay CC0, without an author.
+  expect(edited((assets) => (assets[0].licence = 'CC-BY-4.0'))).toBe(false)
+})
+
+test('a Khronos sample model is credited the same way, by its folder page', () => {
+  const sofa = {
+    ...SKETCHFAB_SOFA,
+    id: 'sheen_wood_leather_sofa',
+    source: 'khronos',
+    sourceId: 'SheenWoodLeatherSofa',
+    api: 'https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/SheenWoodLeatherSofa',
+    title: 'Glam Velvet Sofa',
+    author: 'Wayfair, LLC',
+  }
+  expect(edited((assets) => assets.push(sofa))).toBe(true)
+  expect(edited((assets) => assets.push({ ...sofa, api: 'https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/Other' }))).toBe(false)
+  expect(edited((assets) => assets.push({ ...sofa, sourceId: '../SheenWoodLeatherSofa' }))).toBe(false)
 })
 
 test('asset ids are unique, lower case and match their source id', () => {
   const ids = manifest.assets.map((entry) => entry.id)
   expect(new Set(ids).size).toBe(ids.length)
-  for (const entry of manifest.assets) expect(entry.id).toBe(entry.sourceId.toLowerCase())
+  // Sketchfab's source ids are opaque hashes: those models are named for what they are.
+  for (const entry of manifest.assets) if (entry.licence === 'CC0-1.0') expect(entry.id).toBe(entry.sourceId.toLowerCase())
   expect(byId('metal046a').sourceId).toBe('Metal046A')
   expect(edited((assets) => assets.push({ ...assets[0] }))).toBe(false)
   expect(edited((assets) => (assets[4].id = 'fabric_036'))).toBe(false)
@@ -32,10 +73,12 @@ test('asset ids are unique, lower case and match their source id', () => {
 
 test('every asset points to its source API', () => {
   for (const entry of manifest.assets) {
-    const expected =
-      entry.source === 'polyhaven'
-        ? `https://api.polyhaven.com/files/${entry.sourceId}`
-        : `https://ambientcg.com/api/v2/full_json?id=${entry.sourceId}&include=downloadData`
+    const expected = {
+      polyhaven: `https://api.polyhaven.com/files/${entry.sourceId}`,
+      ambientcg: `https://ambientcg.com/api/v2/full_json?id=${entry.sourceId}&include=downloadData`,
+      sketchfab: `https://sketchfab.com/3d-models/${entry.sourceId}`,
+      khronos: `https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/${entry.sourceId}`,
+    }[entry.source]
     expect(entry.api).toBe(expected)
   }
   expect(edited((assets) => (assets[0].api = 'https://example.com/files/plank_flooring_04'))).toBe(false)
@@ -69,14 +112,16 @@ test('texture resolutions follow the spec', () => {
 
 test('every model is a Poly Haven asset and the clock keeps its node transforms', () => {
   const models = manifest.assets.flatMap((entry) => (entry.kind === 'model' ? [entry] : []))
-  expect(models).toHaveLength(13)
-  expect(models.every((entry) => entry.source === 'polyhaven')).toBe(true)
+  expect(models).toHaveLength(15)
+  expect(models.every((entry) => entry.source === 'polyhaven' || 'author' in entry)).toBe(true)
   expect(models.filter((entry) => !entry.quantize).map((entry) => entry.id)).toEqual(['wall_clock'])
   expect(byId('pachira_aquatica_01')).toMatchObject({ variant: 'b', simplify: { ratio: 0.4, error: 0.01 } })
   expect(models.filter((entry) => entry.stage === 'base').map((entry) => entry.id)).toEqual([
     'modern_wooden_cabinet',
     'television_02',
     'classic_laptop',
+    'glam_velvet_sofa',
+    'dining_chair_02',
     'wall_clock',
   ])
   expect(edited((assets) => (assets[8].source = 'ambientcg'))).toBe(false)
@@ -89,12 +134,14 @@ test('file names come from the asset ids', () => {
     'textures/fabric036_arm.webp',
   ])
   expect(entryFiles(byId('wall_clock'))).toEqual(['models/wall_clock.glb'])
-  expect(manifestFiles(manifest)).toHaveLength(8 * 3 + 13)
+  expect(manifestFiles(manifest)).toHaveLength(8 * 3 + 15)
   expect(manifestFiles(manifest, 'base')).toEqual([
     ...manifest.assets.slice(0, 8).flatMap(entryFiles),
     'models/modern_wooden_cabinet.glb',
     'models/television_02.glb',
     'models/classic_laptop.glb',
+    'models/glam_velvet_sofa.glb',
+    'models/dining_chair_02.glb',
     'models/wall_clock.glb',
   ])
   expect(manifestFiles(manifest, 'decor')).toHaveLength(9)
