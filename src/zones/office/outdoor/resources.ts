@@ -9,13 +9,18 @@ import {
   type Object3D,
   type Texture,
 } from 'three'
+import { paintLater } from '../../../three/paintLater'
 
 /*
  * GPU resources of the outdoor, which is built outside React (like Horn.os) and rendered as <primitive> objects:
  * painted canvas textures, and their disposal (R3F never disposes a primitive).
  */
 
-/** A texture painted on a 2D canvas: sRGB unless told otherwise, repeated when `repeat` is given, anisotropy 8. */
+/**
+ * A texture painted on a 2D canvas: sRGB unless told otherwise, repeated when `repeat` is given, anisotropy 8.
+ * The canvas is painted once the stage holding the texture has queued its programs (paintLater, Task 16b), before the
+ * warm frame: `draw` is not called before then.
+ */
 export function canvasTexture(
   width: number,
   height: number,
@@ -25,9 +30,6 @@ export function canvasTexture(
   const canvas = document.createElement('canvas')
   canvas.width = width
   canvas.height = height
-  const context = canvas.getContext('2d')
-  if (!context) throw new Error('canvasTexture: no 2D canvas context')
-  draw(context, width, height)
   const texture = new CanvasTexture(canvas)
   if (options.srgb ?? true) texture.colorSpace = SRGBColorSpace
   if (options.repeat) {
@@ -36,7 +38,11 @@ export function canvasTexture(
     texture.repeat.set(...options.repeat)
   }
   texture.anisotropy = 8
-  return texture
+  return paintLater(texture, () => {
+    const context = canvas.getContext('2d')
+    if (!context) throw new Error('canvasTexture: no 2D canvas context')
+    draw(context, width, height)
+  })
 }
 
 /**

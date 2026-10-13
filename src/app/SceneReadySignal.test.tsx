@@ -1,9 +1,10 @@
 import { extend } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
-import { BoxGeometry, Group, Mesh } from 'three'
+import { BoxGeometry, DataTexture, Group, Mesh, MeshBasicMaterial } from 'three'
 import { appStore } from '../core/store'
 import { isClockDeprecation, mountR3F, type TestRoot } from '../test/r3fRoot'
 import { resetAppStore } from '../test/resetAppStore'
+import { paintLater } from '../three/paintLater'
 import { SceneReadySignal } from './SceneReadySignal'
 
 /*
@@ -146,3 +147,26 @@ test('the shaders are queued before the effects of the base run', async () => {
   expect(order).toEqual(['compile', 'base effect'])
 })
 
+// Task 16b: the base's painted canvases (paintLater) wait for its programs, and are painted before the warm frame.
+test('the textures the base paints later are painted once its shaders are queued', async () => {
+  const order: string[] = []
+  const map = paintLater(new DataTexture(new Uint8Array(4), 1, 1), () => order.push('paint'))
+  function PaintedBase() {
+    const base = useRef<Group>(null)
+    return (
+      <>
+        <group name="base" ref={base}>
+          <mesh geometry={new BoxGeometry()} material={new MeshBasicMaterial({ map })} />
+        </group>
+        <SceneReadySignal target={base} />
+      </>
+    )
+  }
+  const compileAsync = vi.fn(() => {
+    order.push('compile')
+    return Promise.resolve()
+  })
+  const root = await mountR3F(<PaintedBase />, { compileAsync })
+  roots.push(root)
+  expect(order).toEqual(['compile', 'paint'])
+})

@@ -5,6 +5,7 @@ import { appStore } from '../../../core/store'
 import { isClockDeprecation, mountR3F, type TestRoot } from '../../../test/r3fRoot'
 import { resetAppStore } from '../../../test/resetAppStore'
 import { ENV_MAP_INTENSITY } from '../../../three/materials'
+import { paintLater } from '../../../three/paintLater'
 import { PhaseDriver } from '../lighting/PhaseDriver'
 import { PRESETS } from '../lighting/presets'
 import { DecorStage } from './DecorStage'
@@ -167,4 +168,25 @@ test('decor materials get the environment at their ratio once the decor is ready
   expect(model.envMap).toBe(environment)
   expect(model.envMapIntensity).toBeCloseTo(ENV_MAP_INTENSITY.model * PRESETS.day.environment)
   expect(surface.envMapIntensity).toBeCloseTo(ENV_MAP_INTENSITY.surface * PRESETS.day.environment)
+})
+
+// Task 16b: like the base, the decor paints its canvases painted later (paintLater) once its shaders are queued.
+test('the textures the decor paints later are painted once its shaders are queued, before it shows', async () => {
+  const order: string[] = []
+  const map = paintLater(new Texture(), () => order.push('paint'))
+  const compile = deferred()
+  const compileAsync = vi.fn(() => {
+    order.push('compile')
+    return compile.promise
+  })
+  const { state } = await mount(
+    <DecorStage>
+      <mesh name="poster" geometry={box} material={new MeshStandardMaterial({ map })} />
+    </DecorStage>,
+    { compileAsync },
+  )
+  await vi.waitFor(() => expect(order).toEqual(['compile', 'paint']))
+  expect(named(state.scene, 'decor').visible).toBe(false)
+  compile.resolve()
+  await vi.waitFor(() => expect(appStore.getState().decorReady).toBe(true))
 })
