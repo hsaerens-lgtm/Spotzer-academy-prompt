@@ -101,3 +101,26 @@ test('the lights stay the same through every phase: a light a phase turns off st
     expect(intensities.get('lamp-light')![2], quality).toBeGreaterThan(0)
   }
 })
+
+// Task 16b: the stage builds the tables before the office renders (baseAssets.ts). The rig must not suspend then: the
+// boundary would show its fallback, and React holds a boundary it reveals back until 300 ms after that fallback.
+test('once the area light tables are built, the rig mounts without suspending', async () => {
+  // Fresh modules: React marks a promise it has read as settled, so the tables promise must be one no rig has used yet.
+  vi.resetModules()
+  const { areaLightTablesReady } = await import('./areaLights')
+  const { Lights } = await import('./Lights')
+  await areaLightTablesReady()
+  const fallback = vi.fn()
+  function Fallback() {
+    fallback()
+    return null
+  }
+  const root = await mountR3F(
+    <Suspense fallback={<Fallback />}>
+      <Lights settings={QUALITY_SETTINGS.high} />
+    </Suspense>,
+  )
+  roots.push(root)
+  expect(root.state.scene.getObjectByName('sun')).toBeDefined()
+  expect(fallback).not.toHaveBeenCalled()
+})

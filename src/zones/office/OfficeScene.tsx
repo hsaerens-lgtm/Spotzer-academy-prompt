@@ -9,6 +9,7 @@ import { useMaterials } from '../../three/materials'
 import { SceneObject } from '../../three/objects'
 import { ChairSet } from '../../three/props/ChairSet'
 import { AdaController } from './AdaController'
+import { useBaseModels } from './baseAssets'
 import { CameraRig } from './camera/CameraRig'
 import { CrtScreen } from './CrtScreen'
 import { Decor } from './decor/Decor'
@@ -31,6 +32,8 @@ import { WallScreen3D } from './WallScreen3D'
 export function OfficeScene() {
   const settings = useQualitySettings()
   const materials = useMaterials()
+  // The base models are read here, at the top: a suspension happens before the room renders (baseAssets.ts).
+  useBaseModels()
   useEmissiveLevels(materials)
   const sceneReady = useApp((s) => s.sceneReady)
   const base = useRef<Group>(null)

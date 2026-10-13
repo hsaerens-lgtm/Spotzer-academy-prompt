@@ -2,35 +2,19 @@ import { Fragment, use, useEffect, useLayoutEffect, useMemo, useRef, type ReactN
 import { Object3D, type DirectionalLight, type HemisphereLight, type PointLight, type RectAreaLight, type SpotLight } from 'three'
 import type { QualitySettings } from '../../../app/quality'
 import { CEILING_LINES, layout } from '../layout'
+import { areaLightTablesBuilt, areaLightTablesReady } from './areaLights'
 import { useLightingApplier } from './live'
 import { SUN_TARGET } from './presets'
 import { RIG, crtGlowCandela, floorLampCandela, rigLights } from './rig'
-
-let areaLightTables: Promise<void> | null = null
-
-/**
- * Area lights need their lookup tables in the WebGL renderer before the first one is drawn. The tables (about
- * 0.1 MB of JS) load on the first Lights mount, once, outside the initial chunk: reading mode never builds them.
- * A failed load is forgotten, so the next mount tries again.
- */
-function areaLightTablesReady(): Promise<void> {
-  areaLightTables ??= import('three/addons/lights/RectAreaLightUniformsLib.js').then(
-    ({ RectAreaLightUniformsLib }) => RectAreaLightUniformsLib.init(),
-    (error: unknown) => {
-      areaLightTables = null
-      throw error
-    },
-  )
-  return areaLightTables
-}
 
 /**
  * The named lights of the office (rig.ts). Only the sun casts shadows: 2048 px on the high tier, 1024 on medium,
  * none on low. Colours, intensities and the sun's position follow the time of day through one applier.
  */
 export function Lights({ settings }: { settings: QualitySettings }) {
-  // Suspends the scene (its Suspense keeps the loading screen) until the area light tables are built.
-  use(areaLightTablesReady())
+  // Suspends the scene (its Suspense keeps the loading screen) until the area light tables are built. The stage starts
+  // building them on mount (baseAssets.ts): when they are ready first, the rig renders at once.
+  if (!areaLightTablesBuilt()) use(areaLightTablesReady())
   const sun = useRef<DirectionalLight>(null)
   const sky = useRef<HemisphereLight>(null)
   const facade = useRef<RectAreaLight>(null)
