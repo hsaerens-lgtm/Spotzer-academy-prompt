@@ -16,7 +16,7 @@ function edited(edit: (assets: Record<string, unknown>[]) => void) {
 
 test('the asset manifest is valid', () => {
   expect(assetManifestSchema.safeParse(raw()).success).toBe(true)
-  expect(manifest.assets).toHaveLength(22)
+  expect(manifest.assets).toHaveLength(23)
   for (const entry of manifest.assets) expect(entry.licence).toBe('author' in entry ? 'CC-BY-4.0' : 'CC0-1.0')
 })
 
@@ -112,7 +112,7 @@ test('texture resolutions follow the spec', () => {
 
 test('every model is a Poly Haven asset and the clock keeps its node transforms', () => {
   const models = manifest.assets.flatMap((entry) => (entry.kind === 'model' ? [entry] : []))
-  expect(models).toHaveLength(14)
+  expect(models).toHaveLength(15)
   expect(models.every((entry) => entry.source === 'polyhaven' || 'author' in entry)).toBe(true)
   expect(models.filter((entry) => !entry.quantize).map((entry) => entry.id)).toEqual(['wall_clock'])
   expect(byId('pachira_aquatica_01')).toMatchObject({ variant: 'b', simplify: { ratio: 0.4, error: 0.01 } })
@@ -121,6 +121,7 @@ test('every model is a Poly Haven asset and the clock keeps its node transforms'
     'television_02',
     'classic_laptop',
     'glam_velvet_sofa',
+    'dining_chair_02',
     'wall_clock',
   ])
   expect(edited((assets) => (assets[8].source = 'ambientcg'))).toBe(false)
@@ -133,13 +134,14 @@ test('file names come from the asset ids', () => {
     'textures/fabric036_arm.webp',
   ])
   expect(entryFiles(byId('wall_clock'))).toEqual(['models/wall_clock.glb'])
-  expect(manifestFiles(manifest)).toHaveLength(8 * 3 + 14)
+  expect(manifestFiles(manifest)).toHaveLength(8 * 3 + 15)
   expect(manifestFiles(manifest, 'base')).toEqual([
     ...manifest.assets.slice(0, 8).flatMap(entryFiles),
     'models/modern_wooden_cabinet.glb',
     'models/television_02.glb',
     'models/classic_laptop.glb',
     'models/glam_velvet_sofa.glb',
+    'models/dining_chair_02.glb',
     'models/wall_clock.glb',
   ])
   expect(manifestFiles(manifest, 'decor')).toHaveLength(9)

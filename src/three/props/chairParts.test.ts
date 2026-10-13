@@ -74,8 +74,8 @@ test('every part fits the chair footprint, with UVs in metres', () => {
     for (const value of [box.min.x, box.max.x, box.min.z, box.max.z]) expect(Math.abs(value), name).toBeLessThanOrEqual(CHAIR.half + 1e-6)
     expect(nonMetreUVs(geometry), name).toBe(0)
   }
-  // The layout's footprint is the chair's.
-  expect(SIZES.chair).toEqual([2 * CHAIR.half, CHAIR.backTop, 2 * CHAIR.half])
+  // The procedural chair only stands in for the dining chair model (SIZES.chair): it stands at the same places, as tall.
+  expect(Math.abs(CHAIR.backTop - SIZES.chair[1])).toBeLessThan(0.05)
 })
 
 test('all chairs share one geometry per part', () => {

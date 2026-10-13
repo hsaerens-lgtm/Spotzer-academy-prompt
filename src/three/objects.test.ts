@@ -7,6 +7,12 @@ test('objects are procedural unless a GLB is declared', () => {
   expect(resolveObject('table', { table: 'models/table.glb' })).toEqual({ kind: 'glb', url: 'models/table.glb' })
 })
 
+// The owner's choice (2026-10-13): Poly Haven's tufted leather chair at the eight places of the meeting table (CC0).
+test('the meeting chairs are drawn by the dining chair model', () => {
+  expect(OBJECT_NAMES).toContain('meetingChair')
+  expect(resolveObject('meetingChair')).toEqual({ kind: 'glb', url: publicUrl('assets/models/dining_chair_02.glb') })
+})
+
 // The owner's choice (2026-10-13): Wayfair's velvet sofa (CC BY 4.0), the procedural sofa kept as its fallback.
 test('the sofa is drawn by the Glam Velvet Sofa model, the procedural one kept as a fallback', () => {
   expect(resolveObject('sofa')).toEqual({ kind: 'glb', url: publicUrl('assets/models/glam_velvet_sofa.glb') })
@@ -56,8 +62,8 @@ test('the drawer cabinet, the coffee table, the pendants and the picture frames 
     // Nothing else draws them: without its model, an item has no source (AssetBoundary leaves it out).
     expect(hasSource(name, {}), name).toBe(false)
   }
-  // Five base models (with the sofa), these four, and the five of Task 14.
-  expect(Object.keys(glbModels)).toHaveLength(14)
+  // Six base models (with the sofa and the meeting chair), these four, and the five of Task 14.
+  expect(Object.keys(glbModels)).toHaveLength(15)
 })
 
 // The laptop on the meeting table is the CC0 retro laptop; its procedural version stays as the fallback (LaptopModel).

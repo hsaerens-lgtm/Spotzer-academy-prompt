@@ -161,6 +161,12 @@ test('the pendant has its bulb and shell materials and the frame its artwork mat
   expect((await materials('wall_clock')).filter((name) => GLASS_MATERIAL.test(name))).toEqual(['wall_clock_glass'])
 })
 
+// The layout's footprint of a meeting chair is the dining chair model's size, as loaded (in metres, unscaled).
+test('the meeting chair model measures SIZES.chair', async () => {
+  const bounds = getBounds((await readModel('dining_chair_02')).getRoot().listScenes()[0])
+  SIZES.chair.forEach((expected, k) => expect(Math.abs(bounds.max[k] - bounds.min[k] - expected), `axis ${k}`).toBeLessThan(0.01))
+})
+
 // The layout's footprint of the sofa is the velvet sofa model's size, as loaded (in metres, unscaled).
 test('the sofa model measures SIZES.sofa', async () => {
   const bounds = getBounds((await readModel('glam_velvet_sofa')).getRoot().listScenes()[0])

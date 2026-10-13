@@ -53,7 +53,14 @@ export function OfficeScene() {
         <Outdoor />
         <Room />
         <SceneObject object="table" name="table" position={table.position} />
-        <ChairSet placements={chairs} />
+        {/* Poly Haven's tufted leather chair at the eight places (CC0); the procedural chairs stand in if it cannot load. */}
+        <AssetBoundary name="chairs" fallback={<ChairSet placements={chairs} />}>
+          <group name="chairs">
+            {chairs.map((chair, index) => (
+              <SceneObject key={index} object="meetingChair" name={`chair-${index}`} position={chair.position} rotation-y={chair.rotationY} />
+            ))}
+          </group>
+        </AssetBoundary>
         {microphones.map((mic, index) => (
           <SceneObject key={index} object="microphone" name={`microphone-${index}`} position={mic.position} rotation-y={mic.rotationY} />
         ))}

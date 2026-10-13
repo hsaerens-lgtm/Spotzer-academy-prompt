@@ -154,6 +154,18 @@
     },
     {
       "kind": "model",
+      "id": "dining_chair_02",
+      "source": "polyhaven",
+      "sourceId": "dining_chair_02",
+      "api": "https://api.polyhaven.com/files/dining_chair_02",
+      "licence": "CC0-1.0",
+      "stage": "base",
+      "usage": "The eight chairs of the meeting table (tufted leather)",
+      "textureSize": 1024,
+      "simplify": { "ratio": 0.3, "error": 0.01 }
+    },
+    {
+      "kind": "model",
       "id": "wall_clock",
       "source": "polyhaven",
       "sourceId": "wall_clock",

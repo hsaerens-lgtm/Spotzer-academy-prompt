@@ -25,6 +25,7 @@ export type ObjectName =
   | 'clock' // GLB, Task 11
   | 'cabinet' | 'coffeeTable' | 'pendant' | 'pictureFrame' // GLB, Task 12 (decor)
   | 'pottedPlant' | 'pachira' | 'vaseTall' | 'vaseRound' | 'clayPot' // GLB, Task 14 (decor)
+  | 'meetingChair' // GLB (base), the eight chairs of the meeting table
 
 /** Every object name, in the order of the union (objects.test.ts checks that they match). */
 export const OBJECT_NAMES = [
@@ -35,6 +36,7 @@ export const OBJECT_NAMES = [
   'clock',
   'cabinet', 'coffeeTable', 'pendant', 'pictureFrame',
   'pottedPlant', 'pachira', 'vaseTall', 'vaseRound', 'clayPot',
+  'meetingChair',
 ] as const satisfies readonly ObjectName[]
 
 /**
@@ -48,6 +50,7 @@ export const glbModels: Partial<Record<ObjectName, string>> = {
   clock: modelUrl('wallClock'),
   laptop: modelUrl('laptop'),
   sofa: modelUrl('sofa'),
+  meetingChair: modelUrl('meetingChair'),
   cabinet: modelUrl('drawerCabinet'),
   coffeeTable: modelUrl('coffeeTable'),
   pendant: modelUrl('pendantLamp'),

@@ -7,6 +7,7 @@ All files in this folder are CC0-1.0 (public domain dedication), except those ma
 | models/ceramic_vase_01.glb | ceramic_vase_01 | Poly Haven https://polyhaven.com/a/ceramic_vase_01 | CC0-1.0 | 85640 |
 | models/ceramic_vase_04.glb | ceramic_vase_04 | Poly Haven https://polyhaven.com/a/ceramic_vase_04 | CC0-1.0 | 118664 |
 | models/classic_laptop.glb | classic_laptop | Poly Haven https://polyhaven.com/a/classic_laptop | CC0-1.0 | 437712 |
+| models/dining_chair_02.glb | dining_chair_02 | Poly Haven https://polyhaven.com/a/dining_chair_02 | CC0-1.0 | 270372 |
 | models/drawer_cabinet.glb | drawer_cabinet | Poly Haven https://polyhaven.com/a/drawer_cabinet | CC0-1.0 | 325556 |
 | models/glam_velvet_sofa.glb | glam_velvet_sofa | Khronos glTF Sample Assets https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/GlamVelvetSofa by Wayfair, LLC | CC-BY-4.0 | 601120 |
 | models/hanging_picture_frame_01.glb | hanging_picture_frame_01 | Poly Haven https://polyhaven.com/a/hanging_picture_frame_01 | CC0-1.0 | 77980 |
