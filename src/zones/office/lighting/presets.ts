@@ -15,7 +15,10 @@ export interface Preset {
   windowIntensity: number
   /** 0..1 level of the ceiling-line RectAreaLights and the pendant PointLight (high tier only). */
   ceiling: number
-  /** 0..1 level of the emissive pendant bulbs and ceiling strips (x RIG.emissivePeak). */
+  /**
+   * 0..1 level of the emissive pendant bulbs and ceiling strips (x RIG.emissivePeak), and of the pendants' frosted
+   * shells, which glow with their bulbs (x RIG.pendantShellPeak).
+   */
   bulb: number
   /** Sideboard lamp SpotLight, candela. */
   lampIntensity: number
