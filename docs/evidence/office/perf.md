@@ -1,27 +1,27 @@
 # Mesures — bureau refait (refonte visuelle)
 
 - Date : 2026-10-13
-- Commit : e2ba7f9 ; version de production : `npm run build` de ce commit, servie par `vite preview`
+- Commit : 72911c9 ; version de production : `npm run build` de ce commit, servie par `vite preview`
 - Machine : ASUSTeK COMPUTER INC. ROG Zephyrus G16 GA605KP_GA605KP ; AMD Ryzen AI 7 350 w/ Radeon 860M ; 31 Go de RAM ; Windows 11 Home 10.0.26200
 - Cartes graphiques (Windows), avec la fréquence de leur écran : NVIDIA GeForce RTX 5070 Laptop GPU, 60 Hz ; AMD Radeon(TM) 860M Graphics, 240 Hz
 - Moteur WebGL de la scène : ANGLE (AMD, AMD Radeon(TM) 860M Graphics (0x00001114) Direct3D11 vs_5_0 ps_5_0, D3D11) (contexte de l'application, `powerPreference` `high-performance`)
 - Navigateur : Chromium 153.0.8010.12 de Playwright, avec interface, `--use-angle=d3d11`, fenêtre 1600 × 900, facteur d'échelle 1,5 (canvas de 2400 px de large, lu sur la page)
-- Fréquence d'affichage mesurée sur une page vide : 222 images/s
+- Fréquence d'affichage mesurée sur une page vide : 223 images/s
 
 Chaque case donne les 3 chargements dans l'ordre (le premier est un démarrage à froid du navigateur), séparés par « · ».
 
 | Mesure | Jour | Coucher | Nuit | Cible |
 |---|---|---|---|---|
-| Images/s, vue d'ensemble | 80 · 100 · 96 | 98 · 96 · 96 | 99 · 100 · 98 | ≥ 60 |
-| Images/s, vue présentation | 26 · 109 · 108 | 106 · 107 · 105 | 111 · 110 · 104 | ≥ 60 |
-| Bureau affiché après | 2193 ms · 1151 ms · 1197 ms | 2046 ms · 1120 ms · 1230 ms | 2117 ms · 1269 ms · 1225 ms | < 3000 ms |
-| Décor chargé après | 3173 ms · 1501 ms · 1554 ms | 3036 ms · 1483 ms · 1591 ms | 3137 ms · 1630 ms · 1579 ms | < 8000 ms au 1er chargement |
+| Images/s, vue d'ensemble | 103 · 100 · 97 | 100 · 102 · 100 | 102 · 101 · 101 | ≥ 60 |
+| Images/s, vue présentation | 106 · 105 · 110 | 108 · 104 · 112 | 108 · 109 · 112 | ≥ 60 |
+| Bureau affiché après | 2148 ms · 1284 ms · 1171 ms | 2114 ms · 1243 ms · 1085 ms | 1923 ms · 1285 ms · 1234 ms | < 3000 ms |
+| Décor chargé après | 3202 ms · 1634 ms · 1522 ms | 2943 ms · 1592 ms · 1435 ms | 2725 ms · 1644 ms · 1587 ms | < 8000 ms au 1er chargement |
 | Niveau de qualité autour des mesures | high · high · high | high · high · high | high · high · high | jamais `low` |
 | JS initial (gzip) | 0,44 Mo | | | ≤ 1,50 Mo |
 
 ## Critère 5 de la spec
 
-- Au moins 60 images/s dans chaque vue et chaque phase : non.
+- Au moins 60 images/s dans chaque vue et chaque phase : oui.
 - Le niveau de qualité ne tombe pas à `low` : oui.
 - Bureau affiché en moins de 3 s : oui.
 - Tous les décors chargés en moins de 8 s au premier chargement : oui.
