@@ -103,12 +103,13 @@ export const layout = {
     tvStand: { position: [4.62, 0, -1.4], rotationY: -Math.PI / 2 } as Placement,
     tv: { position: [4.6, 0.5, -1.4], rotationY: -Math.PI / 2 } as Placement,
     retroConsole: { position: [4.5, 0.5, -0.9], rotationY: -Math.PI / 2 } as Placement,
-    sofa: { position: [2.9, 0, -1.4], rotationY: Math.PI / 2 } as Placement,
-    floorLamp: { position: [2.9, 0, -2.8] } as Placement, // beside the sofa's end on the back-wall side
+    // Half a metre back from the TV: legroom before the coffee table, a passage to the TV, a walkway behind.
+    sofa: { position: [2.4, 0, -1.4], rotationY: Math.PI / 2 } as Placement,
+    floorLamp: { position: [2.4, 0, -2.8] } as Placement, // beside the sofa's end on the back-wall side
     logo: { position: [2.6, 1.95, -5.995], rotationY: 0 } as Placement, // back of the sign's plate, 5 mm off the wall
     clock: { position: [1.75, 2.19, -5.975], rotationY: 0 } as Placement, // bottom of the normalised clock; dial centre at y 2.35
     cabinet: { position: [4.74, 0, -4.2], rotationY: -Math.PI / 2 } as Placement, // drawer_cabinet (decor)
-    coffeeTable: { position: [3.85, 0, -1.4], rotationY: 0 } as Placement,
+    coffeeTable: { position: [3.6, 0, -1.4], rotationY: 0 } as Placement,
     shelves: { position: [3.95, 0, -5.87], rotationY: 0 } as Placement,
     pendants: [-3.0, -1.8, -0.6].map((z) => ({ position: [-1.0, 2.248, z] as Vec3 })) as Placement[], // bottom of the globe; top touches the ceiling
     frames: [
@@ -152,8 +153,8 @@ export const layout = {
     screenGlow: { position: [-1.0, 1.9, -5.3] as Vec3 },
     pendant: { position: [-1.0, 2.1, -1.8] as Vec3 },
     lamp: { position: [1.3, 1.12, -5.5] as Vec3, target: [1.3, 0.68, -4.9] as Vec3 },
-    crt: { position: [4.25, 0.75, -1.4] as Vec3, target: [2.9, 0.45, -1.4] as Vec3 }, // before the TV picture, aimed at the sofa
-    floorLamp: { position: [2.9, 1.4, -2.8] as Vec3 }, // the centre of the floor lamp's shade
+    crt: { position: [4.25, 0.75, -1.4] as Vec3, target: [2.4, 0.45, -1.4] as Vec3 }, // before the TV picture, aimed at the sofa
+    floorLamp: { position: [2.4, 1.4, -2.8] as Vec3 }, // the centre of the floor lamp's shade
   },
 }
 

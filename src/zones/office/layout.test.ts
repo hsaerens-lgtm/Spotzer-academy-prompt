@@ -156,6 +156,30 @@ test('the sign hangs on the back wall, its plate a few millimetres off the plast
   expect(logo.min[0]).toBeGreaterThan(frameRight)
 })
 
+// The lounge corner: the sofa stands back from the TV, with room for legs, a passage and the meeting chairs behind it.
+test('the lounge corner leaves legroom in front of the sofa, a passage to the TV and a walkway behind it', () => {
+  const sofa = named('sofa')
+  const coffeeTable = named('coffeeTable')
+  const tvStand = named('tvStand')
+  expect(clashes(sofa)).toEqual([])
+  expect(clashes(coffeeTable)).toEqual([])
+  // The sofa faces the TV (+x): its front is its max x.
+  const legroom = coffeeTable.min[0] - sofa.max[0]
+  expect(legroom).toBeGreaterThanOrEqual(0.4)
+  expect(legroom).toBeLessThanOrEqual(0.55)
+  expect(tvStand.min[0] - coffeeTable.max[0]).toBeGreaterThanOrEqual(0.4)
+  const chairs = boxes.filter((box) => box.name.startsWith('chair-'))
+  const walkway = Math.min(...chairs.map((chair) => sofa.min[0] - chair.max[0]).filter((gap) => gap > -1))
+  expect(walkway).toBeGreaterThanOrEqual(0.6)
+})
+
+test('the TV glow aims at the sofa', () => {
+  const [sx, , sz] = layout.objects.sofa.position
+  const [tx, , tz] = layout.lights.crt.target
+  expect(tx).toBeCloseTo(sx)
+  expect(tz).toBeCloseTo(sz)
+})
+
 // Task 10b: the floor lamp of the lounge corner.
 test('the floor lamp stands on the floor beside the sofa, clear of every other object', () => {
   const lamp = named('floorLamp')
