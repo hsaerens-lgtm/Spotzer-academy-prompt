@@ -130,6 +130,17 @@
     },
     {
       "kind": "model",
+      "id": "classic_laptop",
+      "source": "polyhaven",
+      "sourceId": "classic_laptop",
+      "api": "https://api.polyhaven.com/files/classic_laptop",
+      "licence": "CC0-1.0",
+      "stage": "base",
+      "usage": "Retro laptop on the meeting table (opens the prompt workshop)",
+      "textureSize": 1024
+    },
+    {
+      "kind": "model",
       "id": "wall_clock",
       "source": "polyhaven",
       "sourceId": "wall_clock",

@@ -50,8 +50,14 @@ test('the drawer cabinet, the coffee table, the pendants and the picture frames 
     // Nothing else draws them: without its model, an item has no source (AssetBoundary leaves it out).
     expect(hasSource(name, {}), name).toBe(false)
   }
-  // Three base models, these four, and the five of Task 14: the final registry.
-  expect(Object.keys(glbModels)).toHaveLength(12)
+  // Four base models, these four, and the five of Task 14: the final registry.
+  expect(Object.keys(glbModels)).toHaveLength(13)
+})
+
+// The laptop on the meeting table is the CC0 retro laptop; its procedural version stays as the fallback (LaptopModel).
+test('the laptop is drawn by the retro laptop model, the procedural one kept as a fallback', () => {
+  expect(resolveObject('laptop')).toEqual({ kind: 'glb', url: publicUrl('assets/models/classic_laptop.glb') })
+  expect(hasSource('laptop', {})).toBe(true)
 })
 
 // Task 14: the large plants, the vases and the clay planter (decor.test.ts checks their registry entries and stage).

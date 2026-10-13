@@ -24,7 +24,7 @@ export const TEXTURE_SETS: Record<TextureSetId, TextureSetSpec> = {
 export const TEXTURE_SET_IDS = Object.keys(TEXTURE_SETS) as TextureSetId[]
 
 export type ModelId =
-  | 'sideboard' | 'television' | 'wallClock' | 'drawerCabinet' | 'coffeeTable' | 'pendantLamp'
+  | 'sideboard' | 'television' | 'wallClock' | 'laptop' | 'drawerCabinet' | 'coffeeTable' | 'pendantLamp'
   | 'pictureFrame' | 'pottedPlant' | 'pachira' | 'vaseTall' | 'vaseRound' | 'clayPot'
 export interface ModelSpec {
   assetId: string
@@ -34,6 +34,7 @@ export const MODELS: Record<ModelId, ModelSpec> = {
   sideboard: { assetId: 'modern_wooden_cabinet', stage: 'base' },
   television: { assetId: 'television_02', stage: 'base' },
   wallClock: { assetId: 'wall_clock', stage: 'base' },
+  laptop: { assetId: 'classic_laptop', stage: 'base' },
   drawerCabinet: { assetId: 'drawer_cabinet', stage: 'decor' },
   coffeeTable: { assetId: 'modern_coffee_table_01', stage: 'decor' },
   pendantLamp: { assetId: 'modern_ceiling_lamp_01', stage: 'decor' },
@@ -57,6 +58,7 @@ export const MODEL_PARTS = {
   clockHands: { hour: 'wall_clock_hours_hand', minute: 'wall_clock_minute_hand', second: 'wall_clock_second_hand' },
   pendantBulb: 'modern_ceiling_globe',
   pendantShell: 'modern_ceiling_lamp_01_glass',
+  laptopScreen: 'classic_laptop_screen',
   frameArtwork: 'hanging_picture_frame_01_artwork',
 } as const
 /** Model materials whose name matches are glass (audit exemption). */
@@ -69,5 +71,14 @@ export const GLASS_MATERIAL = /_glass$/
  * textures.
  */
 export const CRT_SCREEN = { width: 0.3, height: 0.225, center: [0, 0.258, 0.177] as [number, number, number] }
+/**
+ * The laptop on the meeting table: classic_laptop scaled to this height (about 34 cm wide, like a real one; the model is
+ * 65 cm wide), and its screen glass in the scaled, normalised frame (origin at the bottom centre, front +z), measured
+ * from the GLB (assets.test.ts). The glass is flat and upright, with no UVs of its own: LaptopModel gives it some.
+ */
+export const LAPTOP = {
+  height: 0.283,
+  screen: { width: 0.2336, height: 0.1914, center: [0, 0.1726, -0.1085] as [number, number, number] },
+} as const
 /** The artwork of hanging_picture_frame_01 in metres, as the scene shows it (measured: 0.5132 x 0.7615 m). */
 export const FRAME_ARTWORK = { width: 0.513, height: 0.7615 } as const

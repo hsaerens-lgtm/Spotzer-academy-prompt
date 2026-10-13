@@ -12,6 +12,7 @@ import { AdaController } from './AdaController'
 import { useBaseModels } from './baseAssets'
 import { CameraRig } from './camera/CameraRig'
 import { CrtScreen } from './CrtScreen'
+import { LaptopModel } from './LaptopModel'
 import { Decor } from './decor/Decor'
 import { DecorStage } from './decor/DecorStage'
 import { FloorContactShadow } from './FloorContactShadow'
@@ -37,7 +38,7 @@ export function OfficeScene() {
   useEmissiveLevels(materials)
   const sceneReady = useApp((s) => s.sceneReady)
   const base = useRef<Group>(null)
-  const { table, chairs, microphones, laptop, tvStand, tv, retroConsole, sofa, floorLamp, logo, shelves } = layout.objects
+  const { table, chairs, microphones, tvStand, tv, retroConsole, sofa, floorLamp, logo, shelves } = layout.objects
   return (
     <>
       <color attach="background" args={[brand.ink]} />
@@ -56,7 +57,7 @@ export function OfficeScene() {
         ))}
         <SideboardSet />
         <Interactive id="laptop" onActivate={objectActions.laptop}>
-          <SceneObject object="laptop" name="laptop" position={laptop.position} rotation-y={laptop.rotationY} />
+          <LaptopModel />
         </Interactive>
         <SceneObject object="tvStand" name="tvStand" position={tvStand.position} rotation-y={tvStand.rotationY} />
         <Interactive id="tv" onActivate={objectActions.tv}>

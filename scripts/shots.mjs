@@ -1,5 +1,5 @@
 // Review and evidence screenshots of the office, rendered by Chromium on the real GPU (ANGLE on Direct3D 11).
-// Usage: node scripts/shots.mjs --out <dir> [--phases day,sunset,night] [--views overview,presentation,tv] [--prefix <text>] [--wait-decor]
+// Usage: node scripts/shots.mjs --out <dir> [--phases day,sunset,night] [--views overview,presentation,tv,laptop] [--prefix <text>] [--wait-decor]
 // Uses the dev server on http://localhost:<E2E_PORT, default 5199> (the Playwright port), starting one when nothing answers there.
 // Another worktree can use 5199 at the same time: set E2E_PORT to use a different port (empty means unset).
 import { spawn, spawnSync } from 'node:child_process'
@@ -12,7 +12,7 @@ import { chromium } from '@playwright/test'
 const PORT = process.env.E2E_PORT || '5199'
 const BASE = `http://localhost:${PORT}`
 const PHASES = ['day', 'sunset', 'night']
-const VIEWS = ['overview', 'presentation', 'tv']
+const VIEWS = ['overview', 'presentation', 'tv', 'laptop']
 const READY_MS = 60_000
 
 const { values } = parseArgs({
@@ -25,7 +25,7 @@ const { values } = parseArgs({
     help: { type: 'boolean', default: false },
   },
 })
-const usage = 'Usage: node scripts/shots.mjs --out <dir> [--phases day,sunset,night] [--views overview,presentation,tv] [--prefix <text>] [--wait-decor]'
+const usage = 'Usage: node scripts/shots.mjs --out <dir> [--phases day,sunset,night] [--views overview,presentation,tv,laptop] [--prefix <text>] [--wait-decor]'
 if (values.help) {
   console.log(usage)
   process.exit(0)
@@ -112,9 +112,10 @@ try {
         await sleep(2500)
         await shoot(page, `${phase}-presentation`)
       } else {
-        await page.evaluate(() => window.__academy.clickObject('tv'))
+        // A flight to the TV or the laptop, shot just before it ends in another zone.
+        await page.evaluate((target) => window.__academy.clickObject(target), view)
         await sleep(1100)
-        await shoot(page, `${phase}-tv`)
+        await shoot(page, `${phase}-${view}`)
         // The flight ends in another zone: reload the office when more views follow.
         if (view !== views.at(-1)) await openOffice(page, phase)
       }

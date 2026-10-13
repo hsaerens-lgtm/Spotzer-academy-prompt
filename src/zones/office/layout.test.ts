@@ -1,4 +1,4 @@
-import { CRT_SCREEN } from '../../three/assets'
+import { CRT_SCREEN, LAPTOP } from '../../three/assets'
 import { PARALLAX, makeRail } from './camera/railMath'
 import { SIZES, sceneBoxes, segmentHitsBox, type Box } from './footprints'
 import { SCREEN_BANDS, glazingFraction, projectBox, projectPoint } from './framing'
@@ -349,6 +349,25 @@ test('nothing hides the wall screen in the presentation view', () => {
 })
 
 // Task 11: the flight into the TV ends in front of the television_02 picture, looking at its centre.
+test('the laptop flight ends 25 to 35 cm in front of the laptop screen, aimed at its centre', () => {
+  const { position, rotationY = 0 } = layout.objects.laptop
+  const [cx, cy, cz] = LAPTOP.screen.center
+  const cos = Math.cos(rotationY)
+  const sin = Math.sin(rotationY)
+  const screen = [position[0] + cx * cos + cz * sin, position[1] + cy, position[2] - cx * sin + cz * cos]
+  const normal = [sin, 0, cos]
+  const dot = (a: readonly number[], b: readonly number[]) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+  const sub = (a: readonly number[], b: readonly number[]) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
+  const { position: eye, target } = layout.flights.laptop
+  const distance = dot(sub(eye, screen), normal)
+  expect(distance).toBeGreaterThanOrEqual(0.25)
+  expect(distance).toBeLessThanOrEqual(0.35)
+  const aim = sub(target, eye)
+  const k = dot(sub(screen, eye), normal) / dot(aim, normal)
+  const hit = eye.map((value, i) => value + aim[i] * k)
+  expect(Math.hypot(...sub(hit, screen))).toBeLessThan(0.02)
+})
+
 test('the TV flight ends 30 to 50 cm in front of the TV picture, aimed at its centre', () => {
   const { position, rotationY = 0 } = layout.objects.tv
   const [cx, cy, cz] = CRT_SCREEN.center

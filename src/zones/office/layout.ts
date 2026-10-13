@@ -87,7 +87,7 @@ export const layout = {
     { position: [-1.5, 1.35, -1.4], target: [-1.5, 1.6, -5.97] },
   ] as Pose[],
   flights: {
-    laptop: { position: [-0.8, 0.95, 0.39], target: [-0.8, 0.87, 0.1] },
+    laptop: { position: [-0.8, 0.95, 0.4415], target: [-0.8, 0.9226, 0.1415] }, // 30 cm before the retro laptop's screen (LAPTOP.screen)
     tv: { position: [4.05, 0.763, -1.4], target: [4.42, 0.758, -1.4] },
   } as Record<Via, Pose>,
   objects: {

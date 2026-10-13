@@ -146,6 +146,19 @@ test('with outline, each mesh of the model gets a hover outline of its own geome
   }
 })
 
+test('an outline filter leaves out the meshes it rejects', async () => {
+  const { scene } = await mount(
+    <HoverContext.Provider value>
+      <SceneObject object="clock" name="filtered" outline={(mesh) => mesh.name !== 'back'} />
+    </HoverContext.Provider>,
+    'filtered',
+  )
+  const outlinesOf = (name: string) =>
+    (named(named(scene, 'filtered'), name) as Mesh).children.flatMap((child) => child.children).filter((child) => (child as Mesh).isMesh)
+  expect(outlinesOf('front')).toHaveLength(1)
+  expect(outlinesOf('back')).toHaveLength(0)
+})
+
 test('height scales the model before it is set on the floor, centred', async () => {
   const { scene } = await mount(
     <>

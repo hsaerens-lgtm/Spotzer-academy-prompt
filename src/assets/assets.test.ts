@@ -6,7 +6,7 @@ import { NodeIO, type Document } from '@gltf-transform/core'
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions'
 import { getBounds } from '@gltf-transform/functions'
 import { MeshoptDecoder } from 'meshoptimizer'
-import { CRT_SCREEN, FRAME_ARTWORK, GLASS_MATERIAL, MODEL_PARTS } from '../three/assets'
+import { CRT_SCREEN, FRAME_ARTWORK, GLASS_MATERIAL, LAPTOP, MODEL_PARTS } from '../three/assets'
 import { assetManifestSchema, entryFiles, manifestFiles } from './manifest'
 import { ASSET_BUDGET, ASSETS_DIR, CREDITS_FILE, LICENCE, modelFile } from './paths'
 
@@ -138,6 +138,33 @@ test('the pendant has its bulb and shell materials and the frame its artwork mat
   expect(pendant.filter((name) => GLASS_MATERIAL.test(name))).toEqual([MODEL_PARTS.pendantShell])
   expect(await materials('hanging_picture_frame_01')).toContain(MODEL_PARTS.frameArtwork)
   expect((await materials('wall_clock')).filter((name) => GLASS_MATERIAL.test(name))).toEqual(['wall_clock_glass'])
+})
+
+// The laptop is scaled to LAPTOP.height; the workshop preview covers its screen glass (LaptopModel.tsx).
+test('the laptop screen glass is where LAPTOP.screen says, once the laptop is scaled and normalised', async () => {
+  const document = await readModel('classic_laptop')
+  const scene = document.getRoot().listScenes()[0]
+  const bounds = getBounds(scene)
+  const scale = LAPTOP.height / (bounds.max[1] - bounds.min[1])
+  const node = document.getRoot().listNodes().find((n) => n.getMesh()?.listPrimitives().some((p) => p.getMaterial()?.getName() === MODEL_PARTS.laptopScreen))!
+  const glass = node.getMesh()!.listPrimitives().find((primitive) => primitive.getMaterial()?.getName() === MODEL_PARTS.laptopScreen)!
+  expect(glass.getMaterial()!.getAlphaMode()).toBe('OPAQUE')
+  const position = glass.getAttribute('POSITION')!
+  const world = node.getWorldMatrix()
+  const [min, max, p] = [[Infinity, Infinity, Infinity], [-Infinity, -Infinity, -Infinity], [] as number[]]
+  for (let i = 0; i < position.getCount(); i++) {
+    position.getElement(i, p)
+    const v = [0, 1, 2].map((r) => world[r] * p[0] + world[4 + r] * p[1] + world[8 + r] * p[2] + world[12 + r])
+    for (let k = 0; k < 3; k++) {
+      min[k] = Math.min(min[k], v[k])
+      max[k] = Math.max(max[k], v[k])
+    }
+  }
+  // Normalised: standing on y = 0, centred on x and z; then scaled about that origin.
+  const centre = [((min[0] + max[0]) / 2 - (bounds.min[0] + bounds.max[0]) / 2) * scale, ((min[1] + max[1]) / 2 - bounds.min[1]) * scale, (max[2] - (bounds.min[2] + bounds.max[2]) / 2) * scale]
+  centre.forEach((value, k) => expect(Math.abs(value - LAPTOP.screen.center[k]), `centre axis ${k}`).toBeLessThan(0.002))
+  expect(Math.abs((max[0] - min[0]) * scale - LAPTOP.screen.width)).toBeLessThan(0.002)
+  expect(Math.abs((max[1] - min[1]) * scale - LAPTOP.screen.height)).toBeLessThan(0.002)
 })
 
 // The posters are painted at the artwork's proportions (decor/posters.ts): its size, in metres, as the scene shows it.

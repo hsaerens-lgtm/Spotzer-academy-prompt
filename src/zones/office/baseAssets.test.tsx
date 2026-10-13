@@ -39,14 +39,14 @@ test('the base preloads every texture set in one request, as useTextureSets read
 test('the base preloads its models as useGLTF loads them, and no decor model', () => {
   preloadBaseAssets()
   const base = (Object.keys(MODELS) as ModelId[]).filter((id) => MODELS[id].stage === 'base').map(modelUrl)
-  expect(base).toHaveLength(3)
+  expect(base).toHaveLength(4)
   expect(baseModelUrls()).toEqual(base)
   expect(vi.mocked(useGLTF.preload).mock.calls).toEqual(base.map((url) => [url, false, true]))
 })
 
-test('the base models are the models the base draws its sideboard, TV and clock with', () => {
+test('the base models are the models the base draws its sideboard, TV, clock and laptop with', () => {
   // The other objects of the base are procedural (the sofa included: the default glbModels keep it so).
-  expect(baseModelUrls()).toEqual([glbModels.sideboard, glbModels.crtTv, glbModels.clock])
+  expect(baseModelUrls()).toEqual([glbModels.sideboard, glbModels.crtTv, glbModels.clock, glbModels.laptop])
   expect(resolveObject('sofa')).toEqual({ kind: 'procedural' })
 })
 
@@ -83,4 +83,20 @@ test('useBaseModels reads every base model as GltfObject does', async () => {
   }
   roots.push(await mountR3F(<Reader />))
   expect(vi.mocked(useGLTF).mock.calls).toEqual(baseModelUrls().map((url) => [url, false, true]))
+})
+
+// A model that cannot load fails where it is drawn, inside its own boundary (the laptop's stand-in), not at the top.
+test('useBaseModels leaves a model that failed to load to the object that draws it', async () => {
+  vi.mocked(useGLTF).mockImplementation(((url: string) => {
+    if (url === glbModels.laptop) throw new Error('Could not load classic_laptop.glb: 404')
+    return { scene: new Group() }
+  }) as never)
+  let rendered = false
+  function Reader() {
+    useBaseModels()
+    rendered = true
+    return null
+  }
+  roots.push(await mountR3F(<Reader />))
+  expect(rendered).toBe(true)
 })

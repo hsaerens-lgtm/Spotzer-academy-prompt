@@ -1,7 +1,7 @@
 import { useGLTF } from '@react-three/drei'
 import { createPortal } from '@react-three/fiber'
 import { Fragment, useLayoutEffect, useMemo, type ComponentType } from 'react'
-import type { Object3D } from 'three'
+import type { Mesh, Object3D } from 'three'
 import { modelUrl } from './assets'
 import { cloneModel, meshesOf, normaliseModel, prepareModel, scaleToHeight } from './gltf'
 import { HoverOutline } from './interactive'
@@ -46,6 +46,7 @@ export const glbModels: Partial<Record<ObjectName, string>> = {
   sideboard: modelUrl('sideboard'),
   crtTv: modelUrl('television'),
   clock: modelUrl('wallClock'),
+  laptop: modelUrl('laptop'),
   cabinet: modelUrl('drawerCabinet'),
   coffeeTable: modelUrl('coffeeTable'),
   pendant: modelUrl('pendantLamp'),
@@ -71,8 +72,11 @@ const procedural: Partial<Record<ObjectName, ComponentType<ObjectProps>>> = {
 }
 
 export interface ModelProps extends ObjectProps {
-  /** Lime hover outline on every mesh of a model (interactive models, inside an <Interactive>). */
-  outline?: boolean
+  /**
+   * Lime hover outline on the meshes of a model (interactive models, inside an <Interactive>): every mesh, or those a
+   * filter accepts (a module-level function: a new one on each render rebuilds the outlines).
+   */
+  outline?: boolean | ((mesh: Mesh) => boolean)
   /** Scale the model uniformly to this height, in metres, before normalising it. */
   height?: number
   /** Called once per placed copy, after preparation: the place to find named nodes and materials. */
@@ -105,7 +109,11 @@ function GltfObject({ url, outline = false, height, onModel, ...props }: ModelPr
   useLayoutEffect(() => {
     onModel?.(root)
   }, [root])
-  const meshes = useMemo(() => (outline ? meshesOf(root) : []), [outline, root])
+  const meshes = useMemo(() => {
+    if (!outline) return []
+    const all = meshesOf(root)
+    return outline === true ? all : all.filter(outline)
+  }, [outline, root])
   return (
     <group {...props}>
       <primitive object={root} />

@@ -20,7 +20,7 @@ export const SIZES: Record<string, Vec3> = {
   microphone: [0.1, 0.42, 0.22],
   sideboard: [4.88, 0.68, 0.684],
   lamp: [0.28, 0.48, 0.28],
-  laptop: [0.34, 0.24, 0.26],
+  laptop: [0.34, 0.283, 0.253], // classic_laptop scaled to LAPTOP.height (assets.ts)
   tvStand: [1.7, 0.5, 0.5],
   tv: [0.4, 0.42, 0.36],
   retroConsole: [0.62, 0.08, 0.3],

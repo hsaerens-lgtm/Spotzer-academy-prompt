@@ -27,7 +27,16 @@ export function preloadBaseAssets(): void {
  * Reads the base models as GltfObject does, for the top of the scene: if one is still parsing, the scene suspends there,
  * before rendering the room, and not after it (the models come last in the tree). The models then parse on a free main
  * thread, and the room renders once, when they are in (Task 16b).
+ * A model that failed to load is left to the object that draws it: its error comes again there, inside its own
+ * boundary (the laptop falls back to its procedural version), instead of taking the whole scene down here.
  */
 export function useBaseModels(): void {
-  for (const url of baseModelUrls()) useGLTF(url, false, true)
+  for (const url of baseModelUrls()) {
+    try {
+      useGLTF(url, false, true)
+    } catch (thrown) {
+      // A pending load suspends as before; only a settled failure is let through.
+      if (thrown instanceof Promise) throw thrown
+    }
+  }
 }

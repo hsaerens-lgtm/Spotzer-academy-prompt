@@ -4,6 +4,8 @@ interface Props {
   /** Shown in the development warning. */
   name: string
   children: ReactNode
+  /** Drawn instead when the item fails (a base object's procedural stand-in); nothing by default. */
+  fallback?: ReactNode
 }
 
 /**
@@ -41,10 +43,12 @@ export class AssetBoundary extends Component<Props, { failed: boolean }> {
   }
 
   componentDidCatch(error: unknown) {
-    if (import.meta.env.DEV) console.warn(`Decor item "${this.props.name}" failed to load and is left out.`, error)
+    if (!import.meta.env.DEV) return
+    if (this.props.fallback === undefined) console.warn(`Decor item "${this.props.name}" failed to load and is left out.`, error)
+    else console.warn(`Model "${this.props.name}" failed to load: its stand-in is drawn instead.`, error)
   }
 
   render() {
-    return this.state.failed ? null : this.props.children
+    return this.state.failed ? (this.props.fallback ?? null) : this.props.children
   }
 }

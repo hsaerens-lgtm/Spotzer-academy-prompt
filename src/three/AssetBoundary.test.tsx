@@ -43,6 +43,18 @@ test('a failing d\u00e9cor item renders nothing and warns in development', () =>
   expect(warnSpy).toHaveBeenCalledWith('Decor item "pottedPlant" failed to load and is left out.', expect.any(Error))
 })
 
+// A base object with a stand-in: the procedural laptop takes over when the laptop model cannot load.
+test('a failing item with a fallback shows the fallback instead', () => {
+  render(
+    <AssetBoundary name="laptop" fallback={<p>procedural laptop</p>}>
+      <p>model</p>
+      <Missing />
+    </AssetBoundary>,
+  )
+  expect(screen.getByText('procedural laptop')).toBeInTheDocument()
+  expect(screen.queryByText('model')).toBeNull()
+})
+
 // Review focus 3: R3F reports every caught error with reportError(); the boundary cancels that report, and only that one.
 test('an error it has handled is not reported as uncaught', () => {
   const error = new Error('Could not load assets/models/potted_plant_01.glb: 404')
