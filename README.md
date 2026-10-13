@@ -9,8 +9,6 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173 — best on Chrome or Edge, window at least 1280 × 720.
-
 Requires Node.js `^22.22.2` or `^24.15.0` (jsdom 30, used by the unit tests, needs it).
 
 ## The prompt workshop
