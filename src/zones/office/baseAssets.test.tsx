@@ -39,15 +39,15 @@ test('the base preloads every texture set in one request, as useTextureSets read
 test('the base preloads its models as useGLTF loads them, and no decor model', () => {
   preloadBaseAssets()
   const base = (Object.keys(MODELS) as ModelId[]).filter((id) => MODELS[id].stage === 'base').map(modelUrl)
-  expect(base).toHaveLength(4)
+  expect(base).toHaveLength(5)
   expect(baseModelUrls()).toEqual(base)
   expect(vi.mocked(useGLTF.preload).mock.calls).toEqual(base.map((url) => [url, false, true]))
 })
 
-test('the base models are the models the base draws its sideboard, TV, clock and laptop with', () => {
-  // The other objects of the base are procedural (the sofa included: the default glbModels keep it so).
-  expect(baseModelUrls()).toEqual([glbModels.sideboard, glbModels.crtTv, glbModels.clock, glbModels.laptop])
-  expect(resolveObject('sofa')).toEqual({ kind: 'procedural' })
+test('the base models are the models the base draws its sideboard, TV, clock, laptop and sofa with', () => {
+  // The other objects of the base are procedural (the table, for one).
+  expect(baseModelUrls()).toEqual([glbModels.sideboard, glbModels.crtTv, glbModels.clock, glbModels.laptop, glbModels.sofa])
+  expect(resolveObject('table')).toEqual({ kind: 'procedural' })
 })
 
 test('the base preloads the area light tables, and leaves a failure there to the rig', async () => {

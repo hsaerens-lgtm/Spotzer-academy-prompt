@@ -3,8 +3,14 @@ import { MODELS, modelUrl, type ModelId } from './assets'
 import { OBJECT_NAMES, glbModels, hasSource, resolveObject, type ObjectName } from './objects'
 
 test('objects are procedural unless a GLB is declared', () => {
-  expect(resolveObject('sofa')).toEqual({ kind: 'procedural' })
-  expect(resolveObject('sofa', { sofa: 'models/sofa.glb' })).toEqual({ kind: 'glb', url: 'models/sofa.glb' })
+  expect(resolveObject('table')).toEqual({ kind: 'procedural' })
+  expect(resolveObject('table', { table: 'models/table.glb' })).toEqual({ kind: 'glb', url: 'models/table.glb' })
+})
+
+// The owner's choice (2026-10-13): Wayfair's velvet sofa (CC BY 4.0), the procedural sofa kept as its fallback.
+test('the sofa is drawn by the Glam Velvet Sofa model, the procedural one kept as a fallback', () => {
+  expect(resolveObject('sofa')).toEqual({ kind: 'glb', url: publicUrl('assets/models/glam_velvet_sofa.glb') })
+  expect(hasSource('sofa', {})).toBe(true)
 })
 
 test('every object name has a source', () => {
@@ -50,8 +56,8 @@ test('the drawer cabinet, the coffee table, the pendants and the picture frames 
     // Nothing else draws them: without its model, an item has no source (AssetBoundary leaves it out).
     expect(hasSource(name, {}), name).toBe(false)
   }
-  // Four base models, these four, and the five of Task 14: the final registry.
-  expect(Object.keys(glbModels)).toHaveLength(13)
+  // Five base models (with the sofa), these four, and the five of Task 14.
+  expect(Object.keys(glbModels)).toHaveLength(14)
 })
 
 // The laptop on the meeting table is the CC0 retro laptop; its procedural version stays as the fallback (LaptopModel).

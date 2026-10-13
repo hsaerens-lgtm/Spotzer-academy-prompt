@@ -24,7 +24,7 @@ export const SIZES: Record<string, Vec3> = {
   tvStand: [1.7, 0.5, 0.5],
   tv: [0.4, 0.42, 0.36],
   retroConsole: [0.62, 0.08, 0.3],
-  sofa: [2.2, 0.78, 0.92], // low three-seater (Sofa.test.tsx measures it)
+  sofa: [2.19, 0.79, 1.02], // Glam Velvet Sofa as loaded (assets.test.ts measures it)
   floorLamp: [0.4, 1.55, 0.4], // FloorLamp: the 0.4 m drum shade on top, 1.55 m high (floorLamp.test.ts measures it)
   // The backlit sign of Task 10: its plate around the 0.72 x 0.936 m mark, and the 10 cm cubes of the mark in front.
   // Centred vertically on its position; its depth runs forward from it (LogoCubes builds it from local z 0).

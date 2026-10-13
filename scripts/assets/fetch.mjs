@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
 import {
   AMBIENTCG_MAPS,
+  ATTRIBUTED_SOURCES,
   MAX_API_BYTES,
   MAX_DOWNLOAD,
   ambientCgDownload,
@@ -123,6 +124,11 @@ let total = 0
 try {
   for (const entry of manifest.assets) {
     if (only && !only.has(entry.id)) continue
+    // Downloaded by hand (an account is needed), then unpacked by assets:import: nothing to fetch.
+    if (ATTRIBUTED_SOURCES.includes(entry.source)) {
+      console.log(`${entry.id.padEnd(26)} ${''.padStart(10)}  downloaded by hand: npm run assets:import -- --id ${entry.id} --file <download>`)
+      continue
+    }
     let bytes = 0
     let fetched = 0
     for (const file of await downloadsFor(entry)) {

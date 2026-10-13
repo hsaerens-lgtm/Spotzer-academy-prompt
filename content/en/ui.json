@@ -75,6 +75,9 @@
     "title": "The Dungeon",
     "pressStart": "Press start"
   },
+  "credits": {
+    "models": "3D models: “Glam Velvet Sofa” by Wayfair, LLC (Khronos glTF Sample Assets), CC BY 4.0. Other 3D assets: CC0, from Poly Haven and ambientCG."
+  },
   "workshop": {
     "windows": {
       "missions": "MISSIONS.EXE",

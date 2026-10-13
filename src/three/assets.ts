@@ -24,7 +24,7 @@ export const TEXTURE_SETS: Record<TextureSetId, TextureSetSpec> = {
 export const TEXTURE_SET_IDS = Object.keys(TEXTURE_SETS) as TextureSetId[]
 
 export type ModelId =
-  | 'sideboard' | 'television' | 'wallClock' | 'laptop' | 'drawerCabinet' | 'coffeeTable' | 'pendantLamp'
+  | 'sideboard' | 'television' | 'wallClock' | 'laptop' | 'sofa' | 'drawerCabinet' | 'coffeeTable' | 'pendantLamp'
   | 'pictureFrame' | 'pottedPlant' | 'pachira' | 'vaseTall' | 'vaseRound' | 'clayPot'
 export interface ModelSpec {
   assetId: string
@@ -35,6 +35,7 @@ export const MODELS: Record<ModelId, ModelSpec> = {
   television: { assetId: 'television_02', stage: 'base' },
   wallClock: { assetId: 'wall_clock', stage: 'base' },
   laptop: { assetId: 'classic_laptop', stage: 'base' },
+  sofa: { assetId: 'glam_velvet_sofa', stage: 'base' },
   drawerCabinet: { assetId: 'drawer_cabinet', stage: 'decor' },
   coffeeTable: { assetId: 'modern_coffee_table_01', stage: 'decor' },
   pendantLamp: { assetId: 'modern_ceiling_lamp_01', stage: 'decor' },

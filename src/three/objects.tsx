@@ -47,6 +47,7 @@ export const glbModels: Partial<Record<ObjectName, string>> = {
   crtTv: modelUrl('television'),
   clock: modelUrl('wallClock'),
   laptop: modelUrl('laptop'),
+  sofa: modelUrl('sofa'),
   cabinet: modelUrl('drawerCabinet'),
   coffeeTable: modelUrl('coffeeTable'),
   pendant: modelUrl('pendantLamp'),

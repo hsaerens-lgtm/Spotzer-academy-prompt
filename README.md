@@ -64,16 +64,17 @@ Open http://localhost:5173/?tune (development only). Pick an object, drag it, ed
 
 `npm run test` checks the result: the overview keeps the retro corner, the laptop and its share of glazing, nothing stands between the overview camera and the laptop, and every generated plant stays inside its footprint (`src/zones/office/footprints.ts`).
 
-## 3D assets (CC0)
+## 3D assets (CC0 and CC BY)
 
-Every texture and model comes from Poly Haven or ambientCG (CC0) and is served by the site from `public/assets/`: nothing is fetched from a CDN at run time. `scripts/assets/manifest.json` lists each asset: id, source, API URL, licence, texture size (`resolution` for a texture, `textureSize` for a model), use and loading stage (`base` for the first image, `decor` after it).
+Every texture and most models come from Poly Haven or ambientCG (CC0). A few models are CC BY 4.0, downloaded by hand from Sketchfab (an account is needed) or Khronos's glTF Sample Assets: their author is credited in `public/assets/CREDITS.md` and in the site (reading mode, `credits.models` in `content/en/ui.json`, checked by `npm run test`). Everything is served by the site from `public/assets/`: nothing is fetched from a CDN at run time. `scripts/assets/manifest.json` lists each asset: id, source, API URL, licence, texture size (`resolution` for a texture, `textureSize` for a model), use and loading stage (`base` for the first image, `decor` after it).
 
 ```bash
-npm run assets:fetch   # downloads the listed sources into assets-src/ (ignored by git), checking sizes and checksums
+npm run assets:fetch   # downloads the listed CC0 sources into assets-src/ (ignored by git), checking sizes and checksums
+npm run assets:import -- --id <id> --file <download>   # unpacks a CC BY model downloaded by hand (.zip or .glb)
 npm run assets:build   # WebP textures, meshopt-compressed GLB models, public/assets/CREDITS.md, budget check
 ```
 
-`assets:fetch` accepts `-- --only <id>[,<id>]` and `assets:build` accepts `-- --only <id>`. The prepared files and `public/assets/CREDITS.md` are committed, so the site builds without the network. `npm run test` checks that every file is listed in `CREDITS.md` as CC0-1.0 with its exact size, and the budgets: `public/assets` at most 18 MiB, files needed for the first image at most 6 MiB, no file of 3 MiB or more.
+`assets:fetch` accepts `-- --only <id>[,<id>]` and `assets:build` accepts `-- --only <id>`. A CC BY model's manifest entry names its `title` and `author`, and its `api` is its page (it is never fetched). The build drops the lights a model brings and keeps only the default of its colour variants. The prepared files and `public/assets/CREDITS.md` are committed, so the site builds without the network. `npm run test` checks that every file is listed in `CREDITS.md` with its licence (and its author when CC BY) and its exact size, and the budgets: `public/assets` at most 18 MiB, files needed for the first image at most 6 MiB, no file of 3 MiB or more.
 
 ## Replace a procedural object with a 3D model
 

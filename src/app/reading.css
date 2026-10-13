@@ -6,6 +6,7 @@
 .reading__grid { display: grid; grid-template-columns: minmax(300px, 420px) 1fr; gap: 28px; max-width: 1480px; margin: 0 auto; }
 .reading__side { display: flex; flex-direction: column; gap: 16px; }
 .reading__zones { display: flex; flex-wrap: wrap; gap: 10px; }
+.reading__credits { margin: 0; font-size: 12px; line-height: 1.5; color: var(--at-on-dark-2); }
 .reading__main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 .reading__screen { aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid var(--at-hairline); border-radius: var(--oe-radius-lg); }
 .reading__intro { display: flex; flex-direction: column; gap: 10px; }

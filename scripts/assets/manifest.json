@@ -141,6 +141,19 @@
     },
     {
       "kind": "model",
+      "id": "glam_velvet_sofa",
+      "source": "khronos",
+      "sourceId": "GlamVelvetSofa",
+      "api": "https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/GlamVelvetSofa",
+      "licence": "CC-BY-4.0",
+      "title": "Glam Velvet Sofa",
+      "author": "Wayfair, LLC",
+      "stage": "base",
+      "usage": "Navy velvet sofa of the lounge corner",
+      "textureSize": 1024
+    },
+    {
+      "kind": "model",
       "id": "wall_clock",
       "source": "polyhaven",
       "sourceId": "wall_clock",

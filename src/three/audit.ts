@@ -37,9 +37,12 @@ const holds = (reason: Exemption | undefined, material: Material) =>
  * metal's base colour is its reflectance, set by its tint, so its texture is the normal map plus the ARM map. The
  * roughness and metalness maps are one texture (the ARM map of pbrMaterial, the metallic-roughness map of a glTF), so
  * without a colour map the roughness map cannot be the second map: it would let any colourless ARM-only material through.
+ * A model's material (marked by prepareModel) follows the spec's other branch, "a model with its own textures": any
+ * texture of its own counts (a velvet sofa has a normal and an occlusion map, its colour set by its factors and sheen).
  */
 export function isTextured(material: Material): boolean {
-  const maps = material as Material & { map?: unknown; metalnessMap?: unknown; normalMap?: unknown; roughnessMap?: unknown }
+  const maps = material as Material & { map?: unknown; metalnessMap?: unknown; normalMap?: unknown; roughnessMap?: unknown; aoMap?: unknown }
+  if (material.userData.prepared) return Boolean(maps.map || maps.normalMap || maps.roughnessMap || maps.metalnessMap || maps.aoMap)
   if (maps.map) return Boolean(maps.normalMap || maps.roughnessMap)
   return Boolean(maps.metalnessMap && maps.normalMap)
 }
