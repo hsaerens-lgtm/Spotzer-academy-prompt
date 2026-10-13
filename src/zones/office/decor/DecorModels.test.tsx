@@ -345,6 +345,21 @@ test('every mesh of the decor casts and receives shadows, but for the glass and 
   }
 })
 
+// Spec section 8: an object is left out on its own, also when it shares a component with other models.
+test.each(['pottedPlant', 'vaseTall'] as const)('a missing %s model leaves out its own object only', async (model) => {
+  const declared = glbModels[model]
+  glbModels[model] = MISSING
+  try {
+    const { state } = await mountDecor()
+    const gone = model === 'pottedPlant' ? 'pottedPlant' : `vase-${layout.objects.vases.findIndex((vase) => vase.model === model)}`
+    expect(state.scene.getObjectByName(gone)).toBeUndefined()
+    for (const [name] of PLACED.filter(([name]) => name !== gone)) expect(state.scene.getObjectByName(name), name).toBeDefined()
+    expect(named(state.scene, 'decor').visible).toBe(true)
+  } finally {
+    glbModels[model] = declared
+  }
+})
+
 // Review focus 3: a model that cannot load (404) is left out on its own; the rest of the decor shows and decorReady is set.
 test('a decor model that cannot load is left out, and the rest of the decor shows', async () => {
   const declared = glbModels.coffeeTable

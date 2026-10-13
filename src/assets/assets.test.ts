@@ -165,6 +165,13 @@ test('the clock glass stays alpha-blended at 0.4 once the transmission extension
   expect(glass!.getBaseColorFactor()[3]).toBeCloseTo(0.4, 5)
 })
 
+// Nothing transparent may stand in front of the wall screen's DOM hole, and the pendants overlap its corner.
+test('the pendant shells stay opaque', async () => {
+  const shell = (await readModel('modern_ceiling_lamp_01')).getRoot().listMaterials().find((material) => material.getName() === 'modern_ceiling_lamp_01_glass')
+  expect(shell).toBeDefined()
+  expect(shell!.getAlphaMode()).toBe('OPAQUE')
+})
+
 test('the money tree keeps only variant b', async () => {
   const names = (await readModel('pachira_aquatica_01')).getRoot().listNodes().map((node) => node.getName())
   const variants = names.filter((name) => /_[a-z]$/.test(name))

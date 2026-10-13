@@ -118,8 +118,9 @@ test('a missing d\u00e9cor model leaves the office usable', async ({ page }) => 
   await page.route('**/assets/models/potted_plant_01.glb', (route) => route.abort())
   await openOffice(page)
   await waitForDecor(page)
-  // The large plants are left out; the rest of the decor is there.
+  // The potted plant is left out on its own; the money tree and the rest of the decor are there.
   expect(await screenPosition(page, 'pottedPlant')).toBeNull()
+  expect(await screenPosition(page, 'pachira')).not.toBeNull()
   expect(await screenPosition(page, 'cabinet')).not.toBeNull()
   await hover(page, 'laptop')
   await expect(page.locator('.object-label')).toHaveText('Prompt Workshop')

@@ -1,12 +1,20 @@
 import { useThree } from '@react-three/fiber'
 import { useEffect } from 'react'
-import { Box3, Vector3, type Light } from 'three'
+import { Box3, Vector3, type Light, type Object3D } from 'three'
 import { appStore } from '../core/store'
 import { untexturedMeshes } from '../three/audit'
 import type { LightingSnapshot } from './testApi'
 
 /** Scene groups covered by the material audit (spec section 9): the base stage and the decor stage. */
 const AUDITED_GROUPS = ['base', 'decor']
+
+/** The material audit of the stage groups. A missing group is reported, so the audit can never pass on nothing. */
+export function auditScene(scene: Object3D): string[] {
+  return AUDITED_GROUPS.flatMap((name) => {
+    const root = scene.getObjectByName(name)
+    return root ? untexturedMeshes(root) : [`${name}: group missing`]
+  })
+}
 
 /** Development only (mounted behind import.meta.env.DEV): adds the canvas-side methods of window.__academy. */
 export function TestApiBridge() {
@@ -39,11 +47,7 @@ export function TestApiBridge() {
         lampIntensity: light('lamp-light')?.intensity ?? Number.NaN,
       }
     }
-    api.untexturedMeshes = () =>
-      AUDITED_GROUPS.flatMap((name) => {
-        const root = scene.getObjectByName(name)
-        return root ? untexturedMeshes(root) : []
-      })
+    api.untexturedMeshes = () => auditScene(scene)
     return () => {
       delete api.screenPosition
       delete api.lighting

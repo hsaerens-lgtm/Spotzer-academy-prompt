@@ -27,8 +27,9 @@ export function Decor() {
       <AssetBoundary name="coffeeTable"><SceneObject object="coffeeTable" name="coffeeTable" position={coffeeTable.position} rotation-y={coffeeTable.rotationY} /></AssetBoundary>
       <AssetBoundary name="pendants"><Pendants /></AssetBoundary>
       <AssetBoundary name="frames"><PictureFrames /></AssetBoundary>
-      <AssetBoundary name="largePlants"><LargePlants animate={animate} /></AssetBoundary>
-      <AssetBoundary name="vases"><Vases animate={animate} /></AssetBoundary>
+      {/* Each plant and each vase has its own boundary inside these two. */}
+      <LargePlants animate={animate} />
+      <Vases animate={animate} />
       {plants.map((placement, index) => <Plant key={index} name={`plant-${index}`} placement={placement} animate={animate} />)}
       {hangingPlants.map((placement, index) => <HangingPlant key={index} name={`hangingPlant-${index}`} placement={placement} animate={animate} />)}
       {shelfBooks.map((spec, index) => <Books key={index} name={`books-${index}`} spec={spec} />)}

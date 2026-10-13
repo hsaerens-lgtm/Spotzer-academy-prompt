@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { MeshStandardMaterial, type Group } from 'three'
+import { AssetBoundary } from '../../../three/AssetBoundary'
 import { ENV_MAP_INTENSITY } from '../../../three/materials'
 import { noiseTexture, normalNoiseTexture, speckleTexture } from '../../../three/noise'
 import { SceneObject } from '../../../three/objects'
@@ -49,23 +50,28 @@ export function LargePlants({ animate }: { animate: boolean }) {
   const tree = useRef<Group>(null)
   useSway(potted, LARGE_PLANT_SWAY, 1.3, animate)
   useSway(tree, LARGE_PLANT_SWAY, 4.7, animate)
+  // One boundary per plant (spec section 8): a model that fails leaves out its own plant, not the other one.
   return (
     <>
-      <group name="pottedPlant" position={pottedPlant.position} rotation-y={pottedPlant.rotationY ?? 0}>
-        <group ref={potted}>
-          <SceneObject object="pottedPlant" />
-        </group>
-      </group>
-      <group name="pachira" position={pachira.position} rotation-y={pachira.rotationY ?? 0}>
-        <SceneObject object="clayPot" scale={PACHIRA.potScale} />
-        <group ref={tree} position-y={PACHIRA.base}>
-          {/* The sway turns about the trunk's base; the model is moved so that this is the trunk, not the middle of its leaves. */}
-          <group position={[PACHIRA.offset[0], 0, PACHIRA.offset[1]]}>
-            <SceneObject object="pachira" height={PACHIRA.height} />
+      <AssetBoundary name="pottedPlant">
+        <group name="pottedPlant" position={pottedPlant.position} rotation-y={pottedPlant.rotationY ?? 0}>
+          <group ref={potted}>
+            <SceneObject object="pottedPlant" />
           </group>
         </group>
-        <PachiraSoil />
-      </group>
+      </AssetBoundary>
+      <AssetBoundary name="pachira">
+        <group name="pachira" position={pachira.position} rotation-y={pachira.rotationY ?? 0}>
+          <SceneObject object="clayPot" scale={PACHIRA.potScale} />
+          <group ref={tree} position-y={PACHIRA.base}>
+            {/* The sway turns about the trunk's base; the model is moved so that this is the trunk, not the middle of its leaves. */}
+            <group position={[PACHIRA.offset[0], 0, PACHIRA.offset[1]]}>
+              <SceneObject object="pachira" height={PACHIRA.height} />
+            </group>
+          </group>
+          <PachiraSoil />
+        </group>
+      </AssetBoundary>
     </>
   )
 }

@@ -1,4 +1,5 @@
 import { useSoftwareRenderer } from '../../../app/quality'
+import { AssetBoundary } from '../../../three/AssetBoundary'
 import { SceneObject } from '../../../three/objects'
 import { Plant } from '../../../three/plants/Plant'
 import type { VasePlacement } from '../../../three/plants/types'
@@ -19,16 +20,21 @@ export function vasePlantPosition(vase: VasePlacement): Vec3 {
 /** The vase that stands on the sideboard's top: SideboardSet hides the cabinets without a GPU, and it goes with them. */
 const onSideboard = (vase: VasePlacement) => vase.position[1] === SIZES.sideboard[1]
 
-/** The two ceramic vases, each with a small generated plant growing out of it. */
+/**
+ * The two ceramic vases, each with a small generated plant growing out of it. One boundary per vase (spec section 8): a
+ * vase that fails is left out with its plant, and the other vase stays.
+ */
 export function Vases({ animate }: { animate: boolean }) {
   const software = useSoftwareRenderer()
   return (
     <>
       {layout.objects.vases.map((vase, index) => (
-        <group key={index} visible={!(software && onSideboard(vase))}>
-          <SceneObject object={vase.model} name={`vase-${index}`} position={vase.position} rotation-y={vase.rotationY ?? 0} />
-          <Plant name={`vasePlant-${index}`} placement={{ ...vase.plant, position: vasePlantPosition(vase), pot: 'none' }} animate={animate} />
-        </group>
+        <AssetBoundary key={index} name={`vase-${index}`}>
+          <group visible={!(software && onSideboard(vase))}>
+            <SceneObject object={vase.model} name={`vase-${index}`} position={vase.position} rotation-y={vase.rotationY ?? 0} />
+            <Plant name={`vasePlant-${index}`} placement={{ ...vase.plant, position: vasePlantPosition(vase), pot: 'none' }} animate={animate} />
+          </group>
+        </AssetBoundary>
       ))}
     </>
   )
