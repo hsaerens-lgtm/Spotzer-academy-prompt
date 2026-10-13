@@ -1,5 +1,5 @@
 import { extend } from '@react-three/fiber'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { BoxGeometry, Group, Mesh } from 'three'
 import { appStore } from '../core/store'
 import { isClockDeprecation, mountR3F, type TestRoot } from '../test/r3fRoot'
@@ -116,3 +116,33 @@ test('without parallel shader compilation, the programs compile at once, with no
   expect(appStore.getState().sceneReady).toBe(true)
   expect(warnings).toEqual([])
 })
+
+// Task 16b: the GPU compiles in parallel while the main thread runs the base's own effects (drei's useTexture uploads
+// every texture in one): the programs are queued first, in the commit that mounts the base.
+test('the shaders are queued before the effects of the base run', async () => {
+  const order: string[] = []
+  function Uploads() {
+    useEffect(() => {
+      order.push('base effect')
+    }, [])
+    return null
+  }
+  function BaseWithEffects() {
+    const base = useRef<Group>(null)
+    return (
+      <>
+        <group name="base" ref={base}>
+          <Uploads />
+        </group>
+        <SceneReadySignal target={base} />
+      </>
+    )
+  }
+  const compileAsync = vi.fn(() => {
+    order.push('compile')
+    return Promise.resolve()
+  })
+  roots.push(await mountR3F(<BaseWithEffects />, { compileAsync }))
+  expect(order).toEqual(['compile', 'base effect'])
+})
+

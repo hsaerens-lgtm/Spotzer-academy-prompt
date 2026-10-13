@@ -5,6 +5,7 @@ import { resetAppStore } from '../test/resetAppStore'
 import { preloadBaseAssets } from '../zones/office/baseAssets'
 import { OfficeScene } from '../zones/office/OfficeScene'
 import { App } from './App'
+import { createRenderer } from './renderer'
 import { Stage } from './Stage'
 import { TransitionMount } from './TransitionMount'
 
@@ -36,6 +37,12 @@ test('the stage starts every base download when it mounts, once', () => {
   expect(preloadBaseAssets).toHaveBeenCalledTimes(1)
   rerender(<Stage />)
   expect(preloadBaseAssets).toHaveBeenCalledTimes(1)
+})
+
+// Task 16b: the renderer starts compiling the environment's PMREM program as soon as it exists (renderer.ts).
+test('the stage builds its renderer with createRenderer', () => {
+  render(<Stage />)
+  expect(canvas.props?.gl).toBe(createRenderer)
 })
 
 /** The chain of element types from `node` down to the first element of type `target`, or null. */

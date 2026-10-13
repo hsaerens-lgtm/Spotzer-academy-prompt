@@ -1,5 +1,5 @@
 import { useFrame, useThree } from '@react-three/fiber'
-import { useEffect, useLayoutEffect, useRef, type RefObject } from 'react'
+import { useLayoutEffect, useRef, type RefObject } from 'react'
 import type { Object3D } from 'three'
 import { appStore } from '../core/store'
 import { compileAhead } from '../three/compile'
@@ -12,6 +12,8 @@ type Stage = 'compiling' | 'warm' | 'ready' | 'done'
  * it, and only the frame after that sets sceneReady (the loading screen goes away). A failed compilation still shows the
  * office (a stall beats a missing room), with a warning in development. invalidate() keeps it moving when the canvas
  * renders on demand (another zone on screen).
+ * The programs are queued in a layout effect, in the commit that mounts the base, before the base's passive effects
+ * (drei's useTexture uploads every texture there): the GPU compiles in parallel while the main thread uploads (Task 16b).
  */
 export function SceneReadySignal({ target }: { target: RefObject<Object3D | null> }) {
   const gl = useThree((state) => state.gl)
@@ -24,10 +26,10 @@ export function SceneReadySignal({ target }: { target: RefObject<Object3D | null
     if (target.current) target.current.visible = false
   }, [target])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     let cancelled = false
-    Promise.resolve()
-      .then(() => compileAhead(gl, scene, camera))
+    // Queued now; a synchronous failure rejects the promise like a failed compilation.
+    new Promise((resolve) => resolve(compileAhead(gl, scene, camera)))
       .catch((error: unknown) => {
         if (import.meta.env.DEV) console.warn('Office shaders did not compile ahead of time.', error)
       })

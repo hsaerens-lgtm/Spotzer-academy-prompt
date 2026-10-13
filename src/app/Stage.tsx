@@ -17,6 +17,7 @@ import {
   reduceQuality,
   rendererName,
 } from './quality'
+import { createRenderer } from './renderer'
 import { TestApiBridge } from './TestApiBridge'
 import { TransitionMount } from './TransitionMount'
 import { onContextLost } from './webgl'
@@ -57,7 +58,7 @@ export function Stage() {
         dpr={software ? SOFTWARE_DPR : QUALITY_SETTINGS[quality.level].dpr}
         frameloop={active ? 'always' : 'demand'}
         camera={{ ...CAMERA, position: layout.rail[0].position }}
-        gl={{ antialias: true, powerPreference: 'high-performance' }}
+        gl={createRenderer}
         onCreated={({ gl }) => {
           // Without a GPU (the e2e browser), the low tier at SOFTWARE_DPR keeps the office usable.
           if (isSoftwareRenderer(rendererName(gl.getContext()))) {
