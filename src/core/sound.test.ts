@@ -195,9 +195,31 @@ test('works without Web Audio', () => {
 })
 
 test('the first pointer or key press unlocks the audio once', () => {
-  const engine = { unlocked: false, unlock: vi.fn(), setEnabled: vi.fn(), blip: vi.fn(), thud: vi.fn() }
+  const engine = { unlocked: false, unlock: vi.fn(), setEnabled: vi.fn(), blip: vi.fn(), thud: vi.fn(), jingle: vi.fn() }
   installSoundUnlock(engine)
   window.dispatchEvent(new Event('pointerdown'))
   window.dispatchEvent(new Event('keydown'))
   expect(engine.unlock).toHaveBeenCalledTimes(1)
+})
+
+test('a jingle plays one short square note per frequency, in sequence', () => {
+  const engine = createSound(Ctor, () => 0.5)
+  engine.jingle([523, 659, 784])
+  expect(created).toHaveLength(0)
+  engine.unlock()
+  engine.jingle([523, 659, 784])
+  const notes = created[0].oscillators
+  expect(notes.map((o) => o.type)).toEqual(['square', 'square', 'square'])
+  expect(notes.map((o) => o.frequency.value)).toEqual([523, 659, 784])
+  const starts = notes.map((o) => o.start.mock.calls[0][0] as number)
+  expect(starts[1]).toBeGreaterThan(starts[0])
+  expect(starts[2]).toBeGreaterThan(starts[1])
+})
+
+test('no jingle while sound is off', () => {
+  const engine = createSound(Ctor, () => 0.5)
+  engine.unlock()
+  engine.setEnabled(false)
+  engine.jingle([523])
+  expect(created[0].oscillators).toHaveLength(0)
 })

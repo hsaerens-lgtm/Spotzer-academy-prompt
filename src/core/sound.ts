@@ -5,6 +5,8 @@ export interface SoundEngine {
   blip(char: string, index: number): void
   /** A short low knock (0 to 1): blocks landing in the workshop builder. */
   thud(intensity: number): void
+  /** Short square notes in sequence, 90 ms apart (the dungeon's jingles), in Hz. */
+  jingle(notes: readonly number[]): void
 }
 
 export const BASE_PITCH = 620
@@ -109,6 +111,24 @@ export function createSound(
       oscillator.connect(gain).connect(ctx.destination)
       oscillator.start(now)
       oscillator.stop(now + 0.24)
+    },
+    jingle(notes) {
+      const audio = ctx
+      if (!audio || !enabled) return
+      const start = audio.currentTime
+      notes.forEach((frequency, i) => {
+        const at = start + i * 0.09
+        const oscillator = audio.createOscillator()
+        const gain = audio.createGain()
+        oscillator.type = 'square'
+        oscillator.frequency.value = frequency
+        gain.gain.setValueAtTime(0.0001, at)
+        gain.gain.exponentialRampToValueAtTime(0.04, at + 0.01)
+        gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.08)
+        oscillator.connect(gain).connect(audio.destination)
+        oscillator.start(at)
+        oscillator.stop(at + 0.09)
+      })
     },
   }
 }
