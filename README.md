@@ -1,6 +1,6 @@
 # Athena Prompt Academy
 
-Internal, PC-only training site to learn prompting. A 3D office (three.js, React Three Fiber), a glazed agency meeting room over a 3D city lit for day, sunset or night, where Ada, a robot assistant, explains the basics of generative AI while a wall screen shows diagrams. The laptop leads to the prompt workshop and the retro console to the dungeon (coming in a later sub-project).
+Internal, PC-only training site to learn prompting. A 3D office (three.js, React Three Fiber), a glazed agency meeting room over a 3D city lit for day, sunset or night, where Ada, a robot assistant, explains the basics of generative AI while a wall screen shows diagrams. The laptop leads to the prompt workshop and the retro console to the dungeon, the final test.
 
 ## Run
 
@@ -25,6 +25,12 @@ The CORRECTOR program sends any prompt to OpenAI through a small server that kee
 
 Without a key, the corrector shows as offline and everything else works. Limits per user and per day, the model and the answer length are set in `.env.local` (see `.env.example`). The server never logs prompt content; `npm run budget` fails if the key or OpenAI's address ever reaches the built site.
 
+## The dungeon
+
+The retro console (or "The dungeon" in the welcome bar) opens a first-person, grid-based crawler in pixel art behind an old-console filter. Floor 1 has 13 guardians, one per office topic, each asking a question drawn at random, then a boss that makes you rewrite a vague prompt, graded offline by the workshop's engine. Three mistakes throw you out to the office, where Ada lists the topics to review. Passing floor 1 opens The Deep, an expert floor (security, compliance, monitoring, advanced prompting, infrastructure) with two hearts and corrections at the end. Each floor gives a PDF certificate made in the browser: the name is typed each time and never stored.
+
+Arrow keys or W A S D move and turn (Q and E step sideways; the physical keys, so Z Q S D on AZERTY), Escape pauses. Without WebGL or in reading mode, the dungeon becomes a text adventure with the same questions. Edit the content in `content/en/dungeon/` (`floor1.json`, `floor2.json`, `bosses.json`, `maps.json`); `npm run test` checks the maps (closed, guardians unavoidable and in order), the question formats, the compliance sources and every boss sample.
+
 ## Check
 
 ```bash
@@ -39,7 +45,7 @@ The first end-to-end run needs the browser: `npx playwright install chromium`.
 npm run e2e
 ```
 
-Runs the Playwright journeys against the dev server and refreshes the screenshots in `docs/evidence/office/` and `docs/evidence/workshop/`. The corrector's server answers are simulated there: the journeys never call OpenAI.
+Runs the Playwright journeys against the dev server and refreshes the screenshots in `docs/evidence/office/`, `docs/evidence/workshop/` and `docs/evidence/dungeon/`. The corrector's server answers are simulated there: the journeys never call OpenAI.
 
 ## Edit the content
 
@@ -92,6 +98,8 @@ npm run perf -- --out docs/evidence/office/perf.md
 
 The first command saves the overview and the presentation view in each phase (Chromium in a real window on the GPU, 1600 x 900). The last two measure the production build in each phase (frames per second, office shown, decor loaded, quality tier) and write `docs/evidence/office/perf.md`. Both open browser windows: leave the machine alone while they run. `shots.mjs` uses the dev server on port 5199 (set `E2E_PORT` to change it, as for `npm run e2e`) and `perf.mjs` serves `dist/` with `vite preview` on port 4173; each starts its server when nothing answers there and stops it at the end.
 
+`node scripts/perf-dungeon.mjs --out docs/evidence/dungeon/perf.md` (after `npm run build`) measures the dungeon the same way: frames per second on floor 1 while turning, and the weight of the chunks it loads on demand.
+
 The six `phase-*.png` screenshots are the look evidence: rendered on the GPU, with the whole decor loaded. The numbered screenshots (`01-overview.png` to `14-small-reading.png`) come from `npm run e2e`, which renders with Chromium's software rasterizer (SwiftShader): there the office runs on the `low` tier at a pixel ratio of 0.35 (`SOFTWARE_DPR`), and it leaves out the park across the street, the sideboard's two cabinets, its lamp and the vase on it, so that the journeys stay within their time limits. In the presentation views (`02-presentation.png`, `12-small-presentation.png`), thin orange lines from the slat wall cross the wall-screen picture: a depth artefact of the software rasterizer at that pixel ratio, absent from the GPU screenshots.
 
 ## Hosting the built site
@@ -108,5 +116,7 @@ The six `phase-*.png` screenshots are the look evidence: rendered on the GPU, wi
 - Workshop spec: `docs/superpowers/specs/2026-10-06-athena-prompt-academy-workshop-design.md`
 - Workshop plan: `docs/superpowers/plans/2026-10-06-athena-prompt-academy-workshop.md`
 - Office redesign spec: `docs/superpowers/specs/2026-10-06-athena-prompt-academy-office-redesign-design.md`
+- Dungeon spec: `docs/superpowers/specs/2026-10-15-athena-prompt-academy-dungeon-design.md`
+- Dungeon plan: `docs/superpowers/plans/2026-10-15-athena-prompt-academy-dungeon.md`
 - Office redesign plan: `docs/superpowers/plans/2026-10-06-athena-prompt-academy-office-redesign.md`
 - Measurements: `docs/evidence/office/perf.md`, `docs/evidence/workshop/perf.md`

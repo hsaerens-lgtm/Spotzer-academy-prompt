@@ -1,7 +1,7 @@
 # Athena Prompt Academy — Spec 3 : le donjon
 
 - **Date** : 2026-10-15
-- **Statut** : en revue
+- **Statut** : implémentée (2026-10-15)
 - **Périmètre** : sous-projet 3 sur 3 (zone « donjon », accessible par la télé et la console rétro du bureau)
 - **S'appuie sur** : spec 1 — `docs/superpowers/specs/2026-09-29-athena-prompt-academy-office-design.md` (socle, bureau, Ada, sujets, progression) et spec 2 — `docs/superpowers/specs/2026-10-06-athena-prompt-academy-workshop-design.md` (atelier, moteur d'évaluation des prompts). Tout ce qu'elles fixent reste valable sauf mention contraire au §2.
 

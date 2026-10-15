@@ -98,10 +98,10 @@ test('the real 3D laptop and the TV lead to their zones and back', async ({ page
   await expect.poll(async () => (await state(page)).zone).toBe('office')
 
   await page.evaluate(() => window.__academy!.clickObject('tv'))
-  await expect(page.getByRole('heading', { name: 'The Dungeon' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'THE DUNGEON' })).toBeVisible()
   // The screen fades in after the zone switch: wait for the fader to be fully off, so the picture is the same on every run.
   await expect(page.getByTestId('fader')).toHaveCSS('opacity', '0')
-  await page.screenshot({ path: `${EVIDENCE}/10-dungeon-soon.png` })
+  await page.screenshot({ path: `${EVIDENCE}/10-dungeon-title.png` })
   await page.goBack()
   await expect.poll(async () => (await state(page)).zone).toBe('office')
   await expect(page).toHaveURL(/#\/office$/)
