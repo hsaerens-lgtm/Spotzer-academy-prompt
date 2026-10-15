@@ -1,0 +1,986 @@
+{
+  "inscriptions": [
+    "Placeholder one.",
+    "Placeholder two.",
+    "Placeholder three.",
+    "Placeholder four."
+  ],
+  "domains": [
+    {
+      "id": "security",
+      "title": "Security",
+      "guardians": [
+        {
+          "name": "The Injection Wraith",
+          "sprite": "wraith",
+          "tint": "warn",
+          "line": "Placeholder line."
+        },
+        {
+          "name": "The Leaky Mimic",
+          "sprite": "mimic",
+          "tint": "mint",
+          "line": "Placeholder line."
+        },
+        {
+          "name": "The Key Thief",
+          "sprite": "goblin",
+          "tint": "warn",
+          "line": "Placeholder line."
+        }
+      ],
+      "questions": [
+        {
+          "id": "security-1",
+          "type": "choice",
+          "question": "Placeholder question security-1?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "security-2",
+          "type": "choice",
+          "question": "Placeholder question security-2?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "security-3",
+          "type": "choice",
+          "question": "Placeholder question security-3?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "security-4",
+          "type": "choice",
+          "question": "Placeholder question security-4?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "security-5",
+          "type": "choice",
+          "question": "Placeholder question security-5?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "security-6",
+          "type": "choice",
+          "question": "Placeholder question security-6?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        }
+      ]
+    },
+    {
+      "id": "compliance",
+      "title": "Compliance",
+      "guardians": [
+        {
+          "name": "The Compliance Sphinx",
+          "sprite": "sphinx",
+          "tint": "onDark",
+          "line": "Placeholder line."
+        },
+        {
+          "name": "The Retention Hoarder",
+          "sprite": "hoarder",
+          "tint": "mint",
+          "line": "Placeholder line."
+        },
+        {
+          "name": "The Consent Warden",
+          "sprite": "knight",
+          "tint": "lime",
+          "line": "Placeholder line."
+        }
+      ],
+      "questions": [
+        {
+          "id": "compliance-1",
+          "type": "choice",
+          "question": "Placeholder question compliance-1?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder.",
+          "source": "https://eur-lex.europa.eu/"
+        },
+        {
+          "id": "compliance-2",
+          "type": "choice",
+          "question": "Placeholder question compliance-2?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder.",
+          "source": "https://eur-lex.europa.eu/"
+        },
+        {
+          "id": "compliance-3",
+          "type": "choice",
+          "question": "Placeholder question compliance-3?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder.",
+          "source": "https://eur-lex.europa.eu/"
+        },
+        {
+          "id": "compliance-4",
+          "type": "choice",
+          "question": "Placeholder question compliance-4?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder.",
+          "source": "https://eur-lex.europa.eu/"
+        },
+        {
+          "id": "compliance-5",
+          "type": "choice",
+          "question": "Placeholder question compliance-5?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder.",
+          "source": "https://eur-lex.europa.eu/"
+        },
+        {
+          "id": "compliance-6",
+          "type": "choice",
+          "question": "Placeholder question compliance-6?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder.",
+          "source": "https://eur-lex.europa.eu/"
+        }
+      ]
+    },
+    {
+      "id": "monitoring",
+      "title": "Monitoring",
+      "guardians": [
+        {
+          "name": "The Drift Ghost",
+          "sprite": "ghost",
+          "tint": "mint",
+          "line": "Placeholder line."
+        },
+        {
+          "name": "The Silent Eye",
+          "sprite": "eye",
+          "tint": "warn",
+          "line": "Placeholder line."
+        },
+        {
+          "name": "The Cost Goblin",
+          "sprite": "goblin",
+          "tint": "onDark",
+          "line": "Placeholder line."
+        }
+      ],
+      "questions": [
+        {
+          "id": "monitoring-1",
+          "type": "choice",
+          "question": "Placeholder question monitoring-1?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "monitoring-2",
+          "type": "choice",
+          "question": "Placeholder question monitoring-2?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "monitoring-3",
+          "type": "choice",
+          "question": "Placeholder question monitoring-3?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "monitoring-4",
+          "type": "choice",
+          "question": "Placeholder question monitoring-4?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "monitoring-5",
+          "type": "choice",
+          "question": "Placeholder question monitoring-5?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "monitoring-6",
+          "type": "choice",
+          "question": "Placeholder question monitoring-6?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        }
+      ]
+    },
+    {
+      "id": "prompting",
+      "title": "Advanced prompting",
+      "guardians": [
+        {
+          "name": "The Few-Shot Slime",
+          "sprite": "slime",
+          "tint": "mint",
+          "line": "Placeholder line."
+        },
+        {
+          "name": "The Temperature Wraith",
+          "sprite": "wraith",
+          "tint": "lime",
+          "line": "Placeholder line."
+        },
+        {
+          "name": "The Reasoning Sphinx",
+          "sprite": "sphinx",
+          "tint": "mint",
+          "line": "Placeholder line."
+        }
+      ],
+      "questions": [
+        {
+          "id": "prompting-1",
+          "type": "choice",
+          "question": "Placeholder question prompting-1?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "prompting-2",
+          "type": "choice",
+          "question": "Placeholder question prompting-2?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "prompting-3",
+          "type": "choice",
+          "question": "Placeholder question prompting-3?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "prompting-4",
+          "type": "choice",
+          "question": "Placeholder question prompting-4?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "prompting-5",
+          "type": "choice",
+          "question": "Placeholder question prompting-5?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "prompting-6",
+          "type": "choice",
+          "question": "Placeholder question prompting-6?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        }
+      ]
+    },
+    {
+      "id": "infrastructure",
+      "title": "Infrastructure",
+      "guardians": [
+        {
+          "name": "The Vector Hoarder",
+          "sprite": "hoarder",
+          "tint": "lime",
+          "line": "Placeholder line."
+        },
+        {
+          "name": "The Rate-Limit Knight",
+          "sprite": "knight",
+          "tint": "mint",
+          "line": "Placeholder line."
+        },
+        {
+          "name": "The Router Mimic",
+          "sprite": "mimic",
+          "tint": "onDark",
+          "line": "Placeholder line."
+        }
+      ],
+      "questions": [
+        {
+          "id": "infrastructure-1",
+          "type": "choice",
+          "question": "Placeholder question infrastructure-1?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "infrastructure-2",
+          "type": "choice",
+          "question": "Placeholder question infrastructure-2?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "infrastructure-3",
+          "type": "choice",
+          "question": "Placeholder question infrastructure-3?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "infrastructure-4",
+          "type": "choice",
+          "question": "Placeholder question infrastructure-4?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "infrastructure-5",
+          "type": "choice",
+          "question": "Placeholder question infrastructure-5?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "infrastructure-6",
+          "type": "choice",
+          "question": "Placeholder question infrastructure-6?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1570 @@
+{
+  "inscriptions": [
+    "Placeholder one.",
+    "Placeholder two.",
+    "Placeholder three.",
+    "Placeholder four."
+  ],
+  "guardians": [
+    {
+      "topic": "what-is-ai",
+      "name": "The Gatekeeper",
+      "sprite": "knight",
+      "tint": "onDark",
+      "questions": [
+        {
+          "id": "what-is-ai-1",
+          "type": "choice",
+          "question": "Placeholder question what-is-ai-1?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "what-is-ai-2",
+          "type": "choice",
+          "question": "Placeholder question what-is-ai-2?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "what-is-ai-3",
+          "type": "choice",
+          "question": "Placeholder question what-is-ai-3?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "what-is-ai-4",
+          "type": "choice",
+          "question": "Placeholder question what-is-ai-4?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        }
+      ]
+    },
+    {
+      "topic": "generative-ai",
+      "name": "The Echo Mimic",
+      "sprite": "mimic",
+      "tint": "mint",
+      "questions": [
+        {
+          "id": "generative-ai-1",
+          "type": "choice",
+          "question": "Placeholder question generative-ai-1?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "generative-ai-2",
+          "type": "choice",
+          "question": "Placeholder question generative-ai-2?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "generative-ai-3",
+          "type": "choice",
+          "question": "Placeholder question generative-ai-3?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "generative-ai-4",
+          "type": "choice",
+          "question": "Placeholder question generative-ai-4?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        }
+      ]
+    },
+    {
+      "topic": "llm",
+      "name": "The Word Oracle",
+      "sprite": "eye",
+      "tint": "lime",
+      "questions": [
+        {
+          "id": "llm-1",
+          "type": "choice",
+          "question": "Placeholder question llm-1?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "llm-2",
+          "type": "choice",
+          "question": "Placeholder question llm-2?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "llm-3",
+          "type": "choice",
+          "question": "Placeholder question llm-3?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "llm-4",
+          "type": "choice",
+          "question": "Placeholder question llm-4?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        }
+      ]
+    },
+    {
+      "topic": "tokens",
+      "name": "The Token Goblin",
+      "sprite": "goblin",
+      "tint": "lime",
+      "questions": [
+        {
+          "id": "tokens-1",
+          "type": "choice",
+          "question": "Placeholder question tokens-1?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "tokens-2",
+          "type": "choice",
+          "question": "Placeholder question tokens-2?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "tokens-3",
+          "type": "choice",
+          "question": "Placeholder question tokens-3?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "tokens-4",
+          "type": "choice",
+          "question": "Placeholder question tokens-4?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        }
+      ]
+    },
+    {
+      "topic": "context-window",
+      "name": "The Context Hoarder",
+      "sprite": "hoarder",
+      "tint": "warn",
+      "questions": [
+        {
+          "id": "context-window-1",
+          "type": "choice",
+          "question": "Placeholder question context-window-1?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "context-window-2",
+          "type": "choice",
+          "question": "Placeholder question context-window-2?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "context-window-3",
+          "type": "choice",
+          "question": "Placeholder question context-window-3?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "context-window-4",
+          "type": "choice",
+          "question": "Placeholder question context-window-4?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        }
+      ]
+    },
+    {
+      "topic": "hallucinations",
+      "name": "The Hallucination Ghost",
+      "sprite": "ghost",
+      "tint": "onDark",
+      "questions": [
+        {
+          "id": "hallucinations-1",
+          "type": "choice",
+          "question": "Placeholder question hallucinations-1?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "hallucinations-2",
+          "type": "choice",
+          "question": "Placeholder question hallucinations-2?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "hallucinations-3",
+          "type": "choice",
+          "question": "Placeholder question hallucinations-3?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "hallucinations-4",
+          "type": "choice",
+          "question": "Placeholder question hallucinations-4?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        }
+      ]
+    },
+    {
+      "topic": "prompt",
+      "name": "The Riddle Sphinx",
+      "sprite": "sphinx",
+      "tint": "warn",
+      "questions": [
+        {
+          "id": "prompt-1",
+          "type": "choice",
+          "question": "Placeholder question prompt-1?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "prompt-2",
+          "type": "choice",
+          "question": "Placeholder question prompt-2?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "prompt-3",
+          "type": "choice",
+          "question": "Placeholder question prompt-3?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "prompt-4",
+          "type": "choice",
+          "question": "Placeholder question prompt-4?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        }
+      ]
+    },
+    {
+      "topic": "multimodal",
+      "name": "The Many-Eyed Watcher",
+      "sprite": "eye",
+      "tint": "mint",
+      "questions": [
+        {
+          "id": "multimodal-1",
+          "type": "choice",
+          "question": "Placeholder question multimodal-1?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "multimodal-2",
+          "type": "choice",
+          "question": "Placeholder question multimodal-2?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "multimodal-3",
+          "type": "choice",
+          "question": "Placeholder question multimodal-3?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "multimodal-4",
+          "type": "choice",
+          "question": "Placeholder question multimodal-4?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        }
+      ]
+    },
+    {
+      "topic": "agents",
+      "name": "The Restless Knight",
+      "sprite": "knight",
+      "tint": "mint",
+      "questions": [
+        {
+          "id": "agents-1",
+          "type": "choice",
+          "question": "Placeholder question agents-1?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "agents-2",
+          "type": "choice",
+          "question": "Placeholder question agents-2?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "agents-3",
+          "type": "choice",
+          "question": "Placeholder question agents-3?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "agents-4",
+          "type": "choice",
+          "question": "Placeholder question agents-4?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        }
+      ]
+    },
+    {
+      "topic": "tools",
+      "name": "The Toolbox Mimic",
+      "sprite": "mimic",
+      "tint": "warn",
+      "questions": [
+        {
+          "id": "tools-1",
+          "type": "choice",
+          "question": "Placeholder question tools-1?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "tools-2",
+          "type": "choice",
+          "question": "Placeholder question tools-2?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "tools-3",
+          "type": "choice",
+          "question": "Placeholder question tools-3?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "tools-4",
+          "type": "choice",
+          "question": "Placeholder question tools-4?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        }
+      ]
+    },
+    {
+      "topic": "skills",
+      "name": "The Skill Slime",
+      "sprite": "slime",
+      "tint": "lime",
+      "questions": [
+        {
+          "id": "skills-1",
+          "type": "choice",
+          "question": "Placeholder question skills-1?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "skills-2",
+          "type": "choice",
+          "question": "Placeholder question skills-2?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "skills-3",
+          "type": "choice",
+          "question": "Placeholder question skills-3?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "skills-4",
+          "type": "choice",
+          "question": "Placeholder question skills-4?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        }
+      ]
+    },
+    {
+      "topic": "mcp",
+      "name": "The Connector Wraith",
+      "sprite": "wraith",
+      "tint": "mint",
+      "questions": [
+        {
+          "id": "mcp-1",
+          "type": "choice",
+          "question": "Placeholder question mcp-1?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "mcp-2",
+          "type": "choice",
+          "question": "Placeholder question mcp-2?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "mcp-3",
+          "type": "choice",
+          "question": "Placeholder question mcp-3?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "mcp-4",
+          "type": "choice",
+          "question": "Placeholder question mcp-4?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        }
+      ]
+    },
+    {
+      "topic": "ai-safety-at-work",
+      "name": "The Data Warden",
+      "sprite": "knight",
+      "tint": "warn",
+      "questions": [
+        {
+          "id": "ai-safety-at-work-1",
+          "type": "choice",
+          "question": "Placeholder question ai-safety-at-work-1?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "ai-safety-at-work-2",
+          "type": "choice",
+          "question": "Placeholder question ai-safety-at-work-2?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "ai-safety-at-work-3",
+          "type": "choice",
+          "question": "Placeholder question ai-safety-at-work-3?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        },
+        {
+          "id": "ai-safety-at-work-4",
+          "type": "choice",
+          "question": "Placeholder question ai-safety-at-work-4?",
+          "answers": [
+            {
+              "id": "a",
+              "text": "Right",
+              "correct": true
+            },
+            {
+              "id": "b",
+              "text": "Wrong one",
+              "correct": false
+            },
+            {
+              "id": "c",
+              "text": "Wrong two",
+              "correct": false
+            },
+            {
+              "id": "d",
+              "text": "Wrong three",
+              "correct": false
+            }
+          ],
+          "explanation": "Placeholder."
+        }
+      ]
+    }
+  ]
+}
