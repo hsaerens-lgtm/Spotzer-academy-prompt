@@ -45,3 +45,22 @@ test('first-visit hints disappear once scrolled and once a topic was opened', ()
   act(() => appStore.getState().openTopic('what-is-ai'))
   expect(screen.queryByText(/the laptop and the old console are clickable/)).not.toBeInTheDocument()
 })
+
+test("Ada's debrief lists the missed topics; a topic button opens it and ends the debrief", async () => {
+  appStore.getState().setDungeonDebrief({ topics: ['tokens', 'hallucinations'] })
+  render(<WelcomeBar />)
+  expect(screen.getByText('The guardians caught you on Tokens and Why AI makes things up. Want to review them?')).toBeInTheDocument()
+  await userEvent.click(screen.getByRole('button', { name: 'Tokens' }))
+  expect(appStore.getState().activeTopic).toBe('tokens')
+  expect(appStore.getState().dungeonDebrief).toBeNull()
+})
+
+test('Not now ends the debrief; a passed dungeon shows on its button', async () => {
+  appStore.getState().passDungeonFloor(1, 90, '2026-10-15')
+  appStore.getState().setDungeonDebrief({ topics: ['tokens'] })
+  render(<WelcomeBar />)
+  await userEvent.click(screen.getByRole('button', { name: 'Not now' }))
+  expect(appStore.getState().dungeonDebrief).toBeNull()
+  expect(screen.getByRole('button', { name: 'The dungeon · passed' })).toBeInTheDocument()
+  expect(screen.getByText(/Welcome to the office/)).toBeInTheDocument()
+})

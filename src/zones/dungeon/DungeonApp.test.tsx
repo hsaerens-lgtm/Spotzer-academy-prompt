@@ -86,3 +86,20 @@ test('a passed floor offers its certificate again from the title screen', async 
   await user.click(screen.getByRole('button', { name: 'Download my certificate again (floor 1)' }))
   expect(screen.getByRole('textbox', { name: 'Your name' })).toBeInTheDocument()
 })
+
+// Development only: the end-to-end tests read and play the run through window.__academy.
+test('exposes the run to the test API while the dungeon is open', async () => {
+  window.__academy = { state: () => appStore.getState(), clickObject: () => {}, setPhase: () => {}, rail: () => {} }
+  try {
+    appStore.getState().setDungeonRoute({ floor: 1 })
+    const { unmount } = await act(async () => render(<DungeonApp />))
+    act(() => window.__academy!.dungeonAdvance!())
+    expect((window.__academy.dungeon!() as { phase: string }).phase).toBe('encounter')
+    act(() => window.__academy!.dungeonAnswer!(false))
+    expect((window.__academy.dungeon!() as { hearts: number }).hearts).toBe(2)
+    unmount()
+    expect(window.__academy.dungeon).toBeUndefined()
+  } finally {
+    delete window.__academy
+  }
+})

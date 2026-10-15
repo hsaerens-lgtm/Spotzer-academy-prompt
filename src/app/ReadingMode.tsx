@@ -3,8 +3,10 @@ import { useScreenRef } from '../core/selectors'
 import { useApp } from '../core/store'
 import { Button } from '../ui/Button'
 import { DialogueBox } from '../ui/DialogueBox'
+import { DungeonDebrief } from '../ui/DungeonDebrief'
 import { ExpandOverlay } from '../ui/ExpandOverlay'
 import { TopicMenu } from '../ui/TopicMenu'
+import { useDungeonLabel } from '../ui/useDungeonLabel'
 import { useWorkshopLabel } from '../ui/useWorkshopLabel'
 import { FitScreen } from '../visuals/FitScreen'
 import { ScreenContent } from '../visuals/ScreenContent'
@@ -17,6 +19,7 @@ export function ReadingMode() {
   const expandOpen = useApp((s) => s.expandOpen)
   const requestZone = useApp((s) => s.requestZone)
   const workshopLabel = useWorkshopLabel()
+  const dungeonLabel = useDungeonLabel()
   const screen = useScreenRef()
 
   return (
@@ -35,7 +38,7 @@ export function ReadingMode() {
                 {workshopLabel}
               </Button>
               <Button variant="ghost" onClick={() => requestZone('dungeon')}>
-                {t('welcome.dungeon')}
+                {dungeonLabel}
               </Button>
             </div>
             {/* CC BY 4.0: the credit of the office's attributed 3D models (public/assets/CREDITS.md lists every file). */}
@@ -53,6 +56,7 @@ export function ReadingMode() {
               </>
             ) : (
               <div className="reading__intro at-card">
+                <DungeonDebrief />
                 <p className="welcome__greeting">
                   <span className="dialogue__speaker">{t('objects.ada')}</span>
                   {t('welcome.greeting')}

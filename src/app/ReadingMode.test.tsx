@@ -107,3 +107,13 @@ test('the HUD toggle round-trips between reading mode and 3D', async () => {
   expect(screen.queryByRole('main', { name: 'Reading mode' })).not.toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Reading mode' })).toBeInTheDocument()
 })
+
+test("reading mode shows Ada's dungeon debrief and the passed dungeon", async () => {
+  resetAppStore({ webgl: 'unavailable' })
+  appStore.getState().passDungeonFloor(1, 70, '2026-10-15')
+  appStore.getState().setDungeonDebrief({ topics: ['tokens'] })
+  await renderApp()
+  const main = within(screen.getByRole('main', { name: 'Reading mode' }))
+  expect(main.getByText('The guardians caught you on Tokens. Want to review them?')).toBeInTheDocument()
+  expect(main.getByRole('button', { name: 'The dungeon · passed' })).toBeInTheDocument()
+})

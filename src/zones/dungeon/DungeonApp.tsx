@@ -4,6 +4,7 @@ import { useEffect, useMemo } from 'react'
 import { sound } from '../../core/sound'
 import { appStore, useApp } from '../../core/store'
 import { getDungeonContent } from '../../dungeon/content'
+import { DungeonTestBridge } from './DungeonTestBridge'
 import { JINGLES } from './sounds'
 import { createDungeonStore, DungeonStoreProvider, useDungeon, useDungeonStore } from './store'
 import { TextDungeon } from './text/TextDungeon'
@@ -71,6 +72,7 @@ export function DungeonApp() {
         <Game />
         <Announcer />
       </div>
+      {import.meta.env.DEV && <DungeonTestBridge store={store} />}
     </DungeonStoreProvider>
   )
 }

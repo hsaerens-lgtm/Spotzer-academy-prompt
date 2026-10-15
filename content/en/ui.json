@@ -22,6 +22,9 @@
     "workshop": "Prompt workshop",
     "workshopProgress": "Prompt workshop · {{done}}/{{total}}",
     "dungeon": "The dungeon",
+    "dungeonPassed": "The dungeon · passed",
+    "debrief": "The guardians caught you on {{topics}}. Want to review them?",
+    "notNow": "Not now",
     "pickTopic": "Pick a topic to start."
   },
   "topics": {

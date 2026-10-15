@@ -36,6 +36,12 @@ export interface AcademyTestApi {
   untexturedMeshes?: () => string[]
   /** The workshop screen state; added by WorkshopTestBridge while the workshop is open (development only). */
   workshop?: () => unknown
+  /** The dungeon run (null on the title screen); added by DungeonTestBridge while the dungeon is open. */
+  dungeon?: () => unknown
+  /** Answers the open encounter right or wrong, whatever the draw. */
+  dungeonAnswer?: (correct: boolean) => void
+  /** Text-mode advance: in front of the next guardian, or of the boss. */
+  dungeonAdvance?: () => void
 }
 
 declare global {
