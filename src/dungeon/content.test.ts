@@ -61,3 +61,9 @@ test('each boss: its starter collapses, its samples land on their tier, and a sa
   }
   expect(content.floors[2].boss.mission.blocks.constraint.required).toBe(true)
 })
+
+// Final review, finding 5: options are shuffled and numbered on screen, so an explanation never names one by letter.
+test('explanations never point at an option by its letter', () => {
+  const byLetter = /\b[A-F] (?:gives|is|has|names|adds|asks|tells|does|works)\b|\bfrom [A-F]\b|\b[A-F] and [A-F]\b|\b(?:option|prompt|answer) [A-F]\b/
+  for (const { q } of all) expect(q.explanation, q.id).not.toMatch(byLetter)
+})

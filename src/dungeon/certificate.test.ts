@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { PDFDocument } from 'pdf-lib'
-import { certificateFileName, isValidName, makeCertificate, UNSUPPORTED_NAME } from './certificate'
+import { certificateFileName, fitNameSize, isValidName, makeCertificate, NAME_SIZE, NAME_WIDTH, UNSUPPORTED_NAME } from './certificate'
 
 const font = (path: string) => new Uint8Array(readFileSync(path))
 const fonts = {
@@ -46,4 +46,20 @@ test('a name the certificate fonts cannot print is refused, not printed blank', 
 test('without the extended Latin font, a Central European name is refused rather than printed with gaps', async () => {
   const { boldExtended: _unused, ...basic } = fonts
   await expect(makeCertificate({ floor: 1, name: 'Łukasz', score: 90, date: '2026-10-15', items: ['Tokens'] }, basic)).rejects.toThrow(UNSUPPORTED_NAME)
+})
+
+// Final review, finding 2: the name shrinks to fit the frame, down to the widest 60-letter name the form accepts.
+test('a long name shrinks to fit inside the frame', async () => {
+  const { PDFDocument } = await import('pdf-lib')
+  const { default: fontkit } = await import('@pdf-lib/fontkit')
+  const pdf = await PDFDocument.create()
+  pdf.registerFontkit(fontkit)
+  const bold = await pdf.embedFont(fonts.bold)
+  for (const name of ['Jean-Baptiste Emmanuel Zorg-Delacroix', 'Maximiliana Wilhelmina Hohenzollern-Sigmaringen de la Tour', 'W'.repeat(60)]) {
+    const size = fitNameSize(bold.widthOfTextAtSize(name, NAME_SIZE), NAME_WIDTH)
+    expect(bold.widthOfTextAtSize(name, size), name).toBeLessThanOrEqual(NAME_WIDTH + 0.01)
+  }
+  expect(fitNameSize(bold.widthOfTextAtSize('Sam', NAME_SIZE), NAME_WIDTH)).toBe(NAME_SIZE)
+  // And the whole certificate still comes out for the longest names.
+  await expect(makeCertificate({ floor: 1, name: 'W'.repeat(60), score: 90, date: '2026-10-15', items: ['Tokens'] }, fonts)).resolves.toBeInstanceOf(Uint8Array)
 })

@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber'
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import type { StoreApi } from 'zustand/vanilla'
 import { isSoftwareRenderer, rendererName } from '../../../app/quality'
 import { brand } from '../../../core/brand'
@@ -18,6 +18,12 @@ export interface DungeonCanvasProps {
 export default function DungeonCanvas({ store, onContextLost }: DungeonCanvasProps) {
   // Without a GPU (the e2e browser), only the cheap effects run (spec 3, §4.4).
   const [software, setSoftware] = useState(false)
+  // The listener goes with the canvas: the renderer's own disposal loses the context on purpose.
+  const element = useRef<HTMLCanvasElement | null>(null)
+  const lost = useRef(onContextLost)
+  lost.current = onContextLost
+  const onLost = useRef(() => lost.current())
+  useEffect(() => () => element.current?.removeEventListener('webglcontextlost', onLost.current), [])
   return (
     <Canvas
       className="dg-canvas"
@@ -26,7 +32,8 @@ export default function DungeonCanvas({ store, onContextLost }: DungeonCanvasPro
       camera={{ fov: 70, near: 0.05, far: 30, position: [0, 0.5, 0] }}
       onCreated={({ gl }) => {
         setSoftware(isSoftwareRenderer(rendererName(gl.getContext())))
-        gl.domElement.addEventListener('webglcontextlost', onContextLost, { once: true })
+        element.current = gl.domElement
+        gl.domElement.addEventListener('webglcontextlost', onLost.current, { once: true })
       }}
     >
       {/* The canvas is its own React root: the dungeon store is provided again inside it. */}

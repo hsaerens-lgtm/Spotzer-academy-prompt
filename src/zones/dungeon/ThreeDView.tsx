@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useApp } from '../../core/store'
 import { isFloor, sameCell, type ParsedMap } from '../../dungeon/map'
@@ -43,7 +43,17 @@ export function ThreeDView() {
     else if (deadEnd(floor.map, run.pose)) store.getState().announce(t('dungeon.deadEnd'))
   }, [run.pose])
 
+  // A canvas that goes away (back to the title, down to The Deep) loses its context on purpose as it is disposed: only
+  // a failure while this view is on screen switches the dungeon to text.
+  const onScreen = useRef(true)
+  useEffect(
+    () => () => {
+      onScreen.current = false
+    },
+    [],
+  )
   const fail = () => {
+    if (!onScreen.current) return
     store.getState().fallbackToText()
     store.getState().announce(t('dungeon.textFallback'))
   }

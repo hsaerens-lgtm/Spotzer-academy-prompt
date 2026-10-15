@@ -44,7 +44,7 @@ export function BossPanel() {
   useEffect(() => {
     if (feedback) {
       next.current?.focus()
-      store.getState().announce(`${t('dungeon.bossHit', { name })} ${feedback}`)
+      store.getState().announce(`${t('dungeon.bossHit', { name })} ${t('dungeon.hearts', { count: run.hearts })}. ${feedback}`)
     } else {
       field.current?.focus()
       store.getState().announce(`${t('dungeon.bossIntro', { name })} ${mission.situation}`)

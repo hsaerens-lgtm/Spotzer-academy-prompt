@@ -6,7 +6,17 @@ import { correctIds, options } from '../../dungeon/questions'
 import { resetAppStore } from '../../test/resetAppStore'
 import { DungeonApp } from './DungeonApp'
 import { createDungeonStore, DungeonStoreProvider } from './store'
+import { BossPanel } from './ui/BossPanel'
 import { DialogBox } from './ui/DialogBox'
+
+// The 3D canvas itself needs WebGL: a stand-in keeps the context-loss callback the view hands it.
+const canvas = vi.hoisted(() => ({ onContextLost: null as null | (() => void) }))
+vi.mock('./scene/DungeonCanvas', () => ({
+  default: ({ onContextLost }: { onContextLost: () => void }) => {
+    canvas.onContextLost = onContextLost
+    return null
+  },
+}))
 
 beforeEach(() => resetAppStore({ zone: 'dungeon', webgl: 'unavailable', reducedMotion: true }))
 
@@ -102,4 +112,94 @@ test('exposes the run to the test API while the dungeon is open', async () => {
   } finally {
     delete window.__academy
   }
+})
+
+// Final review, finding 1: tearing a canvas down loses its context on purpose; that must not switch later runs to text.
+test('leaving the 3D view (back to the title) and its context loss do not switch the next run to text', async () => {
+  resetAppStore({ zone: 'dungeon', webgl: 'ok', reducedMotion: true })
+  appStore.getState().setDungeonRoute({ floor: 1 })
+  await renderApp()
+  await act(async () => {})
+  expect(canvas.onContextLost).not.toBeNull()
+  const lose = canvas.onContextLost!
+  act(() => appStore.getState().setDungeonRoute({ floor: null }))
+  expect(screen.getByRole('heading', { name: 'THE DUNGEON' })).toBeInTheDocument()
+  // The old canvas's renderer is disposed after the view has gone: its context-loss event arrives now.
+  act(() => lose())
+  expect(screen.getByTestId('dungeon-announcer')).not.toHaveTextContent('The 3D view stopped')
+  act(() => appStore.getState().setDungeonRoute({ floor: 1 }))
+  await act(async () => {})
+  expect(screen.queryByText('A narrow corridor. Torches flicker.')).not.toBeInTheDocument()
+})
+
+/** A store whose run is facing its first guardian on `floor`. */
+function facingFirstGuardian(floor: 1 | 2) {
+  const store = createDungeonStore({ content: getDungeonContent('en'), seed: () => 3, onVictory: vi.fn(), onEjected: vi.fn() })
+  store.getState().start(floor)
+  store.getState().dispatch({ type: 'advance' })
+  return store
+}
+/** Ticks the right answers (or one wrong one) in the open dialog, by their place on screen, and answers. */
+async function answerInDialog(user: ReturnType<typeof userEvent.setup>, store: ReturnType<typeof facingFirstGuardian>, right: boolean) {
+  const run = store.getState().run!
+  const { question, order } = run.asked[run.current!]
+  const good = correctIds(question)
+  const picks = right ? good : [order.find((id) => !good.includes(id))!]
+  const dialog = within(screen.getByRole('dialog'))
+  const inputs = dialog.getAllByRole(question.type === 'multi' ? 'checkbox' : 'radio')
+  for (const id of picks) await user.click(inputs[order.indexOf(id)])
+  await user.click(dialog.getByRole('button', { name: 'Answer' }))
+}
+
+// Final review, finding 4: the live region says how many hearts are left, and that a beaten guardian fades away.
+test('a wrong answer announces the hearts left; a right one, that the guardian fades away', async () => {
+  const user = userEvent.setup()
+  const wrong = facingFirstGuardian(1)
+  const { unmount } = render(
+    <DungeonStoreProvider value={wrong}>
+      <DialogBox />
+    </DungeonStoreProvider>,
+  )
+  await answerInDialog(user, wrong, false)
+  expect(wrong.getState().announcement?.text).toMatch(/^Wrong\..*2 hearts left/)
+  unmount()
+  const right = facingFirstGuardian(1)
+  render(
+    <DungeonStoreProvider value={right}>
+      <DialogBox />
+    </DungeonStoreProvider>,
+  )
+  await answerInDialog(user, right, true)
+  expect(right.getState().announcement?.text).toMatch(/^Correct\. The Gatekeeper fades away\./)
+})
+
+// Final review, finding 7: spec 3.3 shows a beaten guardian's line on both floors (the expert floor only holds back
+// the explanations of wrong answers).
+test("on the expert floor a right answer shows the guardian's line", async () => {
+  const user = userEvent.setup()
+  const store = facingFirstGuardian(2)
+  const guardian = getDungeonContent('en').floors[2].guardians[0]
+  render(
+    <DungeonStoreProvider value={store}>
+      <DialogBox />
+    </DungeonStoreProvider>,
+  )
+  await answerInDialog(user, store, true)
+  expect(within(screen.getByRole('dialog')).getByText(guardian.line)).toBeInTheDocument()
+})
+
+test('a boss hit announces the hearts left', async () => {
+  const store = createDungeonStore({ content: getDungeonContent('en'), seed: () => 3, onVictory: vi.fn(), onEjected: vi.fn() })
+  store.getState().start(1)
+  const run = store.getState().run!
+  store.setState({ run: { ...run, defeated: run.defeated.map(() => true), phase: 'boss' } })
+  store.getState().dispatch({ type: 'bossResult', text: 'Write an about page.', tier: 'vague', passed: false })
+  await act(async () =>
+    render(
+      <DungeonStoreProvider value={store}>
+        <BossPanel />
+      </DungeonStoreProvider>,
+    ),
+  )
+  expect(store.getState().announcement?.text).toMatch(/strikes back\. You lose a heart\. 2 hearts left\./)
 })

@@ -262,8 +262,13 @@ export function createAppStore(deps: StoreDeps): StoreApi<AppState> {
         if (get().dungeonRoute.floor === route.floor) return
         set({ dungeonRoute: route })
       },
-      passDungeonFloor: (floor, score, date) => setProgress(withDungeonPassed(get().progress, floor, score, date)),
-      setDungeonDebrief: (debrief) => set({ dungeonDebrief: debrief }),
+      passDungeonFloor: (floor, score, date) => {
+        setProgress(withDungeonPassed(get().progress, floor, score, date))
+        // Floor 1 passed: nothing left to review from an earlier ejection.
+        if (floor === 1) set({ dungeonDebrief: null })
+      },
+      // A run lost at the boss alone missed no topic: Ada keeps her usual greeting.
+      setDungeonDebrief: (debrief) => set({ dungeonDebrief: debrief && debrief.topics.length > 0 ? debrief : null }),
     }
   })
 }

@@ -368,7 +368,7 @@
             { "id": "a", "text": "Write an email about the delay.", "best": false },
             { "id": "b", "text": "You are an account manager at a web agency. Write a short, apologetic email to Martin's Bakery: their website launch moves to next Friday because the photos arrived late.", "best": true }
           ],
-          "explanation": "B gives a role, the task, the context (who, why, the new date) and a format. The AI cannot guess any of that from A."
+          "explanation": "The better prompt gives a role, the task, the context (who, why, the new date) and a format. From the short one, the AI cannot guess any of that."
         },
         {
           "id": "prompt-3",

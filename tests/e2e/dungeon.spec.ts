@@ -124,3 +124,33 @@ test.describe('smallest supported viewport (1280 x 600)', () => {
     await page.screenshot({ path: `${EVIDENCE}/11-small.png` })
   })
 })
+
+// Final review, finding 17 (spec 3, §7): without WebGL the dungeon switches to the text adventure.
+test('without WebGL the dungeon is a text adventure', async ({ page }) => {
+  await page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, ...args: unknown[]) {
+      if (type === 'webgl2' || type === 'webgl' || type === 'experimental-webgl') return null
+      return (original as (...params: unknown[]) => RenderingContext | null).call(this, type, ...args)
+    } as typeof original
+  })
+  await openDungeon(page, '?floor=1')
+  await expect(page.getByText('A narrow corridor. Torches flicker.')).toBeVisible()
+  await expect(page.locator('.dg-canvas canvas')).toHaveCount(0)
+})
+
+// Final review, finding 1: the old canvas's disposal loses its context on purpose; the next run must still be in 3D.
+test('back to the title screen and in again: the next run is still in 3D', async ({ page }) => {
+  await openDungeon(page, '?floor=1')
+  await expect(page.locator('.dg-canvas canvas')).toBeVisible({ timeout: 30_000 })
+  await page.getByRole('button', { name: 'Pause' }).click()
+  await page.getByRole('button', { name: 'Back to the title screen' }).click()
+  await page.getByRole('button', { name: 'Leave' }).click()
+  await expect(page.getByRole('heading', { name: 'THE DUNGEON' })).toBeVisible()
+  // Long enough for the old renderer to be disposed (and its context lost).
+  await page.waitForTimeout(1500)
+  await page.getByRole('button', { name: 'Enter anyway' }).click()
+  await expect(page.locator('.dg-canvas canvas')).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByText('A narrow corridor. Torches flicker.')).toHaveCount(0)
+  await expect(page.getByTestId('dungeon-announcer')).not.toContainText('3D view stopped')
+})

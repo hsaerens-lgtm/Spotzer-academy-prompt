@@ -400,3 +400,18 @@ describe('entering the dungeon', () => {
     expect(s().dungeonRoute).toEqual({ floor: null })
   })
 })
+
+// Final review, finding 3: no empty debrief (a run lost at the boss alone), and none left once floor 1 is passed.
+describe('the dungeon debrief', () => {
+  it('is not kept when no topic was missed', () => {
+    const { s } = setup()
+    s().setDungeonDebrief({ topics: [] })
+    expect(s().dungeonDebrief).toBeNull()
+  })
+  it('ends when floor 1 is passed', () => {
+    const { s } = setup()
+    s().setDungeonDebrief({ topics: ['alpha'] })
+    s().passDungeonFloor(1, 80, '2026-10-15')
+    expect(s().dungeonDebrief).toBeNull()
+  })
+})

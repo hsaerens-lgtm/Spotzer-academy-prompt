@@ -99,8 +99,15 @@ async function measureOnce(browser) {
       SAMPLE_MS,
     )
     await turning
-    const width = await page.locator('.dg-canvas canvas').evaluate((canvas) => canvas.width)
-    return { fps, width }
+    const canvas = page.locator('.dg-canvas canvas')
+    const width = await canvas.evaluate((element) => element.width)
+    // The GPU that really drew the dungeon (the canvas's own WebGL context): a laptop may have two.
+    const renderer = await canvas.evaluate((element) => {
+      const gl = element.getContext('webgl2')
+      const info = gl?.getExtension('WEBGL_debug_renderer_info')
+      return gl && info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : null
+    })
+    return { fps, width, renderer }
   } finally {
     await context.close()
   }
@@ -114,15 +121,24 @@ try {
     server = spawn('npx vite preview --port 4173 --strictPort', { shell: true, stdio: 'ignore' })
     for (let i = 0; i < 60 && !(await answers()); i++) await sleep(500)
   }
-  const browser = await chromium.launch({ headless: false, args: ['--use-angle=d3d11'] })
-  const samples = []
-  try {
-    for (let i = 0; i < runs; i++) samples.push(await measureOnce(browser))
-  } finally {
-    await browser.close()
+  // Two series: the GPU the browser picks for the page, then the low-power one (the integrated GPU on a laptop with
+  // two), so that criterion 6 (integrated GPU) is shown whichever GPU the first series used.
+  const series = []
+  for (const [label, extra] of [
+    ['GPU choisi par le navigateur', []],
+    ['GPU basse consommation forcé (--force_low_power_gpu)', ['--force_low_power_gpu']],
+  ]) {
+    const browser = await chromium.launch({ headless: false, args: ['--use-angle=d3d11', ...extra] })
+    const samples = []
+    try {
+      for (let i = 0; i < runs; i++) samples.push(await measureOnce(browser))
+    } finally {
+      await browser.close()
+    }
+    const fps = samples.map((sample) => sample.fps).sort((a, b) => a - b)
+    series.push({ label, samples, median: fps[Math.floor(fps.length / 2)], lowest: fps[0], renderer: samples[0]?.renderer ?? `${NOT_MEASURED} (extension WEBGL_debug_renderer_info absente)` })
   }
-  const fps = samples.map((s) => s.fps).sort((a, b) => a - b)
-  const median = fps[Math.floor(fps.length / 2)]
+  const samples = series[0].samples
   const weights = chunkWeights()
   const lines = [
     '# Donjon : mesure de performance',
@@ -130,12 +146,15 @@ try {
     `- Date : ${new Date().toISOString().slice(0, 10)}`,
     `- Build de production servi par \`vite preview\`, Chromium de Playwright avec interface, \`--use-angle=d3d11\`, fenêtre ${VIEWPORT.width} × ${VIEWPORT.height}, facteur d'échelle ${SCALE} (canvas de ${samples[0]?.width ?? NOT_MEASURED} px de large).`,
     `- GPU et écran : ${gpus()}`,
+    ...series.map((one) => `- Rendu par (${one.label}) : ${one.renderer}`),
     `- Scénario : étage 1, ${SAMPLE_MS / 1000} s par mesure en tournant d'un quart de tour toutes les ${TURN_EVERY_MS} ms ; ${runs} mesures, chacune dans un contexte neuf.`,
     '',
     '| Mesure | Valeur | Objectif |',
     '|---|---|---|',
-    `| Images/s (médiane de ${runs}) | ${median.toFixed(1)} | ${TARGET_FPS} |`,
-    `| Images/s (plus basse) | ${fps[0].toFixed(1)} | ${TARGET_FPS} |`,
+    ...series.flatMap((one) => [
+      `| Images/s, ${one.label} : médiane de ${runs} | ${one.median.toFixed(1)} | ${TARGET_FPS} |`,
+      `| Images/s, ${one.label} : plus basse | ${one.lowest.toFixed(1)} | ${TARGET_FPS} |`,
+    ]),
     `| Morceau de la zone donjon (gzip) | ${weights?.zone ?? NOT_MEASURED} | chargé à la demande |`,
     `| Vue 3D et post-traitement (gzip) | ${weights?.canvas ?? NOT_MEASURED} | chargé à la demande |`,
     `| Générateur de PDF (gzip) | ${weights?.pdf ?? NOT_MEASURED} | chargé au clic sur Download PDF |`,

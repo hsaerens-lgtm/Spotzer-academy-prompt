@@ -38,9 +38,11 @@ export function DialogBox() {
   useEffect(() => {
     if (!answer) return
     next.current?.focus()
-    const result = answer.correct ? t('dungeon.correct') : t('dungeon.wrong')
-    const extra = !immediate ? '' : answer.correct ? guardian.line : question.explanation
-    store.getState().announce(`${result} ${extra}`)
+    // Spec 3, §6.3: the result, then what changed: the guardian fading away with its line, or the hearts left.
+    const parts = answer.correct
+      ? [t('dungeon.correct'), t('dungeon.fades', { name: guardian.name }), guardian.line]
+      : [t('dungeon.wrong'), immediate ? question.explanation : '', `${t('dungeon.hearts', { count: run.hearts })}.`]
+    store.getState().announce(parts.filter(Boolean).join(' '))
   }, [answer])
 
   const toggle = (id: string) => {
@@ -107,7 +109,8 @@ export function DialogBox() {
       ) : (
         <>
           <p className={`dg-result dg-result--${answer.correct ? 'right' : 'wrong'}`}>{answer.correct ? t('dungeon.correct') : t('dungeon.wrong')}</p>
-          {immediate && answer.correct && <p className="dg-line">{guardian.line}</p>}
+          {/* A beaten guardian says its line on both floors; the expert floor only holds back explanations (spec 3, §3.3). */}
+          {answer.correct && <p className="dg-line">{guardian.line}</p>}
           {immediate && !answer.correct && (
             <>
               <p className="dg-explanation">{question.explanation}</p>

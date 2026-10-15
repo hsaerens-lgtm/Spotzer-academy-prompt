@@ -18,6 +18,14 @@ export interface CertificateFonts {
 }
 /** Thrown when the name holds letters neither bold font can print (it would come out blank). */
 export const UNSUPPORTED_NAME = 'unsupported-name'
+/** The name's size, and the width it may take: the page inside the frame, with a margin. */
+export const NAME_SIZE = 40
+export const NAME_WIDTH = 760
+/**
+ * The size that fits a name drawn `widthAtFull` wide at NAME_SIZE into `maxWidth`: never larger than NAME_SIZE, and
+ * small enough for the widest name the form accepts (60 W's still fit at about 11 points).
+ */
+export const fitNameSize = (widthAtFull: number, maxWidth: number) => Math.min(NAME_SIZE, (NAME_SIZE * maxWidth) / widthAtFull)
 
 const NAME = /^\p{L}(?:[\p{L} '-]*\p{L})?$/u
 /** Letters, spaces, apostrophes and hyphens; starts and ends with a letter; 60 characters at most once trimmed. */
@@ -93,8 +101,9 @@ export async function makeCertificate(input: CertificateInput, fonts?: Certifica
     page.drawText(text, { x: (width - font.widthOfTextAtSize(text, size)) / 2, y, size, font, color })
   centre(title.toUpperCase(), height - 170, 30, bold, lime)
   centre('This certifies that', height - 215, 13, regular, muted)
-  const nameSize = 40
-  let x = (width - runs.reduce((sum, run) => sum + run.font.widthOfTextAtSize(run.text, nameSize), 0)) / 2
+  const runsWidth = (size: number) => runs.reduce((sum, run) => sum + run.font.widthOfTextAtSize(run.text, size), 0)
+  const nameSize = fitNameSize(runsWidth(NAME_SIZE), NAME_WIDTH)
+  let x = (width - runsWidth(nameSize)) / 2
   for (const run of runs) {
     page.drawText(run.text, { x, y: height - 268, size: nameSize, font: run.font, color: onDark })
     x += run.font.widthOfTextAtSize(run.text, nameSize)
