@@ -42,10 +42,13 @@ test('offers the available languages', () => {
   expect(screen.getByRole('combobox', { name: /Language/ })).toHaveValue('en')
 })
 
-test('is hidden in the workshop, whose taskbar replaces it', () => {
-  appStore.setState({ zone: 'workshop' })
-  const { container } = render(<Hud />)
-  expect(container).toBeEmptyDOMElement()
+test('is hidden in the workshop and the dungeon, whose own chrome replaces it', () => {
+  for (const zone of ['workshop', 'dungeon'] as const) {
+    appStore.setState({ zone })
+    const { container, unmount } = render(<Hud />)
+    expect(container, zone).toBeEmptyDOMElement()
+    unmount()
+  }
 })
 
 // The HUD (z-index 20) sits above the overlay (z-index 10): an aria-modal dialog must not leave it clickable or focusable.
@@ -73,8 +76,6 @@ test('the Time of day button only shows in the 3D office', () => {
   const hidden: [string, Partial<AppState>][] = [
     ['reading mode', { readingMode: true }],
     ['no WebGL', { webgl: 'unavailable' }],
-    // The dungeon, not the workshop: the workshop has no HUD at all, so it would not test the zone check.
-    ['another zone', { zone: 'dungeon' }],
   ]
   for (const [name, overrides] of hidden) {
     resetAppStore(overrides)

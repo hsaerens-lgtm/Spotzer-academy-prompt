@@ -168,7 +168,9 @@ export function createAppStore(deps: StoreDeps): StoreApi<AppState> {
         const s = get()
         if (s.transition || to === s.zone) return
         const canFly = via !== undefined && s.zone === 'office' && !s.reducedMotion && s.webgl === 'ok' && !s.readingMode
-        set({ transition: { to, via: canFly ? via : null, stage: canFly ? 'flight' : 'fade' }, hovered: null })
+        // The dungeon opens on its title screen; a deep link's floor is set again by the router right after this call.
+        const dungeon = to === 'dungeon' ? { dungeonRoute: { floor: null } } : {}
+        set({ transition: { to, via: canFly ? via : null, stage: canFly ? 'flight' : 'fade' }, hovered: null, ...dungeon })
       },
       transitionStep: () => {
         const t = get().transition

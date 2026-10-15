@@ -391,3 +391,12 @@ describe('dungeon state', () => {
     expect(s().dungeonDebrief).toBeNull()
   })
 })
+
+describe('entering the dungeon', () => {
+  it('starts on the title screen: an old floor in the route is cleared', () => {
+    const { s } = setup()
+    s().setDungeonRoute({ floor: 1 })
+    s().requestZone('dungeon', 'tv')
+    expect(s().dungeonRoute).toEqual({ floor: null })
+  })
+})

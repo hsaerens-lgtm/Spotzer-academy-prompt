@@ -45,11 +45,13 @@ test('Escape in the workshop closes Ada\'s bubble and leaves the office dialogue
   expect(appStore.getState()).toMatchObject({ zone: 'workshop', activeTopic: topic, menuOpen: false, transition: null })
 })
 
-test('shows the dungeon placeholder', async () => {
+test('opens the dungeon on its title screen', async () => {
   appStore.setState({ zone: 'dungeon' })
+  // The dungeon is a lazy zone too: wait for its import before looking for its title.
+  await loadZone('dungeon')
   await renderApp()
-  expect(await screen.findByRole('heading', { name: 'The Dungeon' })).toBeInTheDocument()
-  expect(screen.getByText('Coming soon')).toHaveClass('at-script')
+  expect(await screen.findByRole('heading', { name: 'THE DUNGEON' })).toBeInTheDocument()
+  expect(screen.queryByText('Coming soon')).not.toBeInTheDocument()
 })
 
 test('does not mount the 3D stage without WebGL', () => {

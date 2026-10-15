@@ -21,8 +21,8 @@ export function Hud() {
   const { setSound, setLang, setReadingMode, advancePhase } = appStore.getState()
   const seenCount = content.topics.filter((topic) => seen.includes(topic.id)).length
 
-  // The workshop's fake PC has its own taskbar (sound, back to the office).
-  if (zone === 'workshop') return null
+  // The workshop's fake PC has its own taskbar, the dungeon its own HUD (sound, back to the office).
+  if (zone === 'workshop' || zone === 'dungeon') return null
 
   return (
     <header className="hud panel" inert={expandOpen}>

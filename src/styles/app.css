@@ -31,9 +31,6 @@ body { margin: 0; overflow: hidden; }
 .loading__fill.is-indeterminate { width: 40%; animation: loading-slide 1.1s var(--oe-ease) infinite; }
 @keyframes loading-slide { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
 
-.coming-soon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--at-ink); }
-.coming-soon__card { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; max-width: 620px; padding: 48px; }
-.coming-soon__script { margin: 0; font-size: 28px; }
 
 .error-card {
   position: absolute; top: 50%; left: 50%; z-index: 30; transform: translate(-50%, -50%);
