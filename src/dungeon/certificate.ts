@@ -28,8 +28,10 @@ export const NAME_WIDTH = 760
 export const fitNameSize = (widthAtFull: number, maxWidth: number) => Math.min(NAME_SIZE, (NAME_SIZE * maxWidth) / widthAtFull)
 
 const NAME = /^\p{L}(?:[\p{L} '-]*\p{L})?$/u
+/** The name as printed: composed accents (NFC), typographic apostrophes as plain ones, trimmed. */
+export const normalizeName = (name: string) => name.normalize('NFC').replace(/[\u2018\u2019\u02BC]/g, "'").trim()
 /** Letters, spaces, apostrophes and hyphens; starts and ends with a letter; 60 characters at most once trimmed. */
-export const isValidName = (name: string) => name.trim().length <= 60 && NAME.test(name.trim())
+export const isValidName = (name: string) => normalizeName(name).length <= 60 && NAME.test(normalizeName(name))
 export const certificateFileName = (floor: Floor) =>
   floor === 1 ? 'athena-prompt-academy-certificate.pdf' : 'athena-prompt-academy-expert-certificate.pdf'
 const TITLE = { 1: 'Certificate of completion', 2: 'Expert certificate' } as const
@@ -59,7 +61,7 @@ export async function makeCertificate(input: CertificateInput, fonts?: Certifica
   const [regular, bold, italic] = await Promise.all([files.regular, files.bold, files.italic].map((file) => pdf.embedFont(file, { subset: true })))
   const extended = files.boldExtended ? await pdf.embedFont(files.boldExtended, { subset: true }) : null
   // The name, run by run: each letter in the first bold font that has it. A letter neither has would print blank.
-  const name = input.name.trim()
+  const name = normalizeName(input.name)
   const fontFor = (char: string) => [bold, extended].find((font) => font?.getCharacterSet().includes(char.codePointAt(0)!)) ?? null
   const runs: { text: string; font: typeof bold }[] = []
   for (const char of name) {

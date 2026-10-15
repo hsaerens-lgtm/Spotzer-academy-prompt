@@ -63,3 +63,10 @@ test('a long name shrinks to fit inside the frame', async () => {
   // And the whole certificate still comes out for the longest names.
   await expect(makeCertificate({ floor: 1, name: 'W'.repeat(60), score: 90, date: '2026-10-15', items: ['Tokens'] }, fonts)).resolves.toBeInstanceOf(Uint8Array)
 })
+
+// Deferred minor: a typographic apostrophe (autocorrect, copy-paste) is an apostrophe.
+test('a typographic apostrophe is accepted and printed', async () => {
+  expect(isValidName('Seán O’Brien')).toBe(true)
+  const pdf = await PDFDocument.load(await makeCertificate({ floor: 1, name: 'Seán O’Brien', score: 90, date: '2026-10-15', items: ['Tokens'] }, fonts))
+  expect(pdf.getSubject()).toBe("Seán O'Brien · 90/100 · 15 October 2026")
+})

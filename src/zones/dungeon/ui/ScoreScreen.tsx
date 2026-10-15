@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appStore, useApp } from '../../../core/store'
 import { useDungeon, useDungeonStore } from '../store'
+import { localDay } from '../../../dungeon/today'
 import { CertificateForm } from './CertificateForm'
 import { ReviewScreen } from './ReviewScreen'
 
@@ -13,7 +14,7 @@ export function ScoreScreen() {
   const result = useApp((s) => (run.floor === 1 ? s.progress.dungeon : s.progress.dungeon?.expert))
   // Spec 3, §3.9: the certificate carries the best pass and its date (this run's, unless an earlier one scored higher).
   const best = result?.bestScore ?? run.score
-  const date = result?.passedAt ?? new Date().toISOString().slice(0, 10)
+  const date = result?.passedAt ?? localDay()
   const right = run.answers.filter((a) => a.correct).length
   const heading = useRef<HTMLHeadingElement>(null)
 
@@ -36,6 +37,24 @@ export function ScoreScreen() {
             <button type="button" className="dg-btn dg-btn--primary" onClick={() => appStore.getState().setDungeonRoute({ floor: 2 })}>
               {t('dungeon.goDown')}
             </button>
+          )}
+          {/* Spec 3, §3.6: the expert floor ends on its corrections, then Back to the office or Try again. */}
+          {run.floor === 2 && (
+            <>
+              <button
+                type="button"
+                className="dg-btn"
+                onClick={() => {
+                  appStore.getState().setDungeonRoute({ floor: null })
+                  appStore.getState().requestZone('office')
+                }}
+              >
+                {t('dungeon.back')}
+              </button>
+              <button type="button" className="dg-btn" onClick={() => store.getState().start(2)}>
+                {t('dungeon.tryAgain')}
+              </button>
+            </>
           )}
           <button type="button" className="dg-btn" onClick={() => appStore.getState().setDungeonRoute({ floor: null })}>
             {t('dungeon.toTitle')}

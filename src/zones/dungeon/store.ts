@@ -6,7 +6,9 @@ import type { Floor } from '../../dungeon/model'
 import { ahead } from '../../dungeon/movement'
 import { draw } from '../../dungeon/questions'
 import { newSeed, seeded } from '../../dungeon/random'
+import { isFloor } from '../../dungeon/map'
 import { reduce, startRun, type RunEffect, type RunEvent, type RunState } from '../../dungeon/run'
+import { localDay } from '../../dungeon/today'
 
 export interface DungeonDeps {
   content: DungeonContent
@@ -36,11 +38,13 @@ export interface DungeonState {
 
 export const floorOf = (s: Pick<DungeonState, 'content' | 'run'>): FloorContent => s.content.floors[s.run?.floor ?? 1]
 
-/** The player's cell, its four neighbours and the two cells ahead: what a torch lights. */
+/** The player's cell, its four neighbours and the two cells ahead (the second only past an open first): what a torch lights. */
 function seenAround(floor: FloorContent, run: RunState, seen: Set<number>): Set<number> {
   const next = new Set(seen)
-  const { width } = floor.map
-  const mark = (x: number, y: number) => next.add(y * width + x)
+  const { map } = floor
+  const mark = (x: number, y: number) => {
+    if (x >= 0 && y >= 0 && x < map.width && y < map.height) next.add(y * map.width + x)
+  }
   mark(run.pose.x, run.pose.y)
   for (const [dx, dy] of [
     [0, -1],
@@ -52,15 +56,17 @@ function seenAround(floor: FloorContent, run: RunState, seen: Set<number>): Set<
   }
   const one = ahead(run.pose)
   mark(one.x, one.y)
-  const two = ahead({ ...run.pose, ...one })
-  mark(two.x, two.y)
+  if (isFloor(map, one.x, one.y)) {
+    const two = ahead({ ...run.pose, ...one })
+    mark(two.x, two.y)
+  }
   return next
 }
 
 let counter = 0
 
 export function createDungeonStore(deps: DungeonDeps): StoreApi<DungeonState> {
-  const today = deps.today ?? (() => new Date().toISOString().slice(0, 10))
+  const today = deps.today ?? (() => localDay())
   return createStore<DungeonState>()((set, get) => ({
     content: deps.content,
     run: null,

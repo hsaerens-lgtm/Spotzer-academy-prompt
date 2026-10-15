@@ -155,6 +155,14 @@ describe('dungeon progress', () => {
   it('drops a malformed expert result alone', () => {
     expect(loadProgress(stored({ passed: true, bestScore: 80, expert: { passed: 'yes' } })).dungeon).toEqual({ passed: true, bestScore: 80 })
   })
+  // Deferred minor: a malformed date only drops itself, never the saved progress around it.
+  it('drops a malformed pass date alone', () => {
+    const storage = memoryStorage()
+    storage.setItem(PROGRESS_KEY, JSON.stringify({ ...emptyProgress(), topicsSeen: ['tokens'], dungeon: { passed: true, bestScore: 80, passedAt: 42 } }))
+    const progress = loadProgress(storage)
+    expect(progress.topicsSeen).toEqual(['tokens'])
+    expect(progress.dungeon).toEqual({ passed: true, bestScore: 80 })
+  })
   it('keeps the best floor 1 score and the date it was made', () => {
     const first = withDungeonPassed(emptyProgress(), 1, 70, '2026-10-15')
     expect(first.dungeon).toEqual({ passed: true, bestScore: 70, passedAt: '2026-10-15', expert: null })

@@ -67,3 +67,41 @@ test('each effect is a new event, even when the same one repeats', () => {
   expect(second?.kind).toBe('bump')
   expect(second?.id).not.toBe(first?.id)
 })
+
+// Deferred minor: the minimap only learns cells that are on the map and in sight (not through a wall).
+test('the seen cells stay on the map and never pass a wall', () => {
+  const { store } = make()
+  store.getState().start(1)
+  const run = store.getState().run!
+  const { map } = content.floors[1]
+  // On the right end of floor 1's first corridor, facing north: a wall ahead, the map's edge two cells ahead.
+  store.setState({ run: { ...run, pose: { x: 13, y: 1, dir: 'N' } }, seen: new Set() })
+  store.getState().dispatch({ type: 'move', command: 'turnRight' })
+  const seen = [...store.getState().seen]
+  for (const key of seen) expect(key, `cell ${key}`).toBeLessThan(map.width * map.height)
+  // Facing east from (13, 1): (14, 1) is the edge wall; (15, 1) does not exist and must not wrap to (0, 2).
+  expect(seen).not.toContain(2 * map.width + 0)
+  // Facing south from (13, 1): (13, 2) is the corridor down; facing west from (2, 4) through no wall is fine, but a
+  // cell behind a wall is never seen.
+  store.setState({ run: { ...store.getState().run!, pose: { x: 6, y: 1, dir: 'E' } }, seen: new Set() })
+  store.getState().dispatch({ type: 'move', command: 'turnRight' })
+  // From (6, 1) facing south: (6, 2) is an alcove, (6, 3) its inscription wall: both seen; (6, 4) behind it is not.
+  expect(store.getState().seen.has(4 * map.width + 6)).toBe(false)
+})
+
+// Deferred minor: a pass is dated in local time, not UTC (half past midnight in Belgium is already the next day).
+test('a victory is dated with the local day', () => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  try {
+    vi.setSystemTime(new Date(2026, 9, 16, 0, 30))
+    const onVictory = vi.fn()
+    const store = createDungeonStore({ content, seed: () => 11, onVictory, onEjected: vi.fn() })
+    store.getState().start(1)
+    const run = store.getState().run!
+    store.setState({ run: { ...run, defeated: run.defeated.map(() => true), phase: 'boss' } })
+    store.getState().dispatch({ type: 'bossResult', text: 'x', tier: 'excellent', passed: true })
+    expect(onVictory).toHaveBeenCalledWith(1, 35, '2026-10-16')
+  } finally {
+    vi.useRealTimers()
+  }
+})

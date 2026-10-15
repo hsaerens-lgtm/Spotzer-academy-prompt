@@ -1,13 +1,16 @@
-import { act, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { getContent } from '../../content/load'
 import { appStore } from '../../core/store'
 import { getDungeonContent } from '../../dungeon/content'
 import { correctIds, options } from '../../dungeon/questions'
 import { resetAppStore } from '../../test/resetAppStore'
+import { listedMissionIds } from '../../workshop/missionIndex'
 import { DungeonApp } from './DungeonApp'
 import { createDungeonStore, DungeonStoreProvider } from './store'
 import { BossPanel } from './ui/BossPanel'
 import { DialogBox } from './ui/DialogBox'
+import { ScoreScreen } from './ui/ScoreScreen'
 
 // The 3D canvas itself needs WebGL: a stand-in keeps the context-loss callback the view hands it.
 const canvas = vi.hoisted(() => ({ onContextLost: null as null | (() => void) }))
@@ -202,4 +205,60 @@ test('a boss hit announces the hearts left', async () => {
     ),
   )
   expect(store.getState().announcement?.text).toMatch(/strikes back\. You lose a heart\. 2 hearts left\./)
+})
+
+// Deferred minor: the warning counts in good English and leaves out what is done.
+test('the warning says "1 topic" and leaves out the missions once they are all passed', async () => {
+  const office = getContent('en')
+  const progress = appStore.getState().progress
+  appStore.setState({
+    progress: {
+      ...progress,
+      topicsSeen: office.topics.slice(1).map((topic) => topic.id),
+      workshop: { passed: [...listedMissionIds('en')], prompts: {} },
+    },
+  })
+  await renderApp()
+  expect(screen.getByText('1 topic left. The guardians will ask about every topic.')).toBeInTheDocument()
+})
+
+// Deferred minor: spec 3.6, the expert floor's end (victory too) offers Back to the office and Try again.
+test("the expert floor's victory offers Back to the office and Try again", async () => {
+  const user = userEvent.setup()
+  const store = createDungeonStore({ content: getDungeonContent('en'), seed: () => 3, onVictory: vi.fn(), onEjected: vi.fn() })
+  store.getState().start(2)
+  const run = store.getState().run!
+  store.setState({ run: { ...run, defeated: run.defeated.map(() => true), phase: 'boss' } })
+  store.getState().dispatch({ type: 'bossResult', text: 'x', tier: 'excellent', passed: true })
+  render(
+    <DungeonStoreProvider value={store}>
+      <ScoreScreen />
+    </DungeonStoreProvider>,
+  )
+  expect(screen.getByRole('button', { name: 'Back to the office' })).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Try again' }))
+  expect(store.getState().run!.phase).toBe('exploring')
+})
+
+// Deferred minor: spec 6.3, the focus comes back to the game when a dialogue or the pause menu closes; the HUD comes
+// before the move buttons in the tab order.
+test('in 3D, closing a dialogue or the pause menu gives the focus back to the game; the HUD comes first', async () => {
+  const user = userEvent.setup()
+  resetAppStore({ zone: 'dungeon', webgl: 'ok', reducedMotion: true })
+  appStore.getState().setDungeonRoute({ floor: 1 })
+  await renderApp()
+  await act(async () => {})
+  const game = screen.getByTestId('dungeon')
+  const pause = screen.getByRole('button', { name: 'Pause' })
+  expect(pause.compareDocumentPosition(screen.getByRole('button', { name: 'Step forward' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  // Two steps east: the Gatekeeper.
+  act(() => void fireEvent.keyDown(window, { code: 'ArrowUp' }))
+  act(() => void fireEvent.keyDown(window, { code: 'ArrowUp' }))
+  const dialog = within(screen.getByRole('dialog', { name: /The Gatekeeper/ }))
+  await user.keyboard('1{Enter}')
+  await user.click(dialog.getByRole('button', { name: 'Continue' }))
+  expect(document.activeElement).toBe(game)
+  await user.click(screen.getByRole('button', { name: 'Pause' }))
+  await user.click(screen.getByRole('button', { name: 'Resume' }))
+  expect(document.activeElement).toBe(game)
 })

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { getContent } from '../../../content/load'
 import { appStore, useApp } from '../../../core/store'
 import { listedMissionIds } from '../../../workshop/missionIndex'
+import { localDay } from '../../../dungeon/today'
 import { AdaPortrait } from './AdaPortrait'
 import { CertificateForm } from './CertificateForm'
 import { SoundToggle } from './SoundToggle'
@@ -17,6 +18,11 @@ export function TitleScreen() {
   const topicsLeft = topics.filter((topic) => !progress.topicsSeen.includes(topic.id)).length
   const missionsLeft = missionIds.filter((id) => !(progress.workshop?.passed ?? []).includes(id)).length
   const floor1Passed = progress.dungeon?.passed === true
+  const left = [
+    topicsLeft > 0 ? t('dungeon.topicsLeft', { count: topicsLeft }) : null,
+    missionsLeft > 0 ? t('dungeon.missionsLeft', { count: missionsLeft }) : null,
+  ].filter((part): part is string => part !== null)
+  const leftList = new Intl.ListFormat(lang, { type: 'conjunction' }).format(left)
   const { setDungeonRoute, requestZone } = appStore.getState()
   const [again, setAgain] = useState<1 | 2 | null>(null)
   const passes = ([1, 2] as const)
@@ -37,7 +43,7 @@ export function TitleScreen() {
       </p>
       {topicsLeft > 0 || missionsLeft > 0 ? (
         <div className="dg-warning">
-          <p>{t('dungeon.warning', { topics: topicsLeft, missions: missionsLeft })}</p>
+          <p>{t('dungeon.warning', { left: leftList })}</p>
           <div className="dg-actions">
             <button type="button" className="dg-btn" onClick={() => requestZone('office')}>
               {t('dungeon.goToOffice')}
@@ -80,7 +86,7 @@ export function TitleScreen() {
           {passes
             .filter(({ floor }) => floor === again)
             .map(({ floor, result }) => (
-              <CertificateForm key={floor} floor={floor} score={result!.bestScore} date={result!.passedAt ?? new Date().toISOString().slice(0, 10)} />
+              <CertificateForm key={floor} floor={floor} score={result!.bestScore} date={result!.passedAt ?? localDay()} />
             ))}
         </div>
       )}

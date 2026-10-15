@@ -1,6 +1,6 @@
 import '@fontsource/vt323/400.css'
 import './dungeon.css'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { sound } from '../../core/sound'
 import { appStore, useApp } from '../../core/store'
 import { getDungeonContent } from '../../dungeon/content'
@@ -26,6 +26,8 @@ function Game() {
   const effect = useDungeon((s) => s.effect)
   const threeD = useApp((s) => s.webgl === 'ok' && !s.readingMode)
   const view = useDungeon((s) => s.view)
+  const paused = useDungeon((s) => s.paused)
+  const game = useRef<HTMLDivElement>(null)
 
   // Spec 3, §4.6: floor 2 needs floor 1; a run starts for the floor in the route, and stops without one.
   useEffect(() => {
@@ -38,11 +40,19 @@ function Game() {
     if (effect) sound.jingle(JINGLES[effect.kind])
   }, [effect])
 
+  // Spec 3, §6.3: a dialogue or the pause menu that closes leaves the focus on the page body; it comes back to the game.
+  const phase = run?.phase
+  useEffect(() => {
+    if (phase !== 'exploring' || paused) return
+    if (document.activeElement === document.body || document.activeElement === null) game.current?.focus()
+  }, [phase, paused])
+
   if (!floor || !run || run.floor !== floor) return <TitleScreen />
   return (
-    <div className={`dg-game dg-game--floor${run.floor}`} data-testid="dungeon">
-      {threeD && view === '3d' ? <ThreeDView /> : <TextDungeon />}
+    <div ref={game} tabIndex={-1} className={`dg-game dg-game--floor${run.floor}`} data-testid="dungeon">
+      {/* The HUD first: its buttons come before the move buttons in the tab order. */}
       <Hud />
+      {threeD && view === '3d' ? <ThreeDView /> : <TextDungeon />}
       {(run.phase === 'encounter' || run.phase === 'answered') && <DialogBox key={run.current} />}
       {(run.phase === 'boss' || run.phase === 'bossFeedback') && <BossPanel />}
       {run.phase === 'victory' && <ScoreScreen />}

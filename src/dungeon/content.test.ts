@@ -67,3 +67,8 @@ test('explanations never point at an option by its letter', () => {
   const byLetter = /\b[A-F] (?:gives|is|has|names|adds|asks|tells|does|works)\b|\bfrom [A-F]\b|\b[A-F] and [A-F]\b|\b(?:option|prompt|answer) [A-F]\b/
   for (const { q } of all) expect(q.explanation, q.id).not.toMatch(byLetter)
 })
+
+// Deferred minor: the dialogue box says "Select all that apply." itself; the question text must not repeat it.
+test('questions never repeat the select-all hint', () => {
+  for (const { q } of all) expect(q.question, q.id).not.toMatch(/select all that apply/i)
+})

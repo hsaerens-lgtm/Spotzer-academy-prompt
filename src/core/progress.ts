@@ -5,7 +5,7 @@ export const SETTINGS_KEY = 'athena-prompt-academy:settings'
 
 const workshopSchema = z.object({ passed: z.array(z.string()), prompts: z.record(z.string(), z.string()) })
 
-const floorResultSchema = z.object({ passed: z.boolean(), bestScore: z.number(), passedAt: z.string().optional() })
+const floorResultSchema = z.object({ passed: z.boolean(), bestScore: z.number(), passedAt: z.string().optional().catch(undefined) })
 /**
  * Spec 3, §4.5: floor 1 at the top level (saved before the expert floor existed), the expert floor inside. A malformed
  * expert result is dropped alone, like `workshop`.
