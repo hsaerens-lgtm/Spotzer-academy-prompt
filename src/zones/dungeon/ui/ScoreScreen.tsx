@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appStore, useApp } from '../../../core/store'
 import { useDungeon, useDungeonStore } from '../store'
+import { CertificateForm } from './CertificateForm'
 import { ReviewScreen } from './ReviewScreen'
 
 /** Spec 3, §3.5: the score, the best score, the way down to The Deep and, on floor 2, the corrections. */
@@ -9,7 +10,10 @@ export function ScoreScreen() {
   const { t } = useTranslation()
   const store = useDungeonStore()
   const run = useDungeon((s) => s.run)!
-  const best = useApp((s) => (run.floor === 1 ? s.progress.dungeon?.bestScore : s.progress.dungeon?.expert?.bestScore) ?? run.score)
+  const result = useApp((s) => (run.floor === 1 ? s.progress.dungeon : s.progress.dungeon?.expert))
+  // Spec 3, §3.9: the certificate carries the best pass and its date (this run's, unless an earlier one scored higher).
+  const best = result?.bestScore ?? run.score
+  const date = result?.passedAt ?? new Date().toISOString().slice(0, 10)
   const right = run.answers.filter((a) => a.correct).length
   const heading = useRef<HTMLHeadingElement>(null)
 
@@ -37,6 +41,7 @@ export function ScoreScreen() {
             {t('dungeon.toTitle')}
           </button>
         </div>
+        <CertificateForm floor={run.floor} score={best} date={date} />
         {run.floor === 2 && <ReviewScreen />}
       </div>
     </section>

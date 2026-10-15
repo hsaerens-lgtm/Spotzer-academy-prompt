@@ -76,3 +76,13 @@ test('the dungeon has its own Sound toggle, on the title screen and in the HUD',
   await user.click(screen.getByRole('button', { name: 'Enter anyway' }))
   expect(screen.getByRole('button', { name: 'Sound' })).toHaveAttribute('aria-pressed', 'false')
 })
+
+test('a passed floor offers its certificate again from the title screen', async () => {
+  const user = userEvent.setup()
+  appStore.getState().passDungeonFloor(1, 80, '2026-10-15')
+  await renderApp()
+  expect(screen.queryByRole('textbox', { name: 'Your name' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /expert certificate again/ })).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Download my certificate again (floor 1)' }))
+  expect(screen.getByRole('textbox', { name: 'Your name' })).toBeInTheDocument()
+})

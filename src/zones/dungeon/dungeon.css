@@ -122,3 +122,11 @@
   .dg-dialog, .dg-boss { bottom: 10px; padding: 10px 14px 12px; max-height: calc(100% - 64px); }
   .dg-hud { padding: 6px 12px; font-size: 20px; }
 }
+
+/* Certificate */
+.dg-again { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.dg-certificate { margin-top: 14px; padding: 12px 14px; border: 2px dashed var(--oe-blue-grey-soft); text-align: left; }
+.dg-certificate__title { margin: 0 0 8px; font-family: var(--dg-chrome); font-size: 24px; font-weight: 400; color: var(--oe-lime-mint); }
+.dg-certificate__row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.dg-certificate__label { font-family: var(--dg-chrome); font-size: 20px; }
+.dg-certificate__field { flex: 1 1 220px; padding: 6px 8px; border: 2px solid var(--oe-blue-grey-soft); background: var(--at-ink); color: var(--at-on-dark); font: inherit; }

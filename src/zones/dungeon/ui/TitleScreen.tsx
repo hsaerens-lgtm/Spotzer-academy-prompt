@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getContent } from '../../../content/load'
 import { appStore, useApp } from '../../../core/store'
 import { listedMissionIds } from '../../../workshop/missionIndex'
 import { AdaPortrait } from './AdaPortrait'
+import { CertificateForm } from './CertificateForm'
 import { SoundToggle } from './SoundToggle'
 
 /** Spec 3, §3.1: the title screen, with a warning when topics or workshop missions are left. */
@@ -16,6 +18,10 @@ export function TitleScreen() {
   const missionsLeft = missionIds.filter((id) => !(progress.workshop?.passed ?? []).includes(id)).length
   const floor1Passed = progress.dungeon?.passed === true
   const { setDungeonRoute, requestZone } = appStore.getState()
+  const [again, setAgain] = useState<1 | 2 | null>(null)
+  const passes = ([1, 2] as const)
+    .map((floor) => ({ floor, result: floor === 1 ? progress.dungeon : progress.dungeon?.expert }))
+    .filter((pass) => pass.result?.passed)
 
   return (
     <section className="dg-title" aria-labelledby="dg-title-name">
@@ -62,6 +68,22 @@ export function TitleScreen() {
           </p>
         )}
       </div>
+      {passes.length > 0 && (
+        <div className="dg-again">
+          <div className="dg-actions">
+            {passes.map(({ floor }) => (
+              <button key={floor} type="button" className="dg-btn" aria-expanded={again === floor} onClick={() => setAgain(again === floor ? null : floor)}>
+                {t(`dungeon.again${floor}`)}
+              </button>
+            ))}
+          </div>
+          {passes
+            .filter(({ floor }) => floor === again)
+            .map(({ floor, result }) => (
+              <CertificateForm key={floor} floor={floor} score={result!.bestScore} date={result!.passedAt ?? new Date().toISOString().slice(0, 10)} />
+            ))}
+        </div>
+      )}
       <button type="button" className="dg-btn dg-btn--ghost" onClick={() => requestZone('office')}>
         <span aria-hidden="true">&larr; </span>
         {t('dungeon.back')}

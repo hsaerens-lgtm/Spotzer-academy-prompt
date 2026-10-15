@@ -60,7 +60,8 @@
     "goToOffice": "Go to the office",
     "enterAnyway": "Enter anyway",
     "back": "Back to the office",
-    "again": "Download my certificate again",
+    "again1": "Download my certificate again (floor 1)",
+    "again2": "Download my expert certificate again",
     "hearts_one": "1 heart left",
     "hearts_other": "{{count}} hearts left",
     "guardians": "Guardians {{done}}/{{total}}",
@@ -103,6 +104,13 @@
     "deadEnd": "Dead end.",
     "announcer": "Dungeon events",
     "sound": "Sound",
+    "certificate": "Your certificate",
+    "yourName": "Your name",
+    "nameInvalid": "Use letters, spaces, apostrophes or hyphens (60 characters at most).",
+    "nameUnsupported": "Your name has letters this certificate cannot print yet. Please write it in Latin letters.",
+    "download": "Download PDF",
+    "making": "Making your certificate…",
+    "certificateFailed": "The certificate could not be created.",
     "ada": "Ada"
   },
   "errors": {
