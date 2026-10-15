@@ -374,3 +374,20 @@ describe('workshop', () => {
     expect(store.getState().progress.workshop?.passed).toEqual(['a'])
   })
 })
+
+describe('dungeon state', () => {
+  it('passes a floor into the saved progress and keeps the route apart', () => {
+    const { s } = setup()
+    s().setDungeonRoute({ floor: 1 })
+    expect(s().dungeonRoute).toEqual({ floor: 1 })
+    s().passDungeonFloor(1, 85, '2026-10-15')
+    expect(s().progress.dungeon).toEqual({ passed: true, bestScore: 85, passedAt: '2026-10-15', expert: null })
+  })
+  it('holds a debrief until a topic opens', () => {
+    const { s } = setup()
+    s().setDungeonDebrief({ topics: ['alpha'] })
+    expect(s().dungeonDebrief).toEqual({ topics: ['alpha'] })
+    s().openTopic('alpha')
+    expect(s().dungeonDebrief).toBeNull()
+  })
+})

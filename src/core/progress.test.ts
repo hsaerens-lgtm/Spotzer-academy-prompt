@@ -9,6 +9,7 @@ import {
   markSeen,
   saveProgress,
   saveSettings,
+  withDungeonPassed,
   withMissionPassed,
   withoutWorkshopPrompts,
   workshopProgress,
@@ -139,6 +140,35 @@ describe('workshop progress', () => {
     expect(withoutWorkshopPrompts(one).workshop).toEqual({ passed: ['a'], prompts: {} })
     const empty = emptyProgress()
     expect(withoutWorkshopPrompts(empty)).toBe(empty)
+  })
+})
+
+describe('dungeon progress', () => {
+  const stored = (dungeon: unknown) => {
+    const storage = memoryStorage()
+    storage.setItem(PROGRESS_KEY, JSON.stringify({ ...emptyProgress(), dungeon }))
+    return storage
+  }
+  it('loads a dungeon saved before the expert floor', () => {
+    expect(loadProgress(stored({ passed: true, bestScore: 80 })).dungeon).toEqual({ passed: true, bestScore: 80 })
+  })
+  it('drops a malformed expert result alone', () => {
+    expect(loadProgress(stored({ passed: true, bestScore: 80, expert: { passed: 'yes' } })).dungeon).toEqual({ passed: true, bestScore: 80 })
+  })
+  it('keeps the best floor 1 score and the date it was made', () => {
+    const first = withDungeonPassed(emptyProgress(), 1, 70, '2026-10-15')
+    expect(first.dungeon).toEqual({ passed: true, bestScore: 70, passedAt: '2026-10-15', expert: null })
+    const lower = withDungeonPassed(first, 1, 60, '2026-10-16')
+    expect(lower.dungeon).toEqual({ passed: true, bestScore: 70, passedAt: '2026-10-15', expert: null })
+    const higher = withDungeonPassed(lower, 1, 95, '2026-10-17')
+    expect(higher.dungeon).toEqual({ passed: true, bestScore: 95, passedAt: '2026-10-17', expert: null })
+  })
+  it('records the expert floor only after floor 1', () => {
+    const none = withDungeonPassed(emptyProgress(), 2, 90, '2026-10-15')
+    expect(none.dungeon).toBeNull()
+    const passed = withDungeonPassed(withDungeonPassed(emptyProgress(), 1, 70, '2026-10-15'), 2, 64, '2026-10-16')
+    expect(passed.dungeon?.expert).toEqual({ passed: true, bestScore: 64, passedAt: '2026-10-16' })
+    expect(passed.dungeon?.bestScore).toBe(70)
   })
 })
 

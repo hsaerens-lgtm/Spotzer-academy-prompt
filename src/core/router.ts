@@ -1,4 +1,5 @@
 import type { StoreApi } from 'zustand/vanilla'
+import type { DungeonFloor } from './progress'
 import { ZONES, type AppState, type WorkshopApp, type ZoneId } from './store'
 
 export interface Route {
@@ -6,6 +7,7 @@ export interface Route {
   topic: string | null
   mission: string | null
   app: WorkshopApp | null
+  floor: DungeonFloor | null
 }
 
 const APPS: readonly WorkshopApp[] = ['corrector', 'prompts']
@@ -24,11 +26,13 @@ export function parseHash(hash: string): Route {
     }
   }
   const app = zone === 'workshop' ? params?.get('app') ?? null : null
+  const floor = zone === 'dungeon' ? params?.get('floor') ?? null : null
   return {
     zone,
     topic: zone === 'office' ? params?.get('topic') || null : null,
     mission: zone === 'workshop' ? params?.get('mission') || null : null,
     app: isApp(app) ? app : null,
+    floor: floor === '1' ? 1 : floor === '2' ? 2 : null,
   }
 }
 
@@ -37,6 +41,7 @@ export function formatHash(route: Route): string {
   if (route.zone === 'office' && route.topic) query = `?topic=${encodeURIComponent(route.topic)}`
   else if (route.zone === 'workshop' && route.app) query = `?app=${route.app}`
   else if (route.zone === 'workshop' && route.mission) query = `?mission=${encodeURIComponent(route.mission)}`
+  else if (route.zone === 'dungeon' && route.floor) query = `?floor=${route.floor}`
   return `#/${route.zone}${query}`
 }
 
@@ -50,11 +55,13 @@ export function startRouter(store: StoreApi<AppState>, win: Window = window): ()
       topic: s.zone === 'office' ? s.activeTopic : null,
       mission: workshop ? s.workshopRoute.mission : null,
       app: workshop ? s.workshopRoute.app : null,
+      floor: s.zone === 'dungeon' ? s.dungeonRoute.floor : null,
     })
   }
 
   const initial = parseHash(win.location.hash)
   if (initial.zone === 'workshop') store.getState().setWorkshopRoute({ mission: initial.mission, app: initial.app })
+  if (initial.zone === 'dungeon') store.getState().setDungeonRoute({ floor: initial.floor })
   if (initial.zone !== 'office') store.setState({ zone: initial.zone })
   else if (initial.topic) store.getState().openTopic(initial.topic)
   win.history.replaceState(null, '', currentHash())
@@ -77,6 +84,7 @@ export function startRouter(store: StoreApi<AppState>, win: Window = window): ()
     // After requestZone: the transition it starts keeps the subscriber from rewriting the entry the browser just
     // landed on (the workshop route is still applied while the office is on screen).
     if (route.zone === 'workshop') s.setWorkshopRoute({ mission: route.mission, app: route.app })
+    if (route.zone === 'dungeon') s.setDungeonRoute({ floor: route.floor })
     // While a transition runs, the subscriber reconciles the URL when it ends.
     if (store.getState().transition) return
     // State wins: a stale or hand-edited hash is replaced by the canonical one.

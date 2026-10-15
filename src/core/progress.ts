@@ -5,12 +5,19 @@ export const SETTINGS_KEY = 'athena-prompt-academy:settings'
 
 const workshopSchema = z.object({ passed: z.array(z.string()), prompts: z.record(z.string(), z.string()) })
 
+const floorResultSchema = z.object({ passed: z.boolean(), bestScore: z.number(), passedAt: z.string().optional() })
+/**
+ * Spec 3, §4.5: floor 1 at the top level (saved before the expert floor existed), the expert floor inside. A malformed
+ * expert result is dropped alone, like `workshop`.
+ */
+const dungeonSchema = floorResultSchema.extend({ expert: floorResultSchema.nullable().optional().catch(undefined) })
+
 const progressSchema = z.object({
   version: z.literal(1),
   topicsSeen: z.array(z.string()),
   deeperSeen: z.array(z.string()),
   workshopDone: z.boolean(),
-  dungeon: z.object({ passed: z.boolean(), bestScore: z.number() }).nullable(),
+  dungeon: dungeonSchema.nullable(),
   firstVisitDone: z.boolean(),
   /**
    * Added by the workshop (spec 2); progress saved before it simply has no such key. A malformed value is dropped
@@ -99,6 +106,22 @@ export function withMissionPassed(progress: Progress, id: string, prompt: string
     workshop: { passed, prompts: { ...current.prompts, [id]: prompt } },
     workshopDone: progress.workshopDone || (knownIds.length > 0 && knownIds.every((known) => passed.includes(known))),
   }
+}
+
+export type DungeonFloor = 1 | 2
+export type DungeonProgress = z.infer<typeof dungeonSchema>
+type FloorResult = z.infer<typeof floorResultSchema>
+
+/** A floor passed: the best score stays, with the date it was made. The expert floor needs floor 1 (spec 3, §4.5). */
+export function withDungeonPassed(progress: Progress, floor: DungeonFloor, score: number, date: string): Progress {
+  const best = (previous: FloorResult | null | undefined): FloorResult =>
+    previous && previous.bestScore >= score
+      ? { passed: true, bestScore: previous.bestScore, passedAt: previous.passedAt ?? date }
+      : { passed: true, bestScore: score, passedAt: date }
+  const dungeon = progress.dungeon
+  if (floor === 1) return { ...progress, dungeon: { ...best(dungeon), expert: dungeon?.expert ?? null } }
+  if (!dungeon?.passed) return progress
+  return { ...progress, dungeon: { ...dungeon, expert: best(dungeon.expert) } }
 }
 
 export function withoutWorkshopPrompts(progress: Progress): Progress {

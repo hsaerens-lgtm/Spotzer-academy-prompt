@@ -11,8 +11,10 @@ import {
   markSeen,
   saveProgress,
   saveSettings,
+  withDungeonPassed,
   withMissionPassed,
   withoutWorkshopPrompts,
+  type DungeonFloor,
   type Progress,
   type Settings,
   type StorageLike,
@@ -26,6 +28,14 @@ export type WorkshopApp = 'corrector' | 'prompts'
 export interface WorkshopRoute {
   mission: string | null
   app: WorkshopApp | null
+}
+
+export interface DungeonRoute {
+  floor: DungeonFloor | null
+}
+/** Spec 3, §4.5: the topics a floor-1 run got wrong, for Ada's debrief in the office. Not saved. */
+export interface DungeonDebrief {
+  topics: string[]
 }
 
 export interface Transition {
@@ -59,6 +69,8 @@ export interface AppState {
   /** The decor stage (plants, books, frames, pendants) has loaded, or given up on what failed. */
   decorReady: boolean
   workshopRoute: WorkshopRoute
+  dungeonRoute: DungeonRoute
+  dungeonDebrief: DungeonDebrief | null
 
   requestZone: (to: ZoneId, via?: Via) => void
   transitionStep: () => void
@@ -90,6 +102,9 @@ export interface AppState {
   /** `knownIds`: the workshop's real missions, so a saved id of a removed mission never makes the workshop "done". */
   passWorkshopMission: (id: string, prompt: string, knownIds: readonly string[]) => void
   clearWorkshopPrompts: () => void
+  setDungeonRoute: (route: DungeonRoute) => void
+  passDungeonFloor: (floor: DungeonFloor, score: number, date: string) => void
+  setDungeonDebrief: (debrief: DungeonDebrief | null) => void
 }
 
 export interface StoreDeps {
@@ -146,6 +161,8 @@ export function createAppStore(deps: StoreDeps): StoreApi<AppState> {
       phaseTransition: null,
       decorReady: false,
       workshopRoute: { mission: null, app: null },
+      dungeonRoute: { floor: null },
+      dungeonDebrief: null,
 
       requestZone: (to, via) => {
         const s = get()
@@ -176,7 +193,7 @@ export function createAppStore(deps: StoreDeps): StoreApi<AppState> {
       openTopic: (id) => {
         const topic = topicFor(id)
         if (!topic) return
-        set({ activeTopic: id, dialogue: engine.start(topic), menuOpen: false, railTarget: 1, expandOpen: false })
+        set({ activeTopic: id, dialogue: engine.start(topic), menuOpen: false, railTarget: 1, expandOpen: false, dungeonDebrief: null })
         const progress = get().progress
         if (!progress.firstVisitDone) setProgress({ ...progress, firstVisitDone: true })
       },
@@ -239,6 +256,12 @@ export function createAppStore(deps: StoreDeps): StoreApi<AppState> {
       },
       passWorkshopMission: (id, prompt, knownIds) => setProgress(withMissionPassed(get().progress, id, prompt, knownIds)),
       clearWorkshopPrompts: () => setProgress(withoutWorkshopPrompts(get().progress)),
+      setDungeonRoute: (route) => {
+        if (get().dungeonRoute.floor === route.floor) return
+        set({ dungeonRoute: route })
+      },
+      passDungeonFloor: (floor, score, date) => setProgress(withDungeonPassed(get().progress, floor, score, date)),
+      setDungeonDebrief: (debrief) => set({ dungeonDebrief: debrief }),
     }
   })
 }

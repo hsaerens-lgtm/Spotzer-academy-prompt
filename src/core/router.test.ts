@@ -4,11 +4,12 @@ import { formatHash, parseHash, startRouter } from './router'
 import { createAppStore } from './store'
 
 describe('parseHash', () => {
-  const route = (zone: string, extra: Partial<{ topic: string; mission: string; app: string }> = {}) => ({
+  const route = (zone: string, extra: Partial<{ topic: string; mission: string; app: string; floor: 1 | 2 }> = {}) => ({
     zone,
     topic: null,
     mission: null,
     app: null,
+    floor: null,
     ...extra,
   })
   it.each([
@@ -26,13 +27,20 @@ describe('parseHash', () => {
     ['#/workshop?app=prompts&mission=newsletter', route('workshop', { app: 'prompts', mission: 'newsletter' })],
     ['#/workshop?app=hack', route('workshop')],
     ['#/office?mission=florist-post', route('office')],
+    ['#/dungeon?floor=1', route('dungeon', { floor: 1 })],
+    ['#/dungeon?floor=2', route('dungeon', { floor: 2 })],
+    ['#/dungeon?floor=3', route('dungeon')],
+    ['#/office?floor=1', route('office')],
   ])('%s', (hash, expected) => {
     expect(parseHash(hash)).toEqual(expected)
   })
 })
 
 test('formatHash', () => {
-  const route = { topic: null, mission: null, app: null }
+  const route = { topic: null, mission: null, app: null, floor: null }
+  expect(formatHash({ ...route, zone: 'dungeon', floor: 2 })).toBe('#/dungeon?floor=2')
+  expect(formatHash({ ...route, zone: 'dungeon' })).toBe('#/dungeon')
+  expect(formatHash({ ...route, zone: 'office', floor: 1 })).toBe('#/office')
   expect(formatHash({ ...route, zone: 'office' })).toBe('#/office')
   expect(formatHash({ ...route, zone: 'office', topic: 'tokens' })).toBe('#/office?topic=tokens')
   expect(formatHash({ ...route, zone: 'workshop', topic: 'tokens' })).toBe('#/workshop')
@@ -198,6 +206,20 @@ describe('startRouter', () => {
       store.getState().transitionStep()
       expect(store.getState().zone).toBe('workshop')
       expect(window.location.hash).toBe('#/workshop')
+    })
+  })
+
+  describe('dungeon', () => {
+    it('opens a deep-linked floor, and a floor change replaces the entry', () => {
+      window.history.replaceState(null, '', '#/dungeon?floor=1')
+      const store = newStore()
+      stop = startRouter(store)
+      expect(store.getState()).toMatchObject({ zone: 'dungeon', dungeonRoute: { floor: 1 } })
+      expect(window.location.hash).toBe('#/dungeon?floor=1')
+      const before = window.history.length
+      store.getState().setDungeonRoute({ floor: null })
+      expect(window.location.hash).toBe('#/dungeon')
+      expect(window.history.length).toBe(before)
     })
   })
 
