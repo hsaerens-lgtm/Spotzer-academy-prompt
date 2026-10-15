@@ -130,3 +130,9 @@
 .dg-certificate__row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .dg-certificate__label { font-family: var(--dg-chrome); font-size: 20px; }
 .dg-certificate__field { flex: 1 1 220px; padding: 6px 8px; border: 2px solid var(--oe-blue-grey-soft); background: var(--at-ink); color: var(--at-on-dark); font: inherit; }
+
+/* 3D view: minimap, moves, inscriptions */
+.dg-minimap { position: absolute; top: 56px; right: 14px; z-index: 3; width: auto; height: auto; transform: scale(2); transform-origin: top right; image-rendering: pixelated; background: rgb(11 13 14 / 0.7); }
+.dg-moves { position: absolute; left: 14px; bottom: 14px; z-index: 3; display: grid; grid-template-columns: repeat(3, 44px); gap: 6px; }
+.dg-move { padding: 4px 0; font-family: var(--oe-font-ui); font-size: 20px; }
+.dg-inscription { position: absolute; left: 50%; top: 38%; z-index: 3; transform: translateX(-50%); max-width: 520px; margin: 0; padding: 8px 14px; border: 2px solid var(--oe-lime-mint); background: rgb(11 13 14 / 0.85); font-family: var(--dg-chrome); font-size: 26px; text-align: center; color: var(--oe-lime-mint); }

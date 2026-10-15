@@ -7,6 +7,7 @@ import { getDungeonContent } from '../../dungeon/content'
 import { JINGLES } from './sounds'
 import { createDungeonStore, DungeonStoreProvider, useDungeon, useDungeonStore } from './store'
 import { TextDungeon } from './text/TextDungeon'
+import { ThreeDView } from './ThreeDView'
 import { Announcer } from './ui/Announcer'
 import { BossPanel } from './ui/BossPanel'
 import { DialogBox } from './ui/DialogBox'
@@ -22,6 +23,8 @@ function Game() {
   const floor1Passed = useApp((s) => s.progress.dungeon?.passed === true)
   const run = useDungeon((s) => s.run)
   const effect = useDungeon((s) => s.effect)
+  const threeD = useApp((s) => s.webgl === 'ok' && !s.readingMode)
+  const view = useDungeon((s) => s.view)
 
   // Spec 3, §4.6: floor 2 needs floor 1; a run starts for the floor in the route, and stops without one.
   useEffect(() => {
@@ -37,7 +40,7 @@ function Game() {
   if (!floor || !run || run.floor !== floor) return <TitleScreen />
   return (
     <div className={`dg-game dg-game--floor${run.floor}`} data-testid="dungeon">
-      <TextDungeon />
+      {threeD && view === '3d' ? <ThreeDView /> : <TextDungeon />}
       <Hud />
       {(run.phase === 'encounter' || run.phase === 'answered') && <DialogBox key={run.current} />}
       {(run.phase === 'boss' || run.phase === 'bossFeedback') && <BossPanel />}
